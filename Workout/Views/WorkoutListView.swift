@@ -13,9 +13,10 @@ struct WorkoutListView: View {
   @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
 
   @State private var showingNewWorkoutAlert = false
+  @State private var path = NavigationPath()
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       List {
         ForEach(workouts) { workout in
           NavigationLink(value: workout) {
@@ -40,10 +41,8 @@ struct WorkoutListView: View {
         WorkoutDetailView(workout: workout)
       }
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItemGroup(placement: .primaryAction) {
           EditButton()
-        }
-        ToolbarItem(placement: .primaryAction) {
           Button {
             createNewWorkout()
           } label: {
@@ -58,6 +57,7 @@ struct WorkoutListView: View {
     let newWorkout = Workout(date: Date())
     modelContext.insert(newWorkout)
     try? modelContext.save()
+    path.append(newWorkout)
   }
 
   private func deleteWorkouts(offsets: IndexSet) {

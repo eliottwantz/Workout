@@ -39,29 +39,24 @@ struct WorkoutDetailView: View {
     }
     .navigationTitle(formattedDate)
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: {
-          showingAddExerciseView = true
-        }) {
-          Label("Add Exercise", systemImage: "plus")
-        }
-      }
-
-      ToolbarItem(placement: .navigationBarLeading) {
-        Button(action: {
-          isEditingMode.toggle()
-        }) {
-          Text(isEditingMode ? "Done" : "Edit")
-        }
-      }
-
-      if !Calendar.current.isDateInToday(workout.date) {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button(action: {
+      ToolbarItemGroup(placement: .primaryAction) {
+        if !Calendar.current.isDateInToday(workout.date) {
+          Button {
             showingCopyToTodayAlert = true
-          }) {
+          } label: {
             Label("Copy to Today", systemImage: "doc.on.doc")
           }
+        }
+
+        Button {
+          isEditingMode.toggle()
+        } label: {
+          Text(isEditingMode ? "Done" : "Edit")
+        }
+        Button {
+          showingAddExerciseView = true
+        } label: {
+          Label("Add Exercise", systemImage: "plus")
         }
       }
     }

@@ -10,7 +10,7 @@ import SwiftUI
 
 @main
 struct WorkoutApp: App {
-  
+
   init() {
     // Print the Application Support directory path on startup
     if let appSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first

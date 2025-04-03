@@ -29,9 +29,9 @@ final class AppContainer {
       let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: preview)
       modelContainer = try ModelContainer(for: schema, configurations: config)
       #if DEBUG
-//        if preview {
-//          AppContainer.addSampleData(modelContainer.mainContext)
-//        }
+        //        if preview {
+        //          AppContainer.addSampleData(modelContainer.mainContext)
+        //        }
       #endif
     } catch {
       fatalError("Could not create ModelContainer: \(error)")

@@ -12,7 +12,7 @@ struct WorkoutDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @Bindable var workout: Workout
 
-  @State private var isEditingMode = false
+  @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
   @State private var showingCopyToTodayAlert = false
 
@@ -37,7 +37,7 @@ struct WorkoutDetailView: View {
           .padding()
       }
     }
-    .navigationTitle(formattedDate)
+    .navigationTitle(workout.formattedDate)
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
         if !Calendar.current.isDateInToday(workout.date) {
@@ -48,11 +48,7 @@ struct WorkoutDetailView: View {
           }
         }
 
-        Button {
-          isEditingMode.toggle()
-        } label: {
-          Text(isEditingMode ? "Done" : "Edit")
-        }
+        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {
@@ -60,12 +56,11 @@ struct WorkoutDetailView: View {
         }
       }
     }
-    .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
+    .environment(\.editMode, $editMode)
     .sheet(isPresented: $showingAddExerciseView) {
       NavigationStack {
         AddExerciseView(workout: workout)
       }
-      .presentationDetents([.medium, .large])
     }
     .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
       Button("Copy", role: .none) {
@@ -74,20 +69,6 @@ struct WorkoutDetailView: View {
       Button("Cancel", role: .cancel) {}
     } message: {
       Text("Do you want to copy this workout to today?")
-    }
-  }
-
-  private var formattedDate: String {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
-
-    let calendar = Calendar.current
-    if calendar.isDateInToday(workout.date) {
-      return "Today's Workout"
-    } else if calendar.isDateInYesterday(workout.date) {
-      return "Yesterday's Workout"
-    } else {
-      return formatter.string(from: workout.date)
     }
   }
 

@@ -37,6 +37,22 @@ final class Workout {
   }
 }
 
+extension Workout {
+  var formattedDate: String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+
+    let calendar = Calendar.current
+    if calendar.isDateInToday(date) {
+      return "Today"
+    } else if calendar.isDateInYesterday(date) {
+      return "Yesterday"
+    } else {
+      return formatter.string(from: date)
+    }
+  }
+}
+
 // MARK: - Workout Item (Wrapper for Exercise/Superset in Workout Order)
 
 @Model

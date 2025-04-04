@@ -73,7 +73,7 @@ struct WorkoutRowView: View {
 
   var body: some View {
     VStack(alignment: .leading) {
-      Text(formattedDate)
+      Text(workout.formattedDate)
         .font(.headline)
 
       Text("^[\(workout.items.count) exercise](inflect: true)")
@@ -81,20 +81,6 @@ struct WorkoutRowView: View {
         .foregroundColor(.secondary)
     }
     .padding(.vertical, 4)
-  }
-
-  private var formattedDate: String {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
-
-    let calendar = Calendar.current
-    if calendar.isDateInToday(workout.date) {
-      return "Today"
-    } else if calendar.isDateInYesterday(workout.date) {
-      return "Yesterday"
-    } else {
-      return formatter.string(from: workout.date)
-    }
   }
 }
 

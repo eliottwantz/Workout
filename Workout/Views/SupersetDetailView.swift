@@ -17,34 +17,34 @@ struct SupersetDetailView: View {
 
   var body: some View {
     List {
-        if let exercises = superset.orderedExercises, !exercises.isEmpty {
-          ForEach(superset.exercises) { exercise in
-            if let definition = exercise.definition {
-              NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
-                HStack {
-                  Text(definition.name)
-                    .font(.headline)
-                  Spacer()
-                  Text("\(exercise.sets.count) sets")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                }
-                .padding(.vertical, 2)
+      if let exercises = superset.orderedExercises, !exercises.isEmpty {
+        ForEach(superset.exercises) { exercise in
+          if let definition = exercise.definition {
+            NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+              HStack {
+                Text(definition.name)
+                  .font(.headline)
+                Spacer()
+                Text("\(exercise.sets.count) sets")
+                  .font(.subheadline)
+                  .foregroundColor(.secondary)
               }
-            } else {
-              Text("Unknown Exercise")
-                .foregroundColor(.secondary)
+              .padding(.vertical, 2)
             }
+          } else {
+            Text("Unknown Exercise")
+              .foregroundColor(.secondary)
           }
-          .onDelete(perform: deleteExercises)
-          .onMove(perform: moveExercises)
-        } else {
-          Text("No exercises in this superset")
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
         }
-      
+        .onDelete(perform: deleteExercises)
+        .onMove(perform: moveExercises)
+      } else {
+        Text("No exercises in this superset")
+          .foregroundColor(.secondary)
+          .frame(maxWidth: .infinity, alignment: .center)
+          .padding()
+      }
+
     }
     .navigationTitle("Superset Detail")
     .toolbar {

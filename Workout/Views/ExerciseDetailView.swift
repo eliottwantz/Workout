@@ -13,8 +13,6 @@ struct ExerciseDetailView: View {
   @Bindable var exercise: Exercise
 
   @State private var isEditingMode = false
-  @State private var newReps = 8
-  @State private var newWeight = 0.0
   @State private var restTime: Int
   @State private var showingRestTimePicker = false
   @State private var editMode = EditMode.inactive
@@ -39,44 +37,56 @@ struct ExerciseDetailView: View {
         RestTimePicker(exercise: exercise)
       }
 
-      Section("Sets") {
-        if let sets = exercise.orderedSets, !sets.isEmpty {
+      if let sets = exercise.orderedSets, !sets.isEmpty {
+        Section("Sets") {
+          // Table header
+          HStack {
+            Text("#")
+              .font(.headline)
+              .frame(width: 40, alignment: .leading)
+
+            Text("Reps")
+              .font(.headline)
+              .frame(maxWidth: .infinity, alignment: .center)
+
+            HStack(alignment: .bottom, spacing: 6) {
+              Text("Weight")
+                .font(.headline)
+              Text("(lbs)")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+          }
+          .padding(.leading, 6)
+
           ForEach(exercise.sets) { set in
-            SetRowView(set: set)
+            EditableSetRowView(set: set)
           }
           .onDelete(perform: deleteSets)
           .onMove(perform: moveSets)
-        } else {
-          ContentUnavailableView {
-            Label("No sets", systemImage: "dumbbell.fill")
+
+          Button {
+            addSet()
+          } label: {
+            Label("Add Set", systemImage: "plus")
+              .frame(maxWidth: .infinity, alignment: .center)
           }
         }
       }
-
-      Section("New set") {
-
-        Stepper("^[\(newReps) rep](inflect: true)", value: $newReps, in: 1...100)
-
-        HStack {
-          Text("Weight")
-
-          Spacer()
-
-          TextField("Weight", value: $newWeight, formatter: NumberFormatter())
-            .keyboardType(.decimalPad)
-            .multilineTextAlignment(.trailing)
-
-          Text("lbs")
-        }
-
-        Button {
-          addNewSet()
-        } label: {
-          Label("Add Set", systemImage: "plus")
-            .frame(maxWidth: .infinity, alignment: .center)
+    }
+    .overlay {
+      if exercise.sets.isEmpty {
+        ContentUnavailableView {
+          Label("No sets", systemImage: "dumbbell.fill")
+        } actions: {
+          Button {
+            addSet()
+          } label: {
+            Label("Add set", systemImage: "plus")
+          }
         }
       }
-
     }
     .navigationTitle(exercise.definition?.name ?? "Exercise Detail")
     .toolbar {
@@ -98,14 +108,16 @@ struct ExerciseDetailView: View {
     }
   }
 
-  private func addNewSet() {
-    let set = SetEntry(reps: newReps, weight: newWeight)
-    exercise.addSet(set)
-
-    // Reset inputs
-    newWeight = exercise.sets.last?.weight ?? 0.0
-
-    try? modelContext.save()
+  private func addSet() {
+    if let lastSet = exercise.sets.last {
+      let set = SetEntry(reps: lastSet.reps, weight: lastSet.weight)
+      exercise.addSet(set)
+      try? modelContext.save()
+    } else {
+      let set = SetEntry(reps: 10, weight: 0.0)
+      exercise.addSet(set)
+      try? modelContext.save()
+    }
   }
 
   private func deleteSets(at offsets: IndexSet) {
@@ -140,19 +152,38 @@ struct ExerciseDetailView: View {
   }
 }
 
-struct SetRowView: View {
-  let set: SetEntry
+private struct EditableSetRowView: View {
+  @Environment(\.modelContext) private var modelContext
+  @Bindable var set: SetEntry
+
+  @State private var reps: Int
+  @State private var weight: Double
+
+  init(set: SetEntry) {
+    self.set = set
+    self._reps = State(initialValue: set.reps)
+    self._weight = State(initialValue: set.weight)
+  }
 
   var body: some View {
     HStack {
-      Text("Set \(set.order + 1)")
-        .font(.headline)
+      ZStack {
+        Circle()
+          .fill(Color.gray.opacity(0.2))
+          .frame(width: 24, height: 24)
 
-      Spacer()
+        Text("\(set.order + 1)")
+          .font(.system(.callout, weight: .medium))
+      }
+      .frame(width: 40, alignment: .leading)
 
-      Text("\(set.reps) reps at \(String(format: "%.1f", set.weight)) lbs")
-        .font(.subheadline)
+      // Reps column - editable
+      RepsInputField(reps: $set.reps)
+
+      // Weight column - editable
+      WeightInputField(weight: $set.weight)
     }
+    .padding(.vertical, 4)
   }
 }
 
@@ -182,6 +213,60 @@ private struct RestTimePicker: View {
       // Ensure we don't go below 0 seconds
       exercise.restTime = max(0, exercise.restTime - 15)
     }
+  }
+}
+
+private struct WeightInputField: View {
+  @Binding var weight: Double
+  @FocusState var isFocused: Bool
+
+  var body: some View {
+    TextField("Weight", value: $weight, format: .number.precision(.fractionLength(1)))
+      .keyboardType(.decimalPad)
+      .multilineTextAlignment(.center)
+      .textFieldStyle(.roundedBorder)
+      .frame(maxWidth: .infinity)
+      .focused($isFocused)
+      .onChange(of: isFocused) { old, new in
+        if new == true {
+          // Use UIKit to select all text after asynchronously after input is focused
+          DispatchQueue.main.async {
+            UIApplication.shared.sendAction(
+              #selector(UIResponder.selectAll(_:)),
+              to: nil,
+              from: nil,
+              for: nil
+            )
+          }
+        }
+      }
+  }
+}
+
+private struct RepsInputField: View {
+  @Binding var reps: Int
+  @FocusState var isFocused: Bool
+
+  var body: some View {
+    TextField("Reps", value: $reps, format: .number)
+      .keyboardType(.numberPad)
+      .multilineTextAlignment(.center)
+      .textFieldStyle(.roundedBorder)
+      .frame(maxWidth: .infinity)
+      .focused($isFocused)
+      .onChange(of: isFocused) { old, new in
+        if new == true {
+          // Use UIKit to select all text after asynchronously after input is focused
+          DispatchQueue.main.async {
+            UIApplication.shared.sendAction(
+              #selector(UIResponder.selectAll(_:)),
+              to: nil,
+              from: nil,
+              for: nil
+            )
+          }
+        }
+      }
   }
 }
 

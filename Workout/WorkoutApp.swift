@@ -5,9 +5,9 @@
 //  Created by Eliott on 2025-04-03.
 //
 
+import Combine
 import SwiftData
 import SwiftUI
-import Combine
 
 @main
 struct WorkoutApp: App {
@@ -36,7 +36,7 @@ struct WorkoutApp: App {
     }
     .modelContainer(AppContainer.shared.modelContainer)
   }
-  
+
   func setupKeyboardMonitors() {
     keyboardShownMonitor = NotificationCenter.default
       .publisher(for: UIWindow.keyboardWillShowNotification)

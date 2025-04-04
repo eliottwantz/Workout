@@ -46,33 +46,30 @@ struct AddExerciseToSupersetView: View {
       }
       .searchable(text: $searchText, prompt: "Search exercises")
 
-      VStack(spacing: 10) {
-        Button(action: {
-          showingAddNewExerciseDialog = true
-        }) {
-          Label("Add New Exercise Type", systemImage: "plus.circle")
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-        .padding(.horizontal)
-
-        Button(action: {
-          addSelectedExercisesToSuperset()
-          dismiss()
-        }) {
-          Text("Add \(selectedExercises.count) Exercise(s) to Superset")
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(selectedExercises.isEmpty)
-        .padding(.horizontal)
+      Button {
+        addSelectedExercisesToSuperset()
+        dismiss()
+      } label: {
+        Text("Add ^[\(selectedExercises.count) Exercise](inflect: true) to Superset")
+          .frame(maxWidth: .infinity)
       }
-      .padding(.bottom)
+      .buttonStyle(.borderedProminent)
+      .disabled(selectedExercises.isEmpty)
+      .padding([.horizontal, .bottom])
+
     }
     .navigationTitle("Add to Superset")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItemGroup(placement: .primaryAction) {
+        Button {
+          showingAddNewExerciseDialog = true
+        } label: {
+          Label("Add New Exercise", systemImage: "plus")
+            .frame(maxWidth: .infinity)
+        }
+      }
+      ToolbarItem(placement: .cancellationAction) {
         Button("Cancel") {
           dismiss()
         }

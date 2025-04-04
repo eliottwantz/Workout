@@ -12,7 +12,7 @@ struct SupersetDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @Bindable var superset: Superset
 
-  @State private var isEditingMode = false
+  @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
 
   var body: some View {
@@ -46,37 +46,24 @@ struct SupersetDetailView: View {
             .padding()
         }
       }
-
-      Section {
-        Text("A superset involves performing exercises back-to-back without rest between them.")
-          .font(.footnote)
-          .foregroundColor(.secondary)
-      }
     }
     .navigationTitle("Superset Detail")
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: {
+      ToolbarItemGroup(placement: .primaryAction) {
+        EditButton()
+        Button {
           showingAddExerciseView = true
-        }) {
-          Label("Add Exercise", systemImage: "plus")
-        }
-      }
-
-      ToolbarItem(placement: .navigationBarLeading) {
-        Button(action: {
-          isEditingMode.toggle()
-        }) {
-          Text(isEditingMode ? "Done" : "Edit")
+        } label: {
+          Label("Add Exercises", systemImage: "plus")
         }
       }
     }
-    .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
+    .environment(\.editMode, $editMode)
     .sheet(isPresented: $showingAddExerciseView) {
       NavigationStack {
         AddExerciseToSupersetView(superset: superset)
       }
-      .presentationDetents([.medium, .large])
+      .presentationDetents([.fraction(0.75), .large])
     }
   }
 

@@ -66,6 +66,7 @@ struct WorkoutDetailView: View {
       NavigationStack {
         AddExerciseView(workout: workout)
       }
+      .presentationDetents([.fraction(0.75), .large])
     }
     .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
       Button("Copy", role: .none) {

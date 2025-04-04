@@ -163,15 +163,15 @@ private struct RestTimePicker: View {
   @Bindable var exercise: Exercise
 
   var body: some View {
-      Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
-        HStack {
-          Text(formatRestTime(exercise.restTime))
-            .frame(minWidth: 60, alignment: .center)
-            .font(.body.monospacedDigit())
-            .contentTransition(.numericText())
-            .animation(.snappy, value: exercise.restTime)
-        }
+    Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
+      HStack {
+        Text(formatRestTime(exercise.restTime))
+          .frame(minWidth: 60, alignment: .center)
+          .font(.body.monospacedDigit())
+          .contentTransition(.numericText())
+          .animation(.snappy, value: exercise.restTime)
       }
+    }
   }
 
   private func incrementRestTime() {

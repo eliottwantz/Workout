@@ -193,7 +193,7 @@ private struct RestTimePicker: View {
   var body: some View {
     Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
       HStack {
-        Text(formatRestTime(exercise.restTime))
+        Text(exercise.restTime.formattedRestTime)
           .frame(minWidth: 60, alignment: .center)
           .font(.body.monospacedDigit())
           .contentTransition(.numericText())

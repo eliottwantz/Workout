@@ -17,34 +17,38 @@ struct SupersetDetailView: View {
 
   var body: some View {
     List {
-      if let exercises = superset.orderedExercises, !exercises.isEmpty {
-        ForEach(superset.exercises) { exercise in
-          if let definition = exercise.definition {
-            NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
-              HStack {
-                Text(definition.name)
-                  .font(.headline)
-                Spacer()
-                Text("\(exercise.sets.count) sets")
-                  .font(.subheadline)
-                  .foregroundColor(.secondary)
-              }
-              .padding(.vertical, 2)
-            }
-          } else {
-            Text("Unknown Exercise")
-              .foregroundColor(.secondary)
-          }
-        }
-        .onDelete(perform: deleteExercises)
-        .onMove(perform: moveExercises)
-      } else {
-        Text("No exercises in this superset")
-          .foregroundColor(.secondary)
-          .frame(maxWidth: .infinity, alignment: .center)
-          .padding()
+      Section("Rest time") {
+        RestTimePicker(superset: superset)
       }
-
+      Section("Exercises") {
+        if let exercises = superset.orderedExercises, !exercises.isEmpty {
+          ForEach(superset.exercises) { exercise in
+            if let definition = exercise.definition {
+              NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+                HStack {
+                  Text(definition.name)
+                    .font(.headline)
+                  Spacer()
+                  Text("\(exercise.sets.count) sets")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+              }
+            } else {
+              Text("Unknown Exercise")
+                .foregroundColor(.secondary)
+            }
+          }
+          .onDelete(perform: deleteExercises)
+          .onMove(perform: moveExercises)
+        } else {
+          Text("No exercises in this superset")
+            .foregroundColor(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding()
+        }
+      }
     }
     .navigationTitle("Superset Detail")
     .toolbar {
@@ -95,6 +99,36 @@ struct SupersetDetailView: View {
     }
 
     try? modelContext.save()
+  }
+
+}
+
+private struct RestTimePicker: View {
+  @Bindable var superset: Superset
+
+  var body: some View {
+    Stepper(value: $superset.restTime, in: 5...600, step: 5) {
+      HStack {
+        Text(superset.restTime.formattedRestTime)
+          .frame(minWidth: 60, alignment: .center)
+          .font(.body.monospacedDigit())
+          .contentTransition(.numericText())
+          .animation(.snappy, value: superset.restTime)
+      }
+    }
+  }
+
+  private func incrementRestTime() {
+    withAnimation {
+      superset.restTime += 15
+    }
+  }
+
+  private func decrementRestTime() {
+    withAnimation {
+      // Ensure we don't go below 0 seconds
+      superset.restTime = max(0, superset.restTime - 15)
+    }
   }
 }
 

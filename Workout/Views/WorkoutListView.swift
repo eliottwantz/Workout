@@ -28,9 +28,9 @@ struct WorkoutListView: View {
       .overlay {
         if workouts.isEmpty {
           ContentUnavailableView {
-            Label("No workouts", systemImage: "figure.strengthtraining.traditional")
+            Label("No workouts", systemImage: "tray")
           } actions: {
-            Button("Add Workout") {
+            Button("Add Workout", systemImage: "plus") {
               createNewWorkout()
             }
           }
@@ -76,7 +76,7 @@ struct WorkoutRowView: View {
       Text(workout.formattedDate)
         .font(.headline)
 
-      Text("^[\(workout.items.count) exercise](inflect: true)")
+      Text("^[\(workout.orderedItems.count) exercise](inflect: true)")
         .font(.subheadline)
         .foregroundColor(.secondary)
     }

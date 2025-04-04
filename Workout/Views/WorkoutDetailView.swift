@@ -18,23 +18,28 @@ struct WorkoutDetailView: View {
 
   var body: some View {
     List {
-      if let items = workout.orderedItems, !items.isEmpty {
-        ForEach(workout.items) { workoutItem in
-          WorkoutItemRowView(workoutItem: workoutItem)
-            .contextMenu {
-              Button(role: .destructive) {
-                deleteItem(workoutItem)
-              } label: {
-                Label("Delete", systemImage: "trash")
-              }
+      ForEach(workout.orderedItems) { workoutItem in
+        WorkoutItemRowView(workoutItem: workoutItem)
+          .contextMenu {
+            Button(role: .destructive) {
+              deleteItem(workoutItem)
+            } label: {
+              Label("Delete", systemImage: "trash")
             }
+          }
+      }
+      .onMove(perform: moveItems)
+      .onDelete(perform: deleteItems)
+    }
+    .overlay {
+      if workout.orderedItems.isEmpty {
+        ContentUnavailableView {
+          Label("No exercises", systemImage: "figure.strengthtraining.traditional")
+        } actions: {
+          Button("Add Exercises", systemImage: "plus") {
+            showingAddExerciseView = true
+          }
         }
-        .onMove(perform: moveItems)
-      } else {
-        Text("No exercises added yet")
-          .foregroundColor(.secondary)
-          .frame(maxWidth: .infinity, alignment: .center)
-          .padding()
       }
     }
     .navigationTitle(workout.formattedDate)
@@ -52,7 +57,7 @@ struct WorkoutDetailView: View {
         Button {
           showingAddExerciseView = true
         } label: {
-          Label("Add Exercise", systemImage: "plus")
+          Label("Add Exercises", systemImage: "plus")
         }
       }
     }
@@ -73,28 +78,45 @@ struct WorkoutDetailView: View {
   }
 
   private func moveItems(from source: IndexSet, to destination: Int) {
-    var items = workout.items
-    items.move(fromOffsets: source, toOffset: destination)
+    withAnimation {
+      var items = workout.orderedItems
+      items.move(fromOffsets: source, toOffset: destination)
 
-    // Update the order property for all items
-    for (index, item) in items.enumerated() {
-      item.order = index
-    }
-
-    try? modelContext.save()
-  }
-
-  private func deleteItem(_ item: WorkoutItem) {
-    if let items = workout.orderedItems, let index = items.firstIndex(where: { $0.id == item.id }) {
-      workout.orderedItems?.remove(at: index)
-      modelContext.delete(item)
-
-      // Update order of remaining items
-      for (index, item) in workout.items.enumerated() {
+      for (index, item) in items.enumerated() {
         item.order = index
       }
 
       try? modelContext.save()
+    }
+  }
+
+  private func deleteItems(offsets: IndexSet) {
+    withAnimation {
+      var items = workout.orderedItems
+      items.remove(atOffsets: offsets)
+
+      for (index, item) in items.enumerated() {
+        item.order = index
+      }
+
+      workout.items = items
+
+      try? modelContext.save()
+    }
+  }
+
+  private func deleteItem(_ item: WorkoutItem) {
+    withAnimation {
+      if let items = workout.items, let index = items.firstIndex(where: { $0.id == item.id }) {
+        workout.items?.remove(at: index)
+        modelContext.delete(item)
+
+        for (index, item) in items.enumerated() {
+          item.order = index
+        }
+
+        try? modelContext.save()
+      }
     }
   }
 
@@ -103,7 +125,7 @@ struct WorkoutDetailView: View {
     let todayWorkout = Workout(date: Date())
 
     // Copy all workout items from the source workout
-    for item in workout.items {
+    for item in workout.orderedItems {
       if let exercise = item.exercise {
         // Create a new exercise
         let newExercise = Exercise(
@@ -167,34 +189,53 @@ struct WorkoutItemRowView: View {
     if let exercise = workoutItem.exercise, let definition = exercise.definition {
       NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
         HStack {
-          Text(definition.name)
-            .font(.headline)
+          VStack(alignment: .leading, spacing: 8) {
+            Text(definition.name)
+              .font(.headline)
+
+            if let notes = exercise.notes, !notes.isEmpty {
+              Text(notes)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
           Spacer()
-          Text("\(exercise.sets.count) sets")
+
+          Text("^[\(exercise.sets.count) set](inflect: true)")
             .font(.subheadline)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
       }
     } else if let superset = workoutItem.superset {
       NavigationLink(destination: SupersetDetailView(superset: superset)) {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Superset")
-            .font(.headline)
+        HStack {
+          VStack(alignment: .leading, spacing: 8) {
+            Text("Superset")
+              .font(.headline)
+            VStack(alignment: .leading) {
+              ForEach(superset.exercises) { exercise in
+                if let definition = exercise.definition {
+                  Text("• \(definition.name)")
+                    .font(.subheadline)
+                }
+              }
+            }
 
-          ForEach(superset.exercises) { exercise in
-            if let definition = exercise.definition {
-              Text("• \(definition.name)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            if let notes = superset.notes, !notes.isEmpty {
+              Text(notes)
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
           }
+          Spacer()
+
+          Text("^[\(superset.exercises.flatMap {$0.sets}.count) set](inflect: true)")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
       }
-    } else {
-      Text("Unknown workout item")
-        .foregroundColor(.secondary)
     }
   }
 }

@@ -93,7 +93,7 @@ final class AppContainer {
       date: Calendar.current.date(byAdding: .day, value: -7, to: Date())!)
 
     // Create a superset
-    let armsSuperset = Superset()
+    let armsSuperset = Superset(notes: "Very intense")
     let bicepCurlExercise1 = Exercise(definition: bicepCurlDefinition, restTime: 60, orderWithinSuperset: 0)
     bicepCurlExercise1.addSet(SetEntry(reps: 10, weight: 25.0))
     bicepCurlExercise1.addSet(SetEntry(reps: 10, weight: 25.0))

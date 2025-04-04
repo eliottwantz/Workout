@@ -33,18 +33,8 @@ struct AddExerciseView: View {
         Text("Create Superset").tag(AddOption.superset)
       }
       .pickerStyle(.segmented)
-      .padding(.horizontal)
-      .padding(.top)
-
-      Text(
-        selectedOption == .individual
-          ? "Select exercises to add to your workout"
-          : "Select exercises to include in your superset"
-      )
-      .font(.subheadline)
-      .foregroundColor(.secondary)
-      .padding(.horizontal)
-
+      .padding()
+      
       List {
         ForEach(filteredExerciseDefinitions) { definition in
           Button(action: {
@@ -62,34 +52,36 @@ struct AddExerciseView: View {
           .foregroundColor(.primary)
         }
       }
-      .searchable(text: $searchText, prompt: "Search exercises")
+//      .scrollContentBackground(.hidden)
+      .searchable(text: $searchText, prompt: "Exercise name")
+      .safeAreaInset(edge: .bottom) {
+        VStack(spacing: 10) {
+          Button {
+            showingAddNewExerciseDialog = true
+          } label: {
+            Label("Add New Exercise Type", systemImage: "plus.circle")
+              .frame(maxWidth: .infinity)
+          }
+          .buttonStyle(.bordered)
+          .padding(.horizontal)
 
-      VStack(spacing: 10) {
-        Button(action: {
-          showingAddNewExerciseDialog = true
-        }) {
-          Label("Add New Exercise Type", systemImage: "plus.circle")
+          Button {
+            addSelectedExercisesToWorkout()
+            dismiss()
+          } label: {
+            Text(
+              selectedOption == .individual
+                ? "Add ^[\(selectedExercises.count) Exercise](inflect: true)"
+                : "Create Superset with ^[\(selectedExercises.count) Exercise](inflect: true)"
+            )
             .frame(maxWidth: .infinity)
+          }
+          .buttonStyle(.borderedProminent)
+          .disabled(selectedExercises.isEmpty)
+          .padding(.horizontal)
         }
-        .buttonStyle(.bordered)
-        .padding(.horizontal)
-
-        Button(action: {
-          addSelectedExercisesToWorkout()
-          dismiss()
-        }) {
-          Text(
-            selectedOption == .individual
-              ? "Add \(selectedExercises.count) Exercise(s)"
-              : "Create Superset with \(selectedExercises.count) Exercise(s)"
-          )
-          .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(selectedExercises.isEmpty)
-        .padding(.horizontal)
+        .padding(.bottom)
       }
-      .padding(.bottom)
     }
     .navigationTitle("Add Exercise")
     .navigationBarTitleDisplayMode(.inline)

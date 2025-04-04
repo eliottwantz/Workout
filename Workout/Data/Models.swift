@@ -17,28 +17,19 @@ final class Workout {
   // Using a dedicated WorkoutItem class to handle the mixed list of Exercises and Supersets
   // The order property on WorkoutItem will manage the display sequence.
   @Relationship(deleteRule: .cascade, inverse: \WorkoutItem.workout)
-  var orderedItems: [WorkoutItem]? = []  // Use optional array initialization for SwiftData best practice
-
-  // Computed property to get items sorted reliably by their order property
-  @Transient var items: [WorkoutItem] {
-    (orderedItems ?? []).sorted { $0.order < $1.order }
-  }
+  var items: [WorkoutItem]? = []  // Use optional array initialization for SwiftData best practice
 
   init(date: Date = Date()) {
     self.date = date
-    self.orderedItems = []
+    self.items = []
   }
 
-  // Convenience method to add a new item (Exercise or Superset) and maintain order
-  func addItem(_ item: WorkoutItem) {
-    item.order = (orderedItems?.count ?? 0)  // Append to the end
-    orderedItems?.append(item)
-    item.workout = self  // Set the inverse relationship
+  // Computed property to get items sorted reliably by their order property
+  @Transient var orderedItems: [WorkoutItem] {
+    (items ?? []).sorted { $0.order < $1.order }
   }
-}
 
-extension Workout {
-  var formattedDate: String {
+  @Transient var formattedDate: String {
     let formatter = DateFormatter()
     formatter.dateStyle = .medium
 
@@ -50,6 +41,13 @@ extension Workout {
     } else {
       return formatter.string(from: date)
     }
+  }
+
+  // Convenience method to add a new item (Exercise or Superset) and maintain order
+  func addItem(_ item: WorkoutItem) {
+    item.order = (items?.count ?? 0)  // Append to the end
+    items?.append(item)
+    item.workout = self  // Set the inverse relationship
   }
 }
 
@@ -97,6 +95,7 @@ final class WorkoutItem {
 final class Exercise {
   var restTime: Int  // Rest time in seconds for *this specific instance*
   var orderWithinSuperset: Int = 0  // Order if part of a Superset (ignored otherwise)
+  var notes: String?
 
   // Link back to the generic definition of the exercise
   // Delete rule .nullify means if ExerciseDefinition is deleted, this link becomes nil
@@ -120,12 +119,13 @@ final class Exercise {
   }
 
   // Requires the ExerciseDefinition to link to
-  init(definition: ExerciseDefinition, restTime: Int = 120, orderWithinSuperset: Int = 0) {
+  init(definition: ExerciseDefinition, restTime: Int = 120, orderWithinSuperset: Int = 0, notes: String? = nil) {
     self.definition = definition
     // Use definition's default rest time if no specific override provided
     self.restTime = restTime
     self.orderWithinSuperset = orderWithinSuperset
     self.orderedSets = []
+    self.notes = notes
   }
 
   // Convenience method to add a set and maintain order
@@ -140,6 +140,7 @@ final class Exercise {
 
 @Model
 final class Superset {
+  var notes: String?
   // The exercises included in this specific superset instance, in order
   @Relationship(deleteRule: .cascade, inverse: \Exercise.containingSuperset)
   var orderedExercises: [Exercise]? = []  // Use optional array initialization
@@ -152,8 +153,9 @@ final class Superset {
     (orderedExercises ?? []).sorted { $0.orderWithinSuperset < $1.orderWithinSuperset }
   }
 
-  init() {
+  init(notes: String? = nil) {
     self.orderedExercises = []
+    self.notes = notes
   }
 
   // Convenience method to add an exercise and maintain order

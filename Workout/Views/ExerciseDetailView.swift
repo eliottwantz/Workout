@@ -25,35 +25,17 @@ struct ExerciseDetailView: View {
 
   var body: some View {
     List {
-      Section {
-        if let definition = exercise.definition {
-          Text(definition.name)
-            .font(.title)
-            .fontWeight(.bold)
-        } else {
-          Text("Unknown Exercise")
-            .font(.title)
-            .fontWeight(.bold)
-            .foregroundColor(.secondary)
+      if let notes = exercise.notes, !notes.isEmpty {
+        Section("Notes") {
+          Text(notes)
+            .font(.body)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
         }
+      }
 
-        Button(action: {
-          showingRestTimePicker = true
-        }) {
-          HStack {
-            Text("Rest Time")
-            Spacer()
-            Text(formatRestTime(restTime))
-              .foregroundColor(.secondary)
-          }
-        }
-        .sheet(isPresented: $showingRestTimePicker) {
-          RestTimePickerView(restTime: $restTime) {
-            exercise.restTime = restTime
-            try? modelContext.save()
-          }
-          .presentationDetents([.medium])
-        }
+      Section("Rest time") {
+        RestTimePicker(exercise: exercise)
       }
 
       Section("Sets") {
@@ -64,22 +46,15 @@ struct ExerciseDetailView: View {
           .onDelete(perform: deleteSets)
           .onMove(perform: moveSets)
         } else {
-          Text("No sets added yet")
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
+          ContentUnavailableView {
+            Label("No sets", systemImage: "dumbbell.fill")
+          }
         }
       }
 
-      Section {
-        HStack {
-          Text("New Set")
-            .font(.headline)
+      Section("New set") {
 
-          Spacer()
-
-          Stepper("\(newReps) reps", value: $newReps, in: 1...100)
-        }
+        Stepper("^[\(newReps) rep](inflect: true)", value: $newReps, in: 1...100)
 
         HStack {
           Text("Weight")
@@ -93,14 +68,16 @@ struct ExerciseDetailView: View {
           Text("lbs")
         }
 
-        Button(action: addNewSet) {
+        Button {
+          addNewSet()
+        } label: {
           Label("Add Set", systemImage: "plus")
             .frame(maxWidth: .infinity, alignment: .center)
         }
-        .buttonStyle(.bordered)
       }
+
     }
-    .navigationTitle("Exercise Detail")
+    .navigationTitle(exercise.definition?.name ?? "Exercise Detail")
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         Button(action: {
@@ -182,73 +159,43 @@ struct SetRowView: View {
   }
 }
 
-struct RestTimePickerView: View {
-  @Binding var restTime: Int
-  @Environment(\.dismiss) private var dismiss
-  var onSave: () -> Void
-
-  private let restTimeOptions = [30, 45, 60, 90, 120, 180, 240, 300]
+private struct RestTimePicker: View {
+  @Bindable var exercise: Exercise
 
   var body: some View {
-    NavigationStack {
-      List {
-        ForEach(restTimeOptions, id: \.self) { seconds in
-          Button(action: {
-            restTime = seconds
-            onSave()
-            dismiss()
-          }) {
-            HStack {
-              Text(formatRestTime(seconds))
-              Spacer()
-              if restTime == seconds {
-                Image(systemName: "checkmark")
-                  .foregroundColor(.blue)
-              }
-            }
-          }
-          .foregroundColor(.primary)
-        }
-
-        Section("Custom") {
-          Stepper(value: $restTime, in: 5...600, step: 5) {
-            HStack {
-              Text("Rest Time")
-              Spacer()
-              Text(formatRestTime(restTime))
-                .foregroundColor(.secondary)
-            }
-          }
-
-          Button("Save") {
-            onSave()
-            dismiss()
-          }
-          .buttonStyle(.bordered)
-          .frame(maxWidth: .infinity, alignment: .center)
+      Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
+        HStack {
+          Text(formatRestTime(exercise.restTime))
+            .frame(minWidth: 60, alignment: .center)
+            .font(.body.monospacedDigit())
+            .contentTransition(.numericText())
+            .animation(.snappy, value: exercise.restTime)
         }
       }
-      .navigationTitle("Rest Time")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button("Done") {
-            dismiss()
-          }
-        }
-      }
+  }
+
+  private func incrementRestTime() {
+    withAnimation {
+      exercise.restTime += 15
     }
   }
 
-  private func formatRestTime(_ seconds: Int) -> String {
-    let minutes = seconds / 60
-    let remainingSeconds = seconds % 60
-
-    if minutes > 0 {
-      return "\(minutes)m \(remainingSeconds)s"
-    } else {
-      return "\(seconds)s"
+  private func decrementRestTime() {
+    withAnimation {
+      // Ensure we don't go below 0 seconds
+      exercise.restTime = max(0, exercise.restTime - 15)
     }
+  }
+}
+
+private func formatRestTime(_ seconds: Int) -> String {
+  let minutes = seconds / 60
+  let remainingSeconds = seconds % 60
+
+  if minutes > 0 {
+    return "\(minutes)m \(remainingSeconds)s"
+  } else {
+    return "\(seconds)s"
   }
 }
 

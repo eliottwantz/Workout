@@ -21,13 +21,6 @@ struct WorkoutDetailView: View {
       Section("Exercises") {
         ForEach(workout.orderedItems) { workoutItem in
           WorkoutItemRowView(workoutItem: workoutItem)
-            .contextMenu {
-              Button(role: .destructive) {
-                deleteItem(workoutItem)
-              } label: {
-                Label("Delete", systemImage: "trash")
-              }
-            }
         }
         .onMove(perform: moveItems)
         .onDelete(perform: deleteItems)
@@ -105,21 +98,6 @@ struct WorkoutDetailView: View {
       workout.items = items
 
       try? modelContext.save()
-    }
-  }
-
-  private func deleteItem(_ item: WorkoutItem) {
-    withAnimation {
-      if let items = workout.items, let index = items.firstIndex(where: { $0.id == item.id }) {
-        workout.items?.remove(at: index)
-        modelContext.delete(item)
-
-        for (index, item) in items.enumerated() {
-          item.order = index
-        }
-
-        try? modelContext.save()
-      }
     }
   }
 
@@ -219,7 +197,7 @@ struct WorkoutItemRowView: View {
             VStack(alignment: .leading) {
               ForEach(superset.exercises) { exercise in
                 if let definition = exercise.definition {
-                  Text("• \(definition.name)")
+                  Text("  \(definition.name)")
                     .font(.subheadline)
                 }
               }

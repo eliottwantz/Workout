@@ -14,11 +14,7 @@ struct AddExerciseView: View {
 
   @Bindable var workout: Workout
 
-  @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
-  @State private var searchText = ""
   @State private var selectedExercises: Set<PersistentIdentifier> = []
-  @State private var showingAddNewExerciseDialog = false
-  @State private var newExerciseName = ""
   @State private var selectedOption = AddOption.individual
 
   enum AddOption {
@@ -29,84 +25,40 @@ struct AddExerciseView: View {
   var body: some View {
     VStack {
       Picker("Add Option", selection: $selectedOption) {
-        Text("Add Individual Exercises").tag(AddOption.individual)
-        Text("Create Superset").tag(AddOption.superset)
+        Text("Individual Exercises").tag(AddOption.individual)
+        Text("Superset").tag(AddOption.superset)
       }
       .pickerStyle(.segmented)
       .padding(.horizontal)
 
-      List(selection: $selectedExercises) {
-        ForEach(filteredExerciseDefinitions) { definition in
-          Text(definition.name)
+      ExerciseSelectionView(
+        selectedExercises: $selectedExercises,
+        headerText: selectedOption == .individual
+          ? "Select exercises to add to your workout"
+          : "Select exercises to include in your superset"
+      ) {
+        Button {
+          addSelectedExercisesToWorkout()
+          dismiss()
+        } label: {
+          Text(
+            selectedOption == .individual
+              ? "Add ^[\(selectedExercises.count) Exercise](inflect: true)"
+              : "Add Superset with ^[\(selectedExercises.count) Exercise](inflect: true)"
+          )
+          .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.borderedProminent)
       }
-      .searchable(text: $searchText, prompt: "Search Exercises")
-      .listStyle(.grouped)
-      .environment(\.editMode, .constant(.active))
-
-      Button {
-        addSelectedExercisesToWorkout()
-        dismiss()
-      } label: {
-        Text(
-          selectedOption == .individual
-            ? "Add ^[\(selectedExercises.count) Exercise](inflect: true)"
-            : "Add Superset with ^[\(selectedExercises.count) Exercise](inflect: true)"
-        )
-        .frame(maxWidth: .infinity)
-      }
-      .buttonStyle(.borderedProminent)
-      .disabled(selectedExercises.isEmpty)
-      .padding([.leading, .bottom, .trailing])
-
     }
     .navigationTitle("Add Exercise")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarItemGroup(placement: .primaryAction) {
-        Button {
-          showingAddNewExerciseDialog = true
-        } label: {
-          Label("Add New Exercise", systemImage: "plus")
-            .frame(maxWidth: .infinity)
-        }
-      }
       ToolbarItem(placement: .cancellationAction) {
         Button("Cancel") {
           dismiss()
         }
       }
-    }
-    .alert("Add New Exercise", isPresented: $showingAddNewExerciseDialog) {
-      TextField("Exercise Name", text: $newExerciseName)
-
-      Button("Cancel", role: .cancel) {}
-      Button("Add") {
-        addNewExerciseDefinition()
-      }
-    } message: {
-      Text("Enter the name of the exercise you want to add.")
-    }
-  }
-
-  private var filteredExerciseDefinitions: [ExerciseDefinition] {
-    if searchText.isEmpty {
-      return exerciseDefinitions.sorted { $0.name < $1.name }
-    } else {
-      return exerciseDefinitions.filter {
-        $0.name.localizedCaseInsensitiveContains(searchText)
-      }.sorted { $0.name < $1.name }
-    }
-  }
-
-  private func addNewExerciseDefinition() {
-    guard !newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-      return
-    }
-
-    if ExerciseUtilities.createNewExerciseDefinition(with: newExerciseName, in: modelContext) != nil {
-      // Reset the input field after successful creation
-      newExerciseName = ""
     }
   }
 
@@ -116,7 +68,11 @@ struct AddExerciseView: View {
     if selectedOption == .individual {
       // Add individual exercises to the workout
       for definitionID in selectedExercises {
-        if let definition = exerciseDefinitions.first(where: { $0.id == definitionID }) {
+        if let definition = try? modelContext.fetch(
+          FetchDescriptor<ExerciseDefinition>(
+            predicate: #Predicate { $0.id == definitionID }
+          )
+        ).first {
           let exercise = Exercise(definition: definition)
           let workoutItem = WorkoutItem(exercise: exercise)
           workout.addItem(workoutItem)
@@ -127,7 +83,11 @@ struct AddExerciseView: View {
       let superset = Superset()
 
       for (index, definitionID) in selectedExercises.enumerated() {
-        if let definition = exerciseDefinitions.first(where: { $0.id == definitionID }) {
+        if let definition = try? modelContext.fetch(
+          FetchDescriptor<ExerciseDefinition>(
+            predicate: #Predicate { $0.id == definitionID }
+          )
+        ).first {
           let exercise = Exercise(
             definition: definition,
             orderWithinSuperset: index

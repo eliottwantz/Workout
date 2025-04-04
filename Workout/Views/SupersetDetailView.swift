@@ -17,7 +17,6 @@ struct SupersetDetailView: View {
 
   var body: some View {
     List {
-      Section("Exercises in Superset") {
         if let exercises = superset.orderedExercises, !exercises.isEmpty {
           ForEach(superset.exercises) { exercise in
             if let definition = exercise.definition {
@@ -45,7 +44,7 @@ struct SupersetDetailView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding()
         }
-      }
+      
     }
     .navigationTitle("Superset Detail")
     .toolbar {

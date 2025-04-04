@@ -14,23 +14,13 @@ struct AddExerciseToSupersetView: View {
 
   @Bindable var superset: Superset
 
-  @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
-  @State private var searchText = ""
   @State private var selectedExercises: Set<PersistentIdentifier> = []
-  @State private var showingAddNewExerciseDialog = false
-  @State private var newExerciseName = ""
 
   var body: some View {
-    VStack {
-      List(selection: $selectedExercises) {
-        ForEach(filteredExerciseDefinitions) { definition in
-          Text(definition.name)
-        }
-      }
-      .searchable(text: $searchText, prompt: "Search exercises")
-      .listStyle(.grouped)
-      .environment(\.editMode, .constant(.active))
-
+    ExerciseSelectionView(
+      selectedExercises: $selectedExercises,
+      headerText: "Select exercises to add to your superset"
+    ) {
       Button {
         addSelectedExercisesToSuperset()
         dismiss()
@@ -39,65 +29,15 @@ struct AddExerciseToSupersetView: View {
           .frame(maxWidth: .infinity)
       }
       .buttonStyle(.borderedProminent)
-      .disabled(selectedExercises.isEmpty)
-      .padding([.horizontal, .bottom])
-
     }
     .navigationTitle("Add to Superset")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarItemGroup(placement: .primaryAction) {
-        Button {
-          showingAddNewExerciseDialog = true
-        } label: {
-          Label("Add New Exercise", systemImage: "plus")
-            .frame(maxWidth: .infinity)
-        }
-      }
       ToolbarItem(placement: .cancellationAction) {
         Button("Cancel") {
           dismiss()
         }
       }
-    }
-    .alert("Add New Exercise", isPresented: $showingAddNewExerciseDialog) {
-      TextField("Exercise Name", text: $newExerciseName)
-
-      Button("Cancel", role: .cancel) {}
-      Button("Add") {
-        addNewExerciseDefinition()
-      }
-    } message: {
-      Text("Enter the name of the exercise you want to add.")
-    }
-  }
-
-  private var filteredExerciseDefinitions: [ExerciseDefinition] {
-    if searchText.isEmpty {
-      return exerciseDefinitions.sorted { $0.name < $1.name }
-    } else {
-      return exerciseDefinitions.filter {
-        $0.name.localizedCaseInsensitiveContains(searchText)
-      }.sorted { $0.name < $1.name }
-    }
-  }
-
-  private func toggleSelection(_ definition: ExerciseDefinition) {
-    if selectedExercises.contains(definition.id) {
-      selectedExercises.remove(definition.id)
-    } else {
-      selectedExercises.insert(definition.id)
-    }
-  }
-
-  private func addNewExerciseDefinition() {
-    guard !newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-      return
-    }
-
-    if ExerciseUtilities.createNewExerciseDefinition(with: newExerciseName, in: modelContext) != nil {
-      // Reset the input field after successful creation
-      newExerciseName = ""
     }
   }
 
@@ -109,7 +49,11 @@ struct AddExerciseToSupersetView: View {
 
     // Add the selected exercises to the superset
     for (index, definitionID) in selectedExercises.enumerated() {
-      if let definition = exerciseDefinitions.first(where: { $0.id == definitionID }) {
+      if let definition = try? modelContext.fetch(
+        FetchDescriptor<ExerciseDefinition>(
+          predicate: #Predicate { $0.id == definitionID }
+        )
+      ).first {
         let exercise = Exercise(
           definition: definition,
           orderWithinSuperset: nextOrder + index

@@ -28,7 +28,7 @@ struct AddExerciseToSupersetView: View {
         Text("Add ^[\(selectedExercises.count) Exercise](inflect: true) to Superset")
           .frame(maxWidth: .infinity)
       }
-      .buttonStyle(.borderedProminent)
+      .disabled(selectedExercises.isEmpty)
     }
     .navigationTitle("Add to Superset")
     .navigationBarTitleDisplayMode(.inline)

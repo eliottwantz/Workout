@@ -12,6 +12,7 @@ import SwiftUI
 /// Used by both AddExerciseView and AddExerciseToSupersetView to maintain DRY principles.
 struct ExerciseSelectionView<ActionButton: View>: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.userAccentColor) private var userAccentColor
 
   @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
   @Binding var selectedExercises: Set<PersistentIdentifier>
@@ -50,7 +51,8 @@ struct ExerciseSelectionView<ActionButton: View>: View {
 
       actionButton
         .padding([.horizontal, .bottom])
-        .disabled(selectedExercises.isEmpty)
+        .buttonStyle(.borderedProminent)
+        .foregroundStyle(userAccentColor.contrastColor)
     }
     .toolbar {
       ToolbarItem(placement: .primaryAction) {

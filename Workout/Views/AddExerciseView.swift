@@ -48,7 +48,7 @@ struct AddExerciseView: View {
           )
           .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .disabled(selectedOption == .individual ? selectedExercises.isEmpty : selectedExercises.count < 2)
       }
     }
     .navigationTitle("Add Exercise")

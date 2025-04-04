@@ -7,9 +7,14 @@
 
 import SwiftData
 import SwiftUI
+import Combine
 
 @main
 struct WorkoutApp: App {
+  @State private var keyboardIsShown = false
+  @State private var keyboardHideMonitor: AnyCancellable? = nil
+  @State private var keyboardShownMonitor: AnyCancellable? = nil
+  @AppStorage("userAccentColor") private var userAccentColor: Color = .yellow
 
   init() {
     // Print the Application Support directory path on startup
@@ -24,7 +29,26 @@ struct WorkoutApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .environment(\.userAccentColor, userAccentColor)
+        .tint(userAccentColor)
+        .onAppear { setupKeyboardMonitors() }
+        .onDisappear { dismantleKeyboarMonitors() }
     }
     .modelContainer(AppContainer.shared.modelContainer)
+  }
+  
+  func setupKeyboardMonitors() {
+    keyboardShownMonitor = NotificationCenter.default
+      .publisher(for: UIWindow.keyboardWillShowNotification)
+      .sink { _ in if !keyboardIsShown { keyboardIsShown = true } }
+
+    keyboardHideMonitor = NotificationCenter.default
+      .publisher(for: UIWindow.keyboardWillHideNotification)
+      .sink { _ in if keyboardIsShown { keyboardIsShown = false } }
+  }
+
+  func dismantleKeyboarMonitors() {
+    keyboardHideMonitor?.cancel()
+    keyboardShownMonitor?.cancel()
   }
 }

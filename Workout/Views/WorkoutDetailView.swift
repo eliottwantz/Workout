@@ -18,18 +18,20 @@ struct WorkoutDetailView: View {
 
   var body: some View {
     List {
-      ForEach(workout.orderedItems) { workoutItem in
-        WorkoutItemRowView(workoutItem: workoutItem)
-          .contextMenu {
-            Button(role: .destructive) {
-              deleteItem(workoutItem)
-            } label: {
-              Label("Delete", systemImage: "trash")
+      Section("Exercises") {
+        ForEach(workout.orderedItems) { workoutItem in
+          WorkoutItemRowView(workoutItem: workoutItem)
+            .contextMenu {
+              Button(role: .destructive) {
+                deleteItem(workoutItem)
+              } label: {
+                Label("Delete", systemImage: "trash")
+              }
             }
-          }
+        }
+        .onMove(perform: moveItems)
+        .onDelete(perform: deleteItems)
       }
-      .onMove(perform: moveItems)
-      .onDelete(perform: deleteItems)
     }
     .overlay {
       if workout.orderedItems.isEmpty {

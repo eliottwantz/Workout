@@ -14,7 +14,7 @@ struct AddExerciseView: View {
 
   @Bindable var workout: Workout
 
-  @Query var exerciseDefinitions: [ExerciseDefinition]
+  @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
   @State private var searchText = ""
   @State private var selectedExercises: Set<PersistentIdentifier> = []
   @State private var showingAddNewExerciseDialog = false
@@ -35,25 +35,14 @@ struct AddExerciseView: View {
       .pickerStyle(.segmented)
       .padding(.horizontal)
 
-      List {
+      List(selection: $selectedExercises) {
         ForEach(filteredExerciseDefinitions) { definition in
-          Button(action: {
-            toggleSelection(definition)
-          }) {
-            HStack {
-              Text(definition.name)
-              Spacer()
-              if selectedExercises.contains(definition.id) {
-                Image(systemName: "checkmark")
-                  .foregroundColor(.blue)
-              }
-            }
-          }
-          .foregroundColor(.primary)
+          Text(definition.name)
         }
       }
-      .searchable(text: $searchText, prompt: "Exercise name")
+      .searchable(text: $searchText, prompt: "Search Exercises")
       .listStyle(.grouped)
+      .environment(\.editMode, .constant(.active))
 
       Button {
         addSelectedExercisesToWorkout()
@@ -107,14 +96,6 @@ struct AddExerciseView: View {
       return exerciseDefinitions.filter {
         $0.name.localizedCaseInsensitiveContains(searchText)
       }.sorted { $0.name < $1.name }
-    }
-  }
-
-  private func toggleSelection(_ definition: ExerciseDefinition) {
-    if selectedExercises.contains(definition.id) {
-      selectedExercises.remove(definition.id)
-    } else {
-      selectedExercises.insert(definition.id)
     }
   }
 

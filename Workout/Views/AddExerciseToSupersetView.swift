@@ -14,7 +14,7 @@ struct AddExerciseToSupersetView: View {
 
   @Bindable var superset: Superset
 
-  @Query var exerciseDefinitions: [ExerciseDefinition]
+  @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
   @State private var searchText = ""
   @State private var selectedExercises: Set<PersistentIdentifier> = []
   @State private var showingAddNewExerciseDialog = false
@@ -22,29 +22,14 @@ struct AddExerciseToSupersetView: View {
 
   var body: some View {
     VStack {
-      Text("Select exercises to add to your superset")
-        .font(.subheadline)
-        .foregroundColor(.secondary)
-        .padding(.horizontal)
-
-      List {
+      List(selection: $selectedExercises) {
         ForEach(filteredExerciseDefinitions) { definition in
-          Button(action: {
-            toggleSelection(definition)
-          }) {
-            HStack {
-              Text(definition.name)
-              Spacer()
-              if selectedExercises.contains(definition.id) {
-                Image(systemName: "checkmark")
-                  .foregroundColor(.blue)
-              }
-            }
-          }
-          .foregroundColor(.primary)
+          Text(definition.name)
         }
       }
       .searchable(text: $searchText, prompt: "Search exercises")
+      .listStyle(.grouped)
+      .environment(\.editMode, .constant(.active))
 
       Button {
         addSelectedExercisesToSuperset()

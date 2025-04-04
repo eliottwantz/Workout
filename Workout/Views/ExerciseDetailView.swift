@@ -17,6 +17,7 @@ struct ExerciseDetailView: View {
   @State private var newWeight = 0.0
   @State private var restTime: Int
   @State private var showingRestTimePicker = false
+  @State private var editMode = EditMode.inactive
 
   init(exercise: Exercise) {
     self.exercise = exercise
@@ -79,15 +80,11 @@ struct ExerciseDetailView: View {
     }
     .navigationTitle(exercise.definition?.name ?? "Exercise Detail")
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: {
-          isEditingMode.toggle()
-        }) {
-          Text(isEditingMode ? "Done" : "Edit")
-        }
+      ToolbarItem(placement: .primaryAction) {
+        EditButton()
       }
     }
-    .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
+    .environment(\.editMode, $editMode)
   }
 
   private func formatRestTime(_ seconds: Int) -> String {

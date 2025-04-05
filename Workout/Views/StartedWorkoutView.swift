@@ -108,11 +108,11 @@ struct StartedWorkoutView: View {
 
       // Cancel any previous timers
       timerCancellable?.cancel()
-      
+
       // Invalidate all active timers
       activeTimers.forEach { $0.invalidate() }
       activeTimers.removeAll()
-      
+
       // Create a new timer
       let scheduledTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
         if remainingRestTime > 0 {
@@ -122,18 +122,14 @@ struct StartedWorkoutView: View {
           activeTimers.removeAll { $0 === timer }
           isResting = false
 
-          // Vibrate the phone when timer ends
-          let generator = UINotificationFeedbackGenerator()
-          generator.notificationOccurred(.success)
-          
           // Move to the next exercise/set when timer ends
           moveToNextExerciseOrSet()
         }
       }
-      
+
       // Add the timer to active timers
       activeTimers.append(scheduledTimer)
-      
+
       // This is no longer needed since we're tracking the timers directly
       timer = nil
       timerCancellable = nil
@@ -178,11 +174,11 @@ struct StartedWorkoutView: View {
     if isResting {
       // Cancel current rest timer
       timerCancellable?.cancel()
-      
+
       // Invalidate all active timers
       activeTimers.forEach { $0.invalidate() }
       activeTimers.removeAll()
-      
+
       isResting = false
       moveToNextExerciseOrSet()
     } else {
@@ -369,6 +365,12 @@ struct StartedWorkoutView: View {
         .padding(.horizontal)
       }
     }
+    .sensoryFeedback(.decrease, trigger: remainingRestTime, condition: { oldValue, newValue in
+      newValue <= 3
+    })
+    .sensoryFeedback(.error, trigger: remainingRestTime, condition: { oldValue, newValue in
+      oldValue == 1 && newValue == 0
+    })
     .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
       // Check if timer should be reset when app comes back to foreground
       if isResting {

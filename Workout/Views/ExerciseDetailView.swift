@@ -205,6 +205,9 @@ private struct RestTimePicker: View {
             .animation(.snappy, value: exercise.restTime)
         }
       }
+      .sensoryFeedback(trigger: exercise.restTime) { oldValue, newValue in
+        return newValue < oldValue ? .decrease : .increase
+      }
     }
     .sheet(isPresented: $showingRestTimePicker) {
       RestTimePickerView(restTime: $exercise.restTime)

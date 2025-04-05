@@ -123,6 +123,9 @@ private struct RestTimePicker: View {
             .animation(.snappy, value: superset.restTime)
         }
       }
+      .sensoryFeedback(trigger: superset.restTime) { oldValue, newValue in
+        return newValue < oldValue ? .decrease : .increase
+      }
     }
     .sheet(isPresented: $showingRestTimePicker) {
       RestTimePickerView(restTime: $superset.restTime)

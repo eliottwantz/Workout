@@ -8,6 +8,7 @@
 import Combine
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
@@ -117,6 +118,10 @@ struct StartedWorkoutView: View {
       let scheduledTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
         if remainingRestTime > 0 {
           remainingRestTime -= 1
+
+          if remainingRestTime == 1 {
+            scheduleRestFinishedNotification()
+          }
         } else {
           timer.invalidate()
           activeTimers.removeAll { $0 === timer }
@@ -136,6 +141,52 @@ struct StartedWorkoutView: View {
     } else {
       // Move to the next exercise/set directly if no rest time
       moveToNextExerciseOrSet()
+    }
+  }
+
+  // Request notification permissions
+  private func requestNotificationPermissions() {
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+      if granted {
+        print("Notification permission granted")
+      } else if let error = error {
+        print("Error requesting notification permissions: \(error.localizedDescription)")
+      }
+    }
+  }
+
+  // Function to schedule a notification for when rest time is finished
+  private func scheduleRestFinishedNotification() {
+    // Create notification content
+    let content = UNMutableNotificationContent()
+
+    if let nextExercise = nextExercise, let nextDefinition = nextExercise.definition {
+      // Next exercise exists, notify about the next exercise
+      content.title = "Rest Time Finished!"
+      content.body = "Time to start your next set of \(nextDefinition.name)"
+    } else {
+      // No next exercise, workout is complete
+      content.title = "Workout Complete!"
+      content.body = "Great job! You've finished your workout."
+    }
+
+    content.sound = .default
+
+    // Create trigger (fire immediately)
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+    // Create request
+    let request = UNNotificationRequest(
+      identifier: UUID().uuidString,
+      content: content,
+      trigger: trigger
+    )
+
+    // Add request to notification center
+    UNUserNotificationCenter.current().add(request) { error in
+      if let error = error {
+        print("Error scheduling notification: \(error.localizedDescription)")
+      }
     }
   }
 
@@ -381,6 +432,9 @@ struct StartedWorkoutView: View {
       if isResting {
         // Re-sync the timer if needed
       }
+    }
+    .onAppear {
+      requestNotificationPermissions()
     }
   }
 }

@@ -106,6 +106,7 @@ struct StartedWorkoutView: View {
     if restTime > 0 {
       isResting = true
       remainingRestTime = restTime
+      scheduleRestFinishedNotification(timeInterval: TimeInterval(restTime))
 
       // Cancel any previous timers
       timerCancellable?.cancel()
@@ -118,10 +119,6 @@ struct StartedWorkoutView: View {
       let scheduledTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
         if remainingRestTime > 0 {
           remainingRestTime -= 1
-
-          if remainingRestTime == 1 {
-            scheduleRestFinishedNotification()
-          }
         } else {
           timer.invalidate()
           activeTimers.removeAll { $0 === timer }
@@ -156,7 +153,7 @@ struct StartedWorkoutView: View {
   }
 
   // Function to schedule a notification for when rest time is finished
-  private func scheduleRestFinishedNotification() {
+  private func scheduleRestFinishedNotification(timeInterval: TimeInterval) {
     // Create notification content
     let content = UNMutableNotificationContent()
 
@@ -173,7 +170,7 @@ struct StartedWorkoutView: View {
     content.sound = .default
 
     // Create trigger (fire immediately)
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
 
     // Create request
     let request = UNNotificationRequest(
@@ -183,6 +180,7 @@ struct StartedWorkoutView: View {
     )
 
     // Add request to notification center
+    print("Schedule notification for rest timer: \(timeInterval) seconds")
     UNUserNotificationCenter.current().add(request) { error in
       if let error = error {
         print("Error scheduling notification: \(error.localizedDescription)")

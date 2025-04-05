@@ -222,7 +222,8 @@ struct StartedWorkoutView: View {
           .foregroundColor(.clear)
           .padding()
       }
-      .frame(width: .infinity, height: 90, alignment: .top)
+      .frame(height: 90, alignment: .top)
+      .frame(maxWidth: .infinity)
 
       if let exercise = currentExercise, let exerciseDefinition = exercise.definition, let set = currentSet {
         // Current exercise and set

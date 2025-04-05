@@ -30,9 +30,10 @@ struct WorkoutApp: App {
     WindowGroup {
       ContentView()
         .environment(\.userAccentColor, userAccentColor)
-        .tint(userAccentColor)
+        .environment(\.keyboardIsShown, keyboardIsShown)
         .onAppear { setupKeyboardMonitors() }
         .onDisappear { dismantleKeyboarMonitors() }
+        .tint(userAccentColor)
     }
     .modelContainer(AppContainer.shared.modelContainer)
   }

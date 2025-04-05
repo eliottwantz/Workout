@@ -95,6 +95,7 @@ struct ExerciseDetailView: View {
       }
     }
     .environment(\.editMode, $editMode)
+    .scrollDismissesKeyboard(.immediately)
   }
 
   private func formatRestTime(_ seconds: Int) -> String {
@@ -225,6 +226,7 @@ private struct WeightInputField: View {
       .keyboardType(.decimalPad)
       .multilineTextAlignment(.center)
       .textFieldStyle(.roundedBorder)
+      .font(.body.monospacedDigit())
       .frame(maxWidth: .infinity)
       .focused($isFocused)
       .onChange(of: isFocused) { old, new in
@@ -252,6 +254,7 @@ private struct RepsInputField: View {
       .keyboardType(.numberPad)
       .multilineTextAlignment(.center)
       .textFieldStyle(.roundedBorder)
+      .font(.body.monospacedDigit())
       .frame(maxWidth: .infinity)
       .focused($isFocused)
       .onChange(of: isFocused) { old, new in

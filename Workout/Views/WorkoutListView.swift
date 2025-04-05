@@ -26,7 +26,7 @@ struct WorkoutListView: View {
           }
           .padding(.vertical, 6)
         }
-        
+
         ForEach(workouts) { workout in
           NavigationLink(value: workout) {
             WorkoutRowView(workout: workout)
@@ -86,9 +86,16 @@ struct WorkoutRowView: View {
       Text(workout.formattedDate)
         .font(.headline)
 
-      Text("^[\(workout.orderedItems.count) exercise](inflect: true)")
-        .font(.subheadline)
-        .foregroundColor(.secondary)
+      if let name = workout.name {
+        Text("^[\(workout.orderedItems.count) exercise](inflect: true) - \(name)")
+          .font(.subheadline)
+          .foregroundColor(.secondary)
+      } else {
+
+        Text("^[\(workout.orderedItems.count) exercise](inflect: true)")
+          .font(.subheadline)
+          .foregroundColor(.secondary)
+      }
     }
     .padding(.vertical, 4)
   }

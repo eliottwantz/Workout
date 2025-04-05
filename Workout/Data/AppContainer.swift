@@ -63,7 +63,7 @@ final class AppContainer {
     modelContext.insert(lungesDefinition)
 
     // Create a sample past workout
-    let pastWorkout = Workout(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!)
+    let pastWorkout = Workout(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, name: "Leg day")
 
     // Add exercises to the past workout
     let squatExercise1 = Exercise(definition: squatDefinition, restTime: 100)

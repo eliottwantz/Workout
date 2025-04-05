@@ -73,7 +73,9 @@ struct SupersetDetailView: View {
     for index in offsets {
       if let exercises = superset.orderedExercises {
         let exerciseToDelete = superset.exercises[index]
-        if let exerciseIndex = exercises.firstIndex(where: { $0.persistentModelID == exerciseToDelete.persistentModelID }) {
+        if let exerciseIndex = exercises.firstIndex(where: {
+          $0.persistentModelID == exerciseToDelete.persistentModelID
+        }) {
           superset.orderedExercises?.remove(at: exerciseIndex)
           modelContext.delete(exerciseToDelete)
         }

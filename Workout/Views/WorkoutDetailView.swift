@@ -26,7 +26,7 @@ struct WorkoutDetailView: View {
           }
           .onMove(perform: moveItems)
           .onDelete(perform: deleteItems)
-          
+
           Button {
             showingAddExerciseView = true
           } label: {

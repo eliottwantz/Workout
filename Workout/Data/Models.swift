@@ -13,14 +13,16 @@ import SwiftData
 @Model
 final class Workout {
   var date: Date
+  var name: String?
 
   // Using a dedicated WorkoutItem class to handle the mixed list of Exercises and Supersets
   // The order property on WorkoutItem will manage the display sequence.
   @Relationship(deleteRule: .cascade, inverse: \WorkoutItem.workout)
   var items: [WorkoutItem]? = []  // Use optional array initialization for SwiftData best practice
 
-  init(date: Date = Date()) {
+  init(date: Date = Date(), name: String? = nil) {
     self.date = date
+    self.name = name
     self.items = []
   }
 

@@ -270,17 +270,6 @@ private struct RepsInputField: View {
   }
 }
 
-private func formatRestTime(_ seconds: Int) -> String {
-  let minutes = seconds / 60
-  let remainingSeconds = seconds % 60
-
-  if minutes > 0 {
-    return "\(minutes)m \(remainingSeconds)s"
-  } else {
-    return "\(seconds)s"
-  }
-}
-
 #Preview {
   let container = AppContainer.preview.modelContainer
 

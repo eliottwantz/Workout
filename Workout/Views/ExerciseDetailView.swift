@@ -14,7 +14,6 @@ struct ExerciseDetailView: View {
 
   @State private var isEditingMode = false
   @State private var restTime: Int
-  @State private var showingRestTimePicker = false
   @State private var editMode = EditMode.inactive
 
   init(exercise: Exercise) {
@@ -190,15 +189,26 @@ private struct EditableSetRowView: View {
 private struct RestTimePicker: View {
   @Bindable var exercise: Exercise
 
+  @State private var showingRestTimePicker = false
+
   var body: some View {
-    Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
-      HStack {
-        Text(exercise.restTime.formattedRestTime)
-          .frame(minWidth: 60, alignment: .center)
-          .font(.body.monospacedDigit())
-          .contentTransition(.numericText())
-          .animation(.snappy, value: exercise.restTime)
+    Button {
+      showingRestTimePicker = true
+    } label: {
+      Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
+        HStack {
+          Text(exercise.restTime.formattedRestTime)
+            .frame(minWidth: 60, alignment: .center)
+            .font(.body.monospacedDigit())
+            .foregroundStyle(Color.primary)
+            .contentTransition(.numericText())
+            .animation(.snappy, value: exercise.restTime)
+        }
       }
+    }
+    .sheet(isPresented: $showingRestTimePicker) {
+      RestTimePickerView(restTime: $exercise.restTime)
+        .presentationDetents([.fraction(0.7)])
     }
   }
 

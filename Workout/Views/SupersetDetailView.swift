@@ -107,15 +107,26 @@ struct SupersetDetailView: View {
 private struct RestTimePicker: View {
   @Bindable var superset: Superset
 
+  @State private var showingRestTimePicker = false
+
   var body: some View {
-    Stepper(value: $superset.restTime, in: 5...600, step: 5) {
-      HStack {
-        Text(superset.restTime.formattedRestTime)
-          .frame(minWidth: 60, alignment: .center)
-          .font(.body.monospacedDigit())
-          .contentTransition(.numericText())
-          .animation(.snappy, value: superset.restTime)
+    Button {
+      showingRestTimePicker = true
+    } label: {
+      Stepper(value: $superset.restTime, in: 5...600, step: 5) {
+        HStack {
+          Text(superset.restTime.formattedRestTime)
+            .frame(minWidth: 60, alignment: .center)
+            .font(.body.monospacedDigit())
+            .foregroundStyle(Color.primary)
+            .contentTransition(.numericText())
+            .animation(.snappy, value: superset.restTime)
+        }
       }
+    }
+    .sheet(isPresented: $showingRestTimePicker) {
+      RestTimePickerView(restTime: $superset.restTime)
+        .presentationDetents([.fraction(0.7)])
     }
   }
 

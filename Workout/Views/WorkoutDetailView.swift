@@ -18,12 +18,15 @@ struct WorkoutDetailView: View {
 
   var body: some View {
     List {
-      Section("Exercises") {
-        ForEach(workout.orderedItems) { workoutItem in
-          WorkoutItemRowView(workoutItem: workoutItem)
+      if !workout.orderedItems.isEmpty {
+
+        Section("Exercises") {
+          ForEach(workout.orderedItems) { workoutItem in
+            WorkoutItemRowView(workoutItem: workoutItem)
+          }
+          .onMove(perform: moveItems)
+          .onDelete(perform: deleteItems)
         }
-        .onMove(perform: moveItems)
-        .onDelete(perform: deleteItems)
       }
     }
     .overlay {

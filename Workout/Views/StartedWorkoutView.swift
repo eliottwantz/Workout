@@ -282,14 +282,12 @@ struct StartedWorkoutView: View {
               .font(.headline)
               .foregroundColor(.secondary)
 
-            Text("\(remainingRestTime)")
+            Text(remainingRestTime.formattedRestTime)
               .font(.system(size: 70, weight: .bold, design: .rounded))
-              .foregroundColor(.primary)
               .monospacedDigit()
-
-            Text("seconds")
-              .font(.headline)
-              .foregroundColor(.secondary)
+              .contentTransition(.numericText())
+              .animation(.snappy, value: remainingRestTime)
+              .foregroundColor(remainingRestTime <= 5 ? .red : .primary)
           }
           .frame(maxWidth: .infinity)
           .padding(35)
@@ -320,8 +318,8 @@ struct StartedWorkoutView: View {
             Text("Finish Workout")
               .font(.headline)
               .frame(width: 200, height: 60)
-              .background(Color(hue: 0.321, saturation: 0.978, brightness: 0.752))
-              .foregroundStyle(.black)
+              .background(userAccentColor)
+              .foregroundStyle(userAccentColor.contrastColor)
               .cornerRadius(15)
           }
         }
@@ -365,12 +363,18 @@ struct StartedWorkoutView: View {
         .padding(.horizontal)
       }
     }
-    .sensoryFeedback(.decrease, trigger: remainingRestTime, condition: { oldValue, newValue in
-      newValue <= 3
-    })
-    .sensoryFeedback(.error, trigger: remainingRestTime, condition: { oldValue, newValue in
-      oldValue == 1 && newValue == 0
-    })
+    .sensoryFeedback(
+      .decrease, trigger: remainingRestTime,
+      condition: { oldValue, newValue in
+        newValue <= 5
+      }
+    )
+    .sensoryFeedback(
+      .error, trigger: remainingRestTime,
+      condition: { oldValue, newValue in
+        oldValue == 1 && newValue == 0
+      }
+    )
     .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
       // Check if timer should be reset when app comes back to foreground
       if isResting {

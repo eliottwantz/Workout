@@ -18,6 +18,15 @@ struct WorkoutListView: View {
   var body: some View {
     NavigationStack(path: $path) {
       List {
+        if !workouts.isEmpty {
+          Button {
+            createNewWorkout()
+          } label: {
+            Label("Add Workout", systemImage: "plus")
+          }
+          .padding(.vertical, 6)
+        }
+        
         ForEach(workouts) { workout in
           NavigationLink(value: workout) {
             WorkoutRowView(workout: workout)

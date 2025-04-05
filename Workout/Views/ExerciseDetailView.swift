@@ -70,7 +70,6 @@ struct ExerciseDetailView: View {
             addSet()
           } label: {
             Label("Add Set", systemImage: "plus")
-              .frame(maxWidth: .infinity, alignment: .center)
           }
         }
       }

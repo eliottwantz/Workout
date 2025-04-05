@@ -10,11 +10,13 @@ import SwiftUI
 
 struct WorkoutDetailView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.userAccentColor) private var userAccentColor
   @Bindable var workout: Workout
 
   @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
   @State private var showingCopyToTodayAlert = false
+  @State private var showingStartedWorkoutView = false
 
   var body: some View {
     List {
@@ -46,6 +48,23 @@ struct WorkoutDetailView: View {
         }
       }
     }
+    .safeAreaInset(edge: .bottom) {
+      if !workout.orderedItems.isEmpty {
+        Button {
+          showingStartedWorkoutView = true
+        } label: {
+          Text("Start Workout")
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(userAccentColor)
+            .foregroundStyle(userAccentColor.contrastColor)
+            .cornerRadius(10)
+        }
+        .padding()
+        .background(Color(UIColor.systemBackground))
+      }
+    }
     .navigationTitle(workout.formattedDate)
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
@@ -70,6 +89,9 @@ struct WorkoutDetailView: View {
       NavigationStack {
         AddExerciseView(workout: workout)
       }
+    }
+    .fullScreenCover(isPresented: $showingStartedWorkoutView) {
+      StartedWorkoutView(workout: workout)
     }
     .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
       Button("Copy", role: .none) {

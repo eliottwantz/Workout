@@ -14,7 +14,7 @@ struct AddExerciseView: View {
 
   @Bindable var workout: Workout
 
-  @State private var selectedExercises: Set<PersistentIdentifier> = []
+  @State private var selectedExercises = Set<PersistentIdentifier>()
   @State private var selectedOption = AddOption.individual
 
   enum AddOption {
@@ -70,7 +70,7 @@ struct AddExerciseView: View {
       for definitionID in selectedExercises {
         if let definition = try? modelContext.fetch(
           FetchDescriptor<ExerciseDefinition>(
-            predicate: #Predicate { $0.id == definitionID }
+            predicate: #Predicate { $0.persistentModelID == definitionID }
           )
         ).first {
           let exercise = Exercise(definition: definition)
@@ -85,7 +85,7 @@ struct AddExerciseView: View {
       for (index, definitionID) in selectedExercises.enumerated() {
         if let definition = try? modelContext.fetch(
           FetchDescriptor<ExerciseDefinition>(
-            predicate: #Predicate { $0.id == definitionID }
+            predicate: #Predicate { $0.persistentModelID == definitionID }
           )
         ).first {
           let exercise = Exercise(

@@ -14,7 +14,7 @@ struct AddExerciseToSupersetView: View {
 
   @Bindable var superset: Superset
 
-  @State private var selectedExercises: Set<PersistentIdentifier> = []
+  @State private var selectedExercises = Set<PersistentIdentifier>()
 
   var body: some View {
     ExerciseSelectionView(
@@ -51,7 +51,7 @@ struct AddExerciseToSupersetView: View {
     for (index, definitionID) in selectedExercises.enumerated() {
       if let definition = try? modelContext.fetch(
         FetchDescriptor<ExerciseDefinition>(
-          predicate: #Predicate { $0.id == definitionID }
+          predicate: #Predicate { $0.persistentModelID == definitionID }
         )
       ).first {
         let exercise = Exercise(

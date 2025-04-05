@@ -51,12 +51,12 @@ struct WorkoutDetailView: View {
           }
         }
 
-        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {
           Label("Add Exercises", systemImage: "plus")
         }
+        EditButton()
       }
     }
     .environment(\.editMode, $editMode)
@@ -64,7 +64,6 @@ struct WorkoutDetailView: View {
       NavigationStack {
         AddExerciseView(workout: workout)
       }
-      .presentationDetents([.fraction(0.75), .large])
     }
     .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
       Button("Copy", role: .none) {

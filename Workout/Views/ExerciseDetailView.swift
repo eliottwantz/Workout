@@ -125,7 +125,7 @@ struct ExerciseDetailView: View {
     for index in offsets {
       if let sets = exercise.orderedSets {
         let setToDelete = exercise.sets[index]
-        if let setIndex = sets.firstIndex(where: { $0.id == setToDelete.id }) {
+        if let setIndex = sets.firstIndex(where: { $0.persistentModelID == setToDelete.persistentModelID }) {
           exercise.orderedSets?.remove(at: setIndex)
           modelContext.delete(setToDelete)
         }

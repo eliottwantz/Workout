@@ -19,7 +19,6 @@ struct ExerciseSelectionView<ActionButton: View>: View {
   @State private var searchText = ""
   @State private var showingAddNewExerciseDialog = false
   @State private var newExerciseName = ""
-  @State private var editMode = EditMode.active
 
   // Custom button to be provided by parent views
   let actionButton: ActionButton
@@ -45,7 +44,7 @@ struct ExerciseSelectionView<ActionButton: View>: View {
       List(filteredExerciseDefinitions, selection: $selectedExercises) { definition in
         Text(definition.name)
       }
-      .searchable(text: $searchText, prompt: "Search exercises")
+      .searchable(text: $searchText, prompt: "Exercise name")
       .environment(\.editMode, .constant(.active))
       .listStyle(.inset)
 
@@ -63,6 +62,8 @@ struct ExerciseSelectionView<ActionButton: View>: View {
         }
       }
     }
+    .interactiveDismissDisabled()
+    .presentationDetents([.fraction(0.65), .large])
     .alert("Add New Exercise", isPresented: $showingAddNewExerciseDialog) {
       TextField("Exercise Name", text: $newExerciseName)
 

@@ -42,14 +42,15 @@ struct WorkoutListView: View {
       }
       .toolbar {
         ToolbarItemGroup(placement: .primaryAction) {
-          EditButton()
           Button {
             createNewWorkout()
           } label: {
             Label("Add Workout", systemImage: "plus")
           }
+          EditButton()
         }
       }
+
     }
   }
 
@@ -87,4 +88,7 @@ struct WorkoutRowView: View {
 #Preview {
   WorkoutListView()
     .modelContainer(AppContainer.preview.modelContainer)
+    .task {
+      AppContainer.addSampleData(AppContainer.preview.modelContainer.mainContext)
+    }
 }

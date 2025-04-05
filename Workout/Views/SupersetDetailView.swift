@@ -53,12 +53,12 @@ struct SupersetDetailView: View {
     .navigationTitle("Superset Detail")
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
-        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {
           Label("Add Exercises", systemImage: "plus")
         }
+        EditButton()
       }
     }
     .environment(\.editMode, $editMode)
@@ -66,7 +66,6 @@ struct SupersetDetailView: View {
       NavigationStack {
         AddExerciseToSupersetView(superset: superset)
       }
-      .presentationDetents([.fraction(0.75), .large])
     }
   }
 
@@ -74,7 +73,7 @@ struct SupersetDetailView: View {
     for index in offsets {
       if let exercises = superset.orderedExercises {
         let exerciseToDelete = superset.exercises[index]
-        if let exerciseIndex = exercises.firstIndex(where: { $0.id == exerciseToDelete.id }) {
+        if let exerciseIndex = exercises.firstIndex(where: { $0.persistentModelID == exerciseToDelete.persistentModelID }) {
           superset.orderedExercises?.remove(at: exerciseIndex)
           modelContext.delete(exerciseToDelete)
         }

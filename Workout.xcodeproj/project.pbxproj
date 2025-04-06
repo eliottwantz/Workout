@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		55777E032DA2BED400F9129A /* Exceptions for "Workout" folder in "Workout" target */ = {
+		55777E352DA2D2A700F9129A /* Exceptions for "Workout" folder in "Workout" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,7 +24,7 @@
 		55F946692D9EC3DB00CDC61E /* Workout */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				55777E032DA2BED400F9129A /* Exceptions for "Workout" folder in "Workout" target */,
+				55777E352DA2D2A700F9129A /* Exceptions for "Workout" folder in "Workout" target */,
 			);
 			path = Workout;
 			sourceTree = "<group>";

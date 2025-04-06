@@ -108,6 +108,7 @@ class CountdownTimerModel {
 
 struct CountdownTimer: View {
   @Environment(\.scenePhase) private var scenePhase
+  @Environment(\.userAccentColor) private var userAccentColor
   let time: Int
   @State private var timerModel: CountdownTimerModel
   private var lineWidth: CGFloat = 20
@@ -124,12 +125,12 @@ struct CountdownTimer: View {
     ZStack {
       Circle()
         .stroke(lineWidth: lineWidth)
-        .foregroundStyle(.yellow.opacity(0.3))
+        .foregroundStyle(userAccentColor.opacity(0.3))
 
       Circle()
         .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
         .stroke(
-          .yellow.gradient,
+          userAccentColor.gradient,
           style: StrokeStyle(
             lineWidth: lineWidth,
             lineCap: .round,
@@ -144,6 +145,7 @@ struct CountdownTimer: View {
         .monospacedDigit()
         .contentTransition(.numericText())
         .foregroundStyle(.primary)
+        .animation(.linear, value: timerModel.secondsRemaining)
     }
     .frame(width: 200, height: 200)
     .animation(.easeInOut, value: timerModel.secondsRemaining)
@@ -163,17 +165,16 @@ struct CountdownTimer: View {
       timerModel.start()
     }
     .sensoryFeedback(
-      .impact, trigger: timerModel.secondsRemaining,
-      condition: { oldValue, newValue in
-        newValue <= 5
+      trigger: timerModel.secondsRemaining
+    ) { oldValue, newValue in
+      if oldValue == 1 && newValue == 0 {
+        return .error
+      } else if newValue <= 5 {
+        return .impact
+      } else {
+        return nil
       }
-    )
-    .sensoryFeedback(
-      .error, trigger: timerModel.secondsRemaining,
-      condition: { oldValue, newValue in
-        oldValue == 1 && newValue == 0
-      }
-    )
+    }
   }
 
   func displayTime(_ totalSeconds: Int) -> String {

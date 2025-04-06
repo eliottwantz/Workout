@@ -50,6 +50,7 @@ final class Workout {
     item.order = (items?.count ?? 0)  // Append to the end
     items?.append(item)
     item.workout = self  // Set the inverse relationship
+    item.updateContainedItemWorkouts()  // Update workout relationship on contained items
   }
 }
 
@@ -89,6 +90,23 @@ final class WorkoutItem {
   convenience init(order: Int = 0, superset: Superset) {
     self.init(order: order, exercise: nil, superset: superset)
   }
+
+  // Update the workout relationship on contained items when the workout is set
+  func updateContainedItemWorkouts() {
+    if let workout = self.workout {
+      // Update exercise's workout relationship
+      if let exercise = self.exercise {
+        exercise.workout = workout
+      }
+
+      // Update all exercises in a superset
+      if let superset = self.superset {
+        for exercise in superset.exercises {
+          exercise.workout = workout
+        }
+      }
+    }
+  }
 }
 
 // MARK: - Exercise Instance (within a Workout or Superset)
@@ -114,6 +132,7 @@ final class Exercise {
   // Inverse relationship: Where does this exercise instance live?
   var workoutItem: WorkoutItem?  // If it's directly in a Workout
   var containingSuperset: Superset?  // If it's part of a Superset
+  var workout: Workout
 
   // Computed property for sorted sets
   @Transient var sets: [SetEntry] {
@@ -121,8 +140,12 @@ final class Exercise {
   }
 
   // Requires the ExerciseDefinition to link to
-  init(definition: ExerciseDefinition, restTime: Int = 120, orderWithinSuperset: Int = 0, notes: String? = nil) {
+  init(
+    definition: ExerciseDefinition, workout: Workout, restTime: Int = 120, orderWithinSuperset: Int = 0,
+    notes: String? = nil
+  ) {
     self.definition = definition
+    self.workout = workout
     // Use definition's default rest time if no specific override provided
     self.restTime = restTime
     self.orderWithinSuperset = orderWithinSuperset
@@ -169,6 +192,11 @@ final class Superset {
     exercise.containingSuperset = self  // Set inverse relationship
     exercise.orderWithinSuperset = (orderedExercises?.count ?? 0)  // Append to end
     orderedExercises?.append(exercise)
+
+    // Set the workout relationship if the superset is already in a workout
+    if let workoutItem = self.workoutItem, let workout = workoutItem.workout {
+      exercise.workout = workout
+    }
   }
 }
 

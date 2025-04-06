@@ -141,7 +141,9 @@ struct WorkoutDetailView: View {
         // Create a new exercise
         let newExercise = Exercise(
           definition: exercise.definition!,
-          restTime: exercise.restTime
+          workout: todayWorkout,
+          restTime: exercise.restTime,
+          notes: exercise.notes
         )
 
         // Copy all sets from the original exercise
@@ -159,14 +161,16 @@ struct WorkoutDetailView: View {
 
       } else if let superset = item.superset {
         // Create a new superset
-        let newSuperset = Superset()
+        let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
 
         // Copy all exercises in the superset
         for exercise in superset.exercises {
           let newExercise = Exercise(
             definition: exercise.definition!,
+            workout: todayWorkout,
             restTime: exercise.restTime,
-            orderWithinSuperset: exercise.orderWithinSuperset
+            orderWithinSuperset: exercise.orderWithinSuperset,
+            notes: exercise.notes
           )
 
           // Copy all sets from the original exercise

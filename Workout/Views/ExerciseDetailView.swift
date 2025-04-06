@@ -290,15 +290,28 @@ private struct RepsInputField: View {
 
   // Adding some sample data for the preview
   let modelContext = container.mainContext
+
+  // Create sample data
+  let workout = Workout(date: Date())
   let exerciseDefinition = ExerciseDefinition(name: "Bench Press")
   modelContext.insert(exerciseDefinition)
+  modelContext.insert(workout)
 
-  let exercise = Exercise(definition: exerciseDefinition, restTime: 90)
-  exercise.addSet(SetEntry(reps: 8, weight: 135.0))
-  exercise.addSet(SetEntry(reps: 8, weight: 135.0))
-  exercise.addSet(SetEntry(reps: 6, weight: 145.0))
+  let exercise = Exercise(definition: exerciseDefinition, workout: workout, restTime: 90)
 
-  modelContext.insert(exercise)
+  let workoutItem = WorkoutItem(exercise: exercise)
+  workout.addItem(workoutItem)
+
+  // Add some sets
+  let set1 = SetEntry(reps: 8, weight: 135)
+  let set2 = SetEntry(reps: 8, weight: 145)
+  let set3 = SetEntry(reps: 6, weight: 155)
+
+  exercise.addSet(set1)
+  exercise.addSet(set2)
+  exercise.addSet(set3)
+
+  try? modelContext.save()
 
   return NavigationStack {
     ExerciseDetailView(exercise: exercise)

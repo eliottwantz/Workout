@@ -40,102 +40,164 @@ final class AppContainer {
 
   // Function to add some sample data
   static func addSampleData(_ modelContext: ModelContext) {
-    try? modelContext.delete(model: Workout.self)
-    try? modelContext.delete(model: ExerciseDefinition.self)
-
-    // Create some Exercise Definitions
-    let squatDefinition = ExerciseDefinition(name: "Squats")
+    // Create exercise definitions
+    let squatDefinition = ExerciseDefinition(name: "Squat")
     let benchPressDefinition = ExerciseDefinition(name: "Bench Press")
     let deadliftDefinition = ExerciseDefinition(name: "Deadlift")
-    let pullUpDefinition = ExerciseDefinition(name: "Pull-ups")
-    let bicepCurlDefinition = ExerciseDefinition(name: "Bicep Curls")
-    let tricepsExtensionDefinition = ExerciseDefinition(name: "Triceps Extensions")
+    let bicepCurlDefinition = ExerciseDefinition(name: "Bicep Curl")
+    let tricepsExtensionDefinition = ExerciseDefinition(name: "Triceps Extension")
     let shoulderPressDefinition = ExerciseDefinition(name: "Shoulder Press")
     let lungesDefinition = ExerciseDefinition(name: "Lunges")
 
+    // Create some workouts
+    let workout1 = Workout(
+      date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!,
+      name: "Lower Body"
+    )
+
+    let workout2 = Workout(
+      date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!,
+      name: "Upper Body"
+    )
+
+    let todayWorkout = Workout(
+      date: Date(),
+      name: "Full Body"
+    )
+
+    // Insert all models into context first
     modelContext.insert(squatDefinition)
     modelContext.insert(benchPressDefinition)
     modelContext.insert(deadliftDefinition)
-    modelContext.insert(pullUpDefinition)
     modelContext.insert(bicepCurlDefinition)
     modelContext.insert(tricepsExtensionDefinition)
     modelContext.insert(shoulderPressDefinition)
     modelContext.insert(lungesDefinition)
 
-    // Create a sample past workout
-    let pastWorkout = Workout(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, name: "Leg day")
+    modelContext.insert(workout1)
+    modelContext.insert(workout2)
+    modelContext.insert(todayWorkout)
 
-    // Add exercises to the past workout
-    let squatExercise1 = Exercise(definition: squatDefinition, restTime: 100)
-    squatExercise1.addSet(SetEntry(reps: 8, weight: 100.0))
-    squatExercise1.addSet(SetEntry(reps: 8, weight: 100.0))
-    squatExercise1.addSet(SetEntry(reps: 6, weight: 105.0))
-    let squatItem1 = WorkoutItem(order: 0, exercise: squatExercise1)
-    pastWorkout.addItem(squatItem1)
+    // Workout 1 (3 days ago): Squat
+    let squatExercise1 = Exercise(definition: squatDefinition, workout: workout1, restTime: 100)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 8, weight: 225.0 + Double(i * 10))
+      squatExercise1.addSet(set)
+    }
+    let workoutItem1 = WorkoutItem(exercise: squatExercise1)
+    workout1.addItem(workoutItem1)
 
-    let benchPressExercise1 = Exercise(definition: benchPressDefinition, restTime: 120)
-    benchPressExercise1.addSet(SetEntry(reps: 6, weight: 80.0))
-    benchPressExercise1.addSet(SetEntry(reps: 6, weight: 80.0))
-    benchPressExercise1.addSet(SetEntry(reps: 4, weight: 85.0))
-    let benchPressItem1 = WorkoutItem(order: 1, exercise: benchPressExercise1)
-    pastWorkout.addItem(benchPressItem1)
+    // Workout 2 (yesterday): Bench Press
+    let benchPressExercise1 = Exercise(definition: benchPressDefinition, workout: workout2, restTime: 120)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 8, weight: 135.0 + Double(i * 10))
+      benchPressExercise1.addSet(set)
+    }
+    let workoutItem2 = WorkoutItem(exercise: benchPressExercise1)
+    workout2.addItem(workoutItem2)
 
-    let deadliftExercise1 = Exercise(definition: deadliftDefinition, restTime: 150)
-    deadliftExercise1.addSet(SetEntry(reps: 5, weight: 120.0))
-    deadliftExercise1.addSet(SetEntry(reps: 3, weight: 130.0))
-    let deadliftItem1 = WorkoutItem(order: 2, exercise: deadliftExercise1)
-    pastWorkout.addItem(deadliftItem1)
+    // Workout 2: Deadlift
+    let deadliftExercise1 = Exercise(definition: deadliftDefinition, workout: workout2, restTime: 150)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 5, weight: 275.0 + Double(i * 10))
+      deadliftExercise1.addSet(set)
+    }
+    let workoutItem3 = WorkoutItem(exercise: deadliftExercise1)
+    workout2.addItem(workoutItem3)
 
-    modelContext.insert(pastWorkout)
+    // Today's Workout: Superset (Bicep Curl + Triceps Extension)
+    let armsSuperset = Superset(restTime: 90)
 
-    // Create another sample past workout with a superset
-    let anotherPastWorkout = Workout(
-      date: Calendar.current.date(byAdding: .day, value: -7, to: Date())!)
-
-    // Create a superset
-    let armsSuperset = Superset(notes: "Very intense")
-    let bicepCurlExercise1 = Exercise(definition: bicepCurlDefinition, restTime: 60, orderWithinSuperset: 0)
-    bicepCurlExercise1.addSet(SetEntry(reps: 10, weight: 25.0))
-    bicepCurlExercise1.addSet(SetEntry(reps: 10, weight: 25.0))
+    // Add Bicep Curl to superset
+    let bicepCurlExercise1 = Exercise(
+      definition: bicepCurlDefinition, workout: todayWorkout, restTime: 60, orderWithinSuperset: 0)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 12, weight: 25.0 + Double(i * 5))
+      bicepCurlExercise1.addSet(set)
+    }
     armsSuperset.addExercise(bicepCurlExercise1)
 
+    // Add Triceps Extension to superset
     let tricepsExtensionExercise1 = Exercise(
-      definition: tricepsExtensionDefinition, restTime: 60, orderWithinSuperset: 1)
-    tricepsExtensionExercise1.addSet(SetEntry(reps: 12, weight: 40.0))
-    tricepsExtensionExercise1.addSet(SetEntry(reps: 12, weight: 40.0))
+      definition: tricepsExtensionDefinition,
+      workout: todayWorkout,
+      restTime: 60,
+      orderWithinSuperset: 1
+    )
+    for i in 0..<3 {
+      let set = SetEntry(reps: 12, weight: 30.0 + Double(i * 5))
+      tricepsExtensionExercise1.addSet(set)
+    }
     armsSuperset.addExercise(tricepsExtensionExercise1)
 
-    let supersetItem1 = WorkoutItem(order: 0, superset: armsSuperset)
-    anotherPastWorkout.addItem(supersetItem1)
+    let workoutItem4 = WorkoutItem(superset: armsSuperset)
+    todayWorkout.addItem(workoutItem4)
 
-    // Add a regular exercise after the superset
-    let shoulderPressExercise1 = Exercise(definition: shoulderPressDefinition, restTime: 90)
-    shoulderPressExercise1.addSet(SetEntry(reps: 8, weight: 50.0))
-    shoulderPressExercise1.addSet(SetEntry(reps: 8, weight: 50.0))
-    let shoulderPressItem1 = WorkoutItem(order: 1, exercise: shoulderPressExercise1)
-    anotherPastWorkout.addItem(shoulderPressItem1)
+    // Today's Workout: Shoulder Press
+    let shoulderPressExercise1 = Exercise(definition: shoulderPressDefinition, workout: todayWorkout, restTime: 90)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 10, weight: 65.0 + Double(i * 5))
+      shoulderPressExercise1.addSet(set)
+    }
+    let workoutItem5 = WorkoutItem(exercise: shoulderPressExercise1)
+    todayWorkout.addItem(workoutItem5)
 
-    modelContext.insert(anotherPastWorkout)
+    // Create another workout from 5 days ago
+    let workout3 = Workout(
+      date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!,
+      name: "Leg Day"
+    )
+    modelContext.insert(workout3)
 
-    // Create a sample today's workout
-    let todaysWorkout = Workout(date: Date())
+    // Workout 3: Lunges
+    let lungesExercise1 = Exercise(definition: lungesDefinition, workout: workout3, restTime: 80)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 10, weight: 40.0 + Double(i * 5))
+      lungesExercise1.addSet(set)
+    }
+    let workoutItem6 = WorkoutItem(exercise: lungesExercise1)
+    workout3.addItem(workoutItem6)
 
-    let lungesExercise1 = Exercise(definition: lungesDefinition, restTime: 80)
-    lungesExercise1.addSet(SetEntry(reps: 10, weight: 30.0))
-    lungesExercise1.addSet(SetEntry(reps: 10, weight: 30.0))
-    let lungesItem1 = WorkoutItem(order: 0, exercise: lungesExercise1)
-    todaysWorkout.addItem(lungesItem1)
-
-    let squatExercise2 = Exercise(definition: squatDefinition, restTime: 95)
-    squatExercise2.addSet(SetEntry(reps: 6, weight: 105.0))
-    squatExercise2.addSet(SetEntry(reps: 6, weight: 105.0))
-    squatExercise2.addSet(SetEntry(reps: 4, weight: 110.0))
-    let squatItem2 = WorkoutItem(order: 1, exercise: squatExercise2)
-    todaysWorkout.addItem(squatItem2)
-
-    modelContext.insert(todaysWorkout)
+    // Workout 3: Squat (a previous instance of squats)
+    let squatExercise2 = Exercise(definition: squatDefinition, workout: workout3, restTime: 95)
+    for i in 0..<3 {
+      let set = SetEntry(reps: 8, weight: 215.0 + Double(i * 10))
+      squatExercise2.addSet(set)
+    }
+    let workoutItem7 = WorkoutItem(exercise: squatExercise2)
+    workout3.addItem(workoutItem7)
 
     try? modelContext.save()
   }
 
+}
+
+extension AppContainer {
+  static func findMostRecentExercise(
+    for definitionID: PersistentIdentifier, currentWorkoutID: PersistentIdentifier, modelContext: ModelContext
+  ) -> Exercise? {
+    do {
+      // Use the direct relationship to Workout now that it exists in the model
+      let predicate = #Predicate<Exercise> {
+        $0.definition?.persistentModelID == definitionID && $0.workout.persistentModelID != currentWorkoutID
+      }
+
+      var descriptor = FetchDescriptor<Exercise>(
+        predicate: predicate,
+        sortBy: [.init(\Exercise.workout.date, order: .reverse)]
+      )
+
+      // Add relationship prefetching for performance
+      descriptor.relationshipKeyPathsForPrefetching = [
+        \Exercise.workout, \Exercise.definition, \Exercise.orderedSets,
+      ]
+      descriptor.fetchLimit = 1
+
+      let exercises = try modelContext.fetch(descriptor)
+      return exercises.first
+    } catch {
+      print("Error fetching most recent exercise: \(error)")
+      return nil
+    }
+  }
 }

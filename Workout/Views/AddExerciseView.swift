@@ -74,14 +74,17 @@ struct AddExerciseView: View {
           )
         ).first {
           // Look for the most recent instance of this exercise
-          if let previousExercise = findMostRecentExercise(for: definitionID) {
+          if let previousExercise = AppContainer.findMostRecentExercise(
+            for: definitionID, currentWorkoutID: workout.persistentModelID, modelContext: modelContext)
+          {
             // Create a new exercise with the same definition and rest time
             let exercise = Exercise(
               definition: definition,
+              workout: workout,
               restTime: previousExercise.restTime,
               notes: previousExercise.notes
             )
-            
+
             // Copy all sets from the previous exercise
             for setEntry in previousExercise.sets {
               let newSet = SetEntry(
@@ -90,12 +93,12 @@ struct AddExerciseView: View {
               )
               exercise.addSet(newSet)
             }
-            
+
             let workoutItem = WorkoutItem(exercise: exercise)
             workout.addItem(workoutItem)
           } else {
             // No previous exercise found, create a new one with defaults
-            let exercise = Exercise(definition: definition)
+            let exercise = Exercise(definition: definition, workout: workout)
             let workoutItem = WorkoutItem(exercise: exercise)
             workout.addItem(workoutItem)
           }
@@ -112,15 +115,18 @@ struct AddExerciseView: View {
           )
         ).first {
           // Look for the most recent instance of this exercise
-          if let previousExercise = findMostRecentExercise(for: definitionID) {
+          if let previousExercise = AppContainer.findMostRecentExercise(
+            for: definitionID, currentWorkoutID: workout.persistentModelID, modelContext: modelContext)
+          {
             // Create a new exercise with the same definition and rest time
             let exercise = Exercise(
               definition: definition,
+              workout: workout,
               restTime: previousExercise.restTime,
               orderWithinSuperset: index,
               notes: previousExercise.notes
             )
-            
+
             // Copy all sets from the previous exercise
             for setEntry in previousExercise.sets {
               let newSet = SetEntry(
@@ -129,12 +135,13 @@ struct AddExerciseView: View {
               )
               exercise.addSet(newSet)
             }
-            
+
             superset.addExercise(exercise)
           } else {
             // No previous exercise found, create a new one with defaults
             let exercise = Exercise(
               definition: definition,
+              workout: workout,
               orderWithinSuperset: index
             )
             superset.addExercise(exercise)
@@ -149,39 +156,21 @@ struct AddExerciseView: View {
     try? modelContext.save()
   }
 
-  private func findMostRecentExercise(for definitionID: PersistentIdentifier) -> Exercise? {
-    // Find the most recent workout that contains this exercise definition
-    
-    let descriptor = FetchDescriptor<Workout>(
-      sortBy: [SortDescriptor(\.date, order: .reverse)]  // Most recent workouts first
-    )
-    
-    guard let workouts = try? modelContext.fetch(descriptor) else { return nil }
-    
-    // Skip the current workout if it's already in the database
-    let workoutsToSearch = workouts.filter { $0.persistentModelID != workout.persistentModelID }
-    
-    // Search through workouts from most recent to oldest
-    for pastWorkout in workoutsToSearch {
-      // Look through each workout item
-      for item in pastWorkout.orderedItems {
-        // Check individual exercises
-        if let exercise = item.exercise, 
-           exercise.definition?.persistentModelID == definitionID {
-          return exercise
-        }
-        
-        // Check exercises in supersets
-        if let superset = item.superset {
-          for exercise in superset.exercises {
-            if exercise.definition?.persistentModelID == definitionID {
-              return exercise
-            }
-          }
-        }
-      }
+  // Helper function to get the workout date for an exercise
+  private func getWorkoutDateForExercise(_ exercise: Exercise) -> Date? {
+    // Check if the exercise is directly in a workout
+    if let workoutItem = exercise.workoutItem, let workout = workoutItem.workout {
+      return workout.date
     }
-    
+
+    // Check if the exercise is in a superset
+    if let superset = exercise.containingSuperset,
+      let workoutItem = superset.workoutItem,
+      let workout = workoutItem.workout
+    {
+      return workout.date
+    }
+
     return nil
   }
 }

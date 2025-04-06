@@ -153,27 +153,46 @@ private struct RestTimePicker: View {
   // Adding some sample data for the preview
   let modelContext = container.mainContext
 
-  let bicepCurlDefinition = ExerciseDefinition(name: "Bicep Curls")
-  let tricepsExtensionDefinition = ExerciseDefinition(name: "Triceps Extensions")
+  // Create a sample workout
+  let workout = Workout(date: Date())
+  modelContext.insert(workout)
 
-  modelContext.insert(bicepCurlDefinition)
-  modelContext.insert(tricepsExtensionDefinition)
-
+  // Create a superset
   let superset = Superset()
+  let workoutItem = WorkoutItem(superset: superset)
+  workout.addItem(workoutItem)
 
+  // Add exercise definitions
+  let bicepCurlDefinition = ExerciseDefinition(name: "Bicep Curl")
+  let tricepsDefinition = ExerciseDefinition(name: "Triceps Extension")
+  modelContext.insert(bicepCurlDefinition)
+  modelContext.insert(tricepsDefinition)
+
+  // Add exercises to the superset
   let bicepCurlExercise = Exercise(
-    definition: bicepCurlDefinition, restTime: 60, orderWithinSuperset: 0)
-  bicepCurlExercise.addSet(SetEntry(reps: 12, weight: 20.0))
-  bicepCurlExercise.addSet(SetEntry(reps: 10, weight: 22.5))
+    definition: bicepCurlDefinition,
+    workout: workout,
+    restTime: 60,
+    orderWithinSuperset: 0
+  )
   superset.addExercise(bicepCurlExercise)
 
   let tricepsExtensionExercise = Exercise(
-    definition: tricepsExtensionDefinition, restTime: 60, orderWithinSuperset: 1)
-  tricepsExtensionExercise.addSet(SetEntry(reps: 12, weight: 35.0))
-  tricepsExtensionExercise.addSet(SetEntry(reps: 10, weight: 40.0))
+    definition: tricepsDefinition,
+    workout: workout,
+    restTime: 60,
+    orderWithinSuperset: 1
+  )
   superset.addExercise(tricepsExtensionExercise)
 
-  modelContext.insert(superset)
+  // Add some sets
+  let set1 = SetEntry(reps: 10, weight: 25)
+  let set2 = SetEntry(reps: 10, weight: 30)
+
+  bicepCurlExercise.addSet(set1)
+  tricepsExtensionExercise.addSet(set2)
+
+  try? modelContext.save()
 
   return NavigationStack {
     SupersetDetailView(superset: superset)

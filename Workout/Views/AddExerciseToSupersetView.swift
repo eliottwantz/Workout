@@ -44,25 +44,57 @@ struct AddExerciseToSupersetView: View {
   private func addSelectedExercisesToSuperset() {
     if selectedExercises.isEmpty { return }
 
-    // Get the next available order within the superset
-    let nextOrder = superset.exercises.count
-
     // Add the selected exercises to the superset
-    for (index, definitionID) in selectedExercises.enumerated() {
-      if let definition = try? modelContext.fetch(
-        FetchDescriptor<ExerciseDefinition>(
-          predicate: #Predicate { $0.persistentModelID == definitionID }
-        )
-      ).first {
-        let exercise = Exercise(
-          definition: definition,
-          orderWithinSuperset: nextOrder + index
-        )
-        superset.addExercise(exercise)
-      }
+    for definitionID in selectedExercises {
+      addExerciseToSuperset(definitionID: definitionID)
     }
 
     try? modelContext.save()
+  }
+
+  private func addExerciseToSuperset(definitionID: PersistentIdentifier) {
+    if let definition = try? modelContext.fetch(
+      FetchDescriptor<ExerciseDefinition>(
+        predicate: #Predicate { $0.persistentModelID == definitionID }
+      )
+    ).first {
+      // Get the workout from the superset's workoutItem
+      if let workout = superset.workoutItem?.workout {
+        // Look for the most recent instance of this exercise
+        if let previousExercise = AppContainer.findMostRecentExercise(
+          for: definitionID, currentWorkoutID: workout.persistentModelID, modelContext: modelContext)
+        {
+          // Create a new exercise with the same definition and rest time
+          let exercise = Exercise(
+            definition: definition,
+            workout: workout,
+            restTime: previousExercise.restTime,
+            orderWithinSuperset: superset.exercises.count,
+            notes: previousExercise.notes
+          )
+
+          // Copy all sets from the previous exercise
+          for setEntry in previousExercise.sets {
+            let newSet = SetEntry(
+              reps: setEntry.reps,
+              weight: setEntry.weight
+            )
+            exercise.addSet(newSet)
+          }
+
+          superset.addExercise(exercise)
+        } else {
+          // No previous exercise found, create a new one with defaults
+          let exercise = Exercise(
+            definition: definition,
+            workout: workout,
+            orderWithinSuperset: superset.exercises.count
+          )
+          superset.addExercise(exercise)
+        }
+        try? modelContext.save()
+      }
+    }
   }
 }
 
@@ -72,8 +104,13 @@ struct AddExerciseToSupersetView: View {
   // Adding some sample data for the preview
   let modelContext = container.mainContext
 
-  // Create a sample superset
+  // Create a sample workout and superset
+  let workout = Workout(date: Date())
   let superset = Superset()
+
+  // Create workout item for the superset
+  let workoutItem = WorkoutItem(superset: superset)
+  workout.addItem(workoutItem)
 
   // Add some exercise definitions
   let benchPressDefinition = ExerciseDefinition(name: "Bench Press")
@@ -83,12 +120,11 @@ struct AddExerciseToSupersetView: View {
   modelContext.insert(benchPressDefinition)
   modelContext.insert(squatDefinition)
   modelContext.insert(deadliftDefinition)
+  modelContext.insert(workout)
 
   // Add one exercise to the superset
-  let benchPressExercise = Exercise(definition: benchPressDefinition, orderWithinSuperset: 0)
+  let benchPressExercise = Exercise(definition: benchPressDefinition, workout: workout, orderWithinSuperset: 0)
   superset.addExercise(benchPressExercise)
-
-  modelContext.insert(superset)
 
   return NavigationStack {
     AddExerciseToSupersetView(superset: superset)

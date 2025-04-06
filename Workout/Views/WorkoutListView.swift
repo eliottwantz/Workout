@@ -50,6 +50,11 @@ struct WorkoutListView: View {
         WorkoutDetailView(workout: workout)
       }
       .toolbar {
+        ToolbarItemGroup(placement: .topBarLeading) {
+          NavigationLink(destination: SettingsView()) {
+            Label("Settings", systemImage: "gear")
+          }
+        }
         ToolbarItemGroup(placement: .primaryAction) {
           Button {
             createNewWorkout()

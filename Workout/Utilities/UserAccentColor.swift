@@ -78,24 +78,3 @@ extension EnvironmentValues {
     set { self[UserAccentColorKey.self] = newValue }
   }
 }
-
-struct UserColorView: View {
-  @AppStorage("userAccentColor") var storedColor: Color = .yellow
-
-  var body: some View {
-
-    ZStack {
-      storedColor
-      ColorPicker("Color theme", selection: $storedColor)
-        .padding(.horizontal)
-        .foregroundStyle(storedColor.contrastColor)
-        .fontWeight(.semibold)
-        .font(.title)
-        .padding()
-    }
-  }
-}
-
-#Preview {
-  UserColorView()
-}

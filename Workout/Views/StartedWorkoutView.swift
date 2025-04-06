@@ -13,7 +13,6 @@ import UserNotifications
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
-  @Environment(\.scenePhase) private var scenePhase
   @Bindable var workout: Workout
 
   @State private var currentItemIndex = 0

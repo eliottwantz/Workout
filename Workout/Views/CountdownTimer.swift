@@ -22,38 +22,33 @@ class CountdownTimerModel {
   // Current seconds remaining
   var secondsRemaining: Int = 0
 
+  var onComplete: (() -> Void)?
+
   var progress: Double {
     guard totalSeconds > 0 else { return 0 }
     return 1.0 - (Double(secondsRemaining) / Double(totalSeconds))
   }
 
-  init(seconds: Int, id: String = UUID().uuidString) {
+  init(seconds: Int, id: String = UUID().uuidString, onComplete: (() -> Void)?) {
     self.totalSeconds = seconds
     self.secondsRemaining = seconds
+    self.onComplete = onComplete
     self.timerKey = "timer_\(id)"
 
     // Check if we already have a stored end time for this timer
     if let storedEndTime = UserDefaults.standard.object(forKey: timerKey) as? Date {
-      self.endTime = storedEndTime
       // Calculate current time remaining based on the stored end time
+      endTime = storedEndTime
       updateRemainingTime()
     } else {
       // Set initial end time
-      self.endTime = Date().addingTimeInterval(TimeInterval(seconds))
+      endTime = Date().addingTimeInterval(TimeInterval(seconds))
+      UserDefaults.standard.set(Date().addingTimeInterval(TimeInterval(seconds)), forKey: timerKey)
     }
   }
 
   func start() {
     guard !isActive else { return }
-
-    if secondsRemaining <= 0 {
-      // Reset timer if it has already completed
-      secondsRemaining = totalSeconds
-      endTime = Date().addingTimeInterval(TimeInterval(totalSeconds))
-    }
-
-    // Store end time in UserDefaults for persistence across app termination
-    UserDefaults.standard.set(endTime, forKey: timerKey)
 
     isActive = true
     startTimer()
@@ -66,11 +61,6 @@ class CountdownTimerModel {
 
     // Clear stored end time
     UserDefaults.standard.removeObject(forKey: timerKey)
-  }
-
-  func reset() {
-    stop()
-    secondsRemaining = totalSeconds
   }
 
   // Update timer when app comes to foreground
@@ -89,7 +79,8 @@ class CountdownTimerModel {
 
     // Create a repeating timer that fires every second
     timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-      self?.updateRemainingTime()
+      guard let self = self else { return }
+      self.updateRemainingTime()
     }
   }
 
@@ -99,6 +90,7 @@ class CountdownTimerModel {
       // Timer has completed
       secondsRemaining = 0
       stop()
+      onComplete?()
     } else {
       // Calculate seconds remaining
       secondsRemaining = Int(endTime.timeIntervalSince(now))
@@ -117,7 +109,7 @@ struct CountdownTimer: View {
 
   init(time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil) {
     self.time = time
-    self._timerModel = State(initialValue: CountdownTimerModel(seconds: time, id: id))
+    self._timerModel = State(initialValue: CountdownTimerModel(seconds: time, id: id, onComplete: onComplete))
     self.onComplete = onComplete
   }
 
@@ -149,12 +141,6 @@ struct CountdownTimer: View {
     }
     .frame(width: 200, height: 200)
     .animation(.easeInOut, value: timerModel.secondsRemaining)
-    .onChange(of: timerModel.secondsRemaining) { oldValue, newValue in
-      if oldValue > 0 && newValue == 0 {
-        // Timer completed
-        onComplete?()
-      }
-    }
     .onChange(of: scenePhase) { oldPhase, newPhase in
       if newPhase == .active && oldPhase == .background {
         // App came back to foreground

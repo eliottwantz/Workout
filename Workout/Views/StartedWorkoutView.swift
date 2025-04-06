@@ -129,7 +129,7 @@ struct StartedWorkoutView: View {
     // Create notification content
     let content = UNMutableNotificationContent()
 
-    if let nextExercise = nextExercise, let nextDefinition = nextExercise.definition {
+    if let nextDefinition = nextSet?.exercise?.definition {
       // Next exercise exists, notify about the next exercise
       content.title = "Rest Time Finished!"
       content.body = "Time to start your next set of \(nextDefinition.name)"

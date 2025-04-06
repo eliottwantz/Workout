@@ -126,6 +126,9 @@ struct StartedWorkoutView: View {
 
   // Function to schedule a notification for when rest time is finished
   private func scheduleRestFinishedNotification(timeInterval: TimeInterval) {
+    // Remove any pending notifications first
+    removeAllPendingNotifications()
+
     // Create notification content
     let content = UNMutableNotificationContent()
 
@@ -160,7 +163,17 @@ struct StartedWorkoutView: View {
     }
   }
 
+  // Function to remove all pending notifications
+  private func removeAllPendingNotifications() {
+    let notificationCenter = UNUserNotificationCenter.current()
+    notificationCenter.removeAllPendingNotificationRequests()
+    print("Removed all pending notifications")
+  }
+
   private func moveToNextExerciseOrSet() {
+    // Remove any pending notifications when manually moving to next exercise
+    removeAllPendingNotifications()
+
     if let item = currentItem {
       if item.exercise != nil {
         if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {

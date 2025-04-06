@@ -13,17 +13,14 @@ import UserNotifications
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
+  @Environment(\.scenePhase) private var scenePhase
   @Bindable var workout: Workout
 
   @State private var currentItemIndex = 0
   @State private var currentExerciseIndex = 0
   @State private var currentSetIndex = 0
   @State private var isResting = false
-  @State private var remainingRestTime = 0
-  @State private var timer: Timer.TimerPublisher?
-  @State private var timerCancellable: Cancellable?
-  // Keep track of all active timers
-  @State private var activeTimers: [Timer] = []
+  @State private var currentTimerId = UUID().uuidString
 
   private var currentItem: WorkoutItem? {
     guard currentItemIndex < workout.orderedItems.count else { return nil }
@@ -105,36 +102,12 @@ struct StartedWorkoutView: View {
 
     if restTime > 0 {
       isResting = true
-      remainingRestTime = restTime
+
+      // Generate a new timer ID for this rest period
+      currentTimerId = UUID().uuidString
+
+      // Schedule a notification for when rest is finished
       scheduleRestFinishedNotification(timeInterval: TimeInterval(restTime))
-
-      // Cancel any previous timers
-      timerCancellable?.cancel()
-
-      // Invalidate all active timers
-      activeTimers.forEach { $0.invalidate() }
-      activeTimers.removeAll()
-
-      // Create a new timer
-      let scheduledTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-        if remainingRestTime > 0 {
-          remainingRestTime -= 1
-        } else {
-          timer.invalidate()
-          activeTimers.removeAll { $0 === timer }
-          isResting = false
-
-          // Move to the next exercise/set when timer ends
-          moveToNextExerciseOrSet()
-        }
-      }
-
-      // Add the timer to active timers
-      activeTimers.append(scheduledTimer)
-
-      // This is no longer needed since we're tracking the timers directly
-      timer = nil
-      timerCancellable = nil
     } else {
       // Move to the next exercise/set directly if no rest time
       moveToNextExerciseOrSet()
@@ -221,13 +194,6 @@ struct StartedWorkoutView: View {
 
   private func handleDoneSet() {
     if isResting {
-      // Cancel current rest timer
-      timerCancellable?.cancel()
-
-      // Invalidate all active timers
-      activeTimers.forEach { $0.invalidate() }
-      activeTimers.removeAll()
-
       isResting = false
       moveToNextExerciseOrSet()
     } else {
@@ -244,6 +210,19 @@ struct StartedWorkoutView: View {
         startRestTimer()
       }
     }
+  }
+
+  // Helper method to get the rest time for the current exercise or superset
+  private func getRestTime() -> Int {
+    if let item = currentItem, let superset = item.superset {
+      // For supersets, only start timer when it's the last exercise in the superset
+      if currentExerciseIndex == superset.exercises.count - 1 {
+        return superset.restTime
+      }
+    } else if let exercise = currentExercise {
+      return exercise.restTime
+    }
+    return 0
   }
 
   var body: some View {
@@ -327,29 +306,19 @@ struct StartedWorkoutView: View {
       // Middle action button or rest timer
       VStack {
         if isResting {
-          VStack {
-            Text("REST")
-              .font(.headline)
-              .foregroundColor(.secondary)
-
-            Text(remainingRestTime.formattedRestTime)
-              .font(.system(size: 70, weight: .bold, design: .rounded))
-              .monospacedDigit()
-              .contentTransition(.numericText())
-              .animation(.snappy, value: remainingRestTime)
-              .foregroundColor(remainingRestTime <= 5 ? .red : .primary)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(35)
-          .background(Color(UIColor.secondarySystemBackground))
-          .cornerRadius(15)
-          .padding(.horizontal)
+          CountdownTimer(
+            time: getRestTime(),
+            id: currentTimerId,
+            onComplete: {
+              isResting = false
+              moveToNextExerciseOrSet()
+            }
+          )
 
           Button("Skip Rest") {
             handleDoneSet()
           }
-          .padding()
-          .font(.headline)
+          .padding(.top, 20)
         } else if currentExercise != nil {
           Button {
             handleDoneSet()
@@ -411,24 +380,6 @@ struct StartedWorkoutView: View {
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
         .padding(.horizontal)
-      }
-    }
-    .sensoryFeedback(
-      .decrease, trigger: remainingRestTime,
-      condition: { oldValue, newValue in
-        newValue <= 5
-      }
-    )
-    .sensoryFeedback(
-      .error, trigger: remainingRestTime,
-      condition: { oldValue, newValue in
-        oldValue == 1 && newValue == 0
-      }
-    )
-    .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-      // Check if timer should be reset when app comes back to foreground
-      if isResting {
-        // Re-sync the timer if needed
       }
     }
     .onAppear {

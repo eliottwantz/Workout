@@ -73,9 +73,32 @@ struct AddExerciseView: View {
             predicate: #Predicate { $0.persistentModelID == definitionID }
           )
         ).first {
-          let exercise = Exercise(definition: definition)
-          let workoutItem = WorkoutItem(exercise: exercise)
-          workout.addItem(workoutItem)
+          // Look for the most recent instance of this exercise
+          if let previousExercise = findMostRecentExercise(for: definitionID) {
+            // Create a new exercise with the same definition and rest time
+            let exercise = Exercise(
+              definition: definition,
+              restTime: previousExercise.restTime,
+              notes: previousExercise.notes
+            )
+            
+            // Copy all sets from the previous exercise
+            for setEntry in previousExercise.sets {
+              let newSet = SetEntry(
+                reps: setEntry.reps,
+                weight: setEntry.weight
+              )
+              exercise.addSet(newSet)
+            }
+            
+            let workoutItem = WorkoutItem(exercise: exercise)
+            workout.addItem(workoutItem)
+          } else {
+            // No previous exercise found, create a new one with defaults
+            let exercise = Exercise(definition: definition)
+            let workoutItem = WorkoutItem(exercise: exercise)
+            workout.addItem(workoutItem)
+          }
         }
       }
     } else {
@@ -88,11 +111,34 @@ struct AddExerciseView: View {
             predicate: #Predicate { $0.persistentModelID == definitionID }
           )
         ).first {
-          let exercise = Exercise(
-            definition: definition,
-            orderWithinSuperset: index
-          )
-          superset.addExercise(exercise)
+          // Look for the most recent instance of this exercise
+          if let previousExercise = findMostRecentExercise(for: definitionID) {
+            // Create a new exercise with the same definition and rest time
+            let exercise = Exercise(
+              definition: definition,
+              restTime: previousExercise.restTime,
+              orderWithinSuperset: index,
+              notes: previousExercise.notes
+            )
+            
+            // Copy all sets from the previous exercise
+            for setEntry in previousExercise.sets {
+              let newSet = SetEntry(
+                reps: setEntry.reps,
+                weight: setEntry.weight
+              )
+              exercise.addSet(newSet)
+            }
+            
+            superset.addExercise(exercise)
+          } else {
+            // No previous exercise found, create a new one with defaults
+            let exercise = Exercise(
+              definition: definition,
+              orderWithinSuperset: index
+            )
+            superset.addExercise(exercise)
+          }
         }
       }
 
@@ -101,6 +147,42 @@ struct AddExerciseView: View {
     }
 
     try? modelContext.save()
+  }
+
+  private func findMostRecentExercise(for definitionID: PersistentIdentifier) -> Exercise? {
+    // Find the most recent workout that contains this exercise definition
+    
+    let descriptor = FetchDescriptor<Workout>(
+      sortBy: [SortDescriptor(\.date, order: .reverse)]  // Most recent workouts first
+    )
+    
+    guard let workouts = try? modelContext.fetch(descriptor) else { return nil }
+    
+    // Skip the current workout if it's already in the database
+    let workoutsToSearch = workouts.filter { $0.persistentModelID != workout.persistentModelID }
+    
+    // Search through workouts from most recent to oldest
+    for pastWorkout in workoutsToSearch {
+      // Look through each workout item
+      for item in pastWorkout.orderedItems {
+        // Check individual exercises
+        if let exercise = item.exercise, 
+           exercise.definition?.persistentModelID == definitionID {
+          return exercise
+        }
+        
+        // Check exercises in supersets
+        if let superset = item.superset {
+          for exercise in superset.exercises {
+            if exercise.definition?.persistentModelID == definitionID {
+              return exercise
+            }
+          }
+        }
+      }
+    }
+    
+    return nil
   }
 }
 

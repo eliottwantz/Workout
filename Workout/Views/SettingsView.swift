@@ -9,19 +9,21 @@ import SwiftUI
 
 struct SettingsView: View {
   @AppStorage("userAccentColor") var storedColor: Color = .yellow
+  @AppStorage("allowMultipleWorkoutsPerDay") var allowMultipleWorkoutsPerDay: Bool = false
 
   var body: some View {
+    List {
+      Section("Appearance") {
+        ColorPicker("Color theme", selection: $storedColor)
+      }
 
-    ZStack {
-      storedColor
-
-      ColorPicker("Color theme", selection: $storedColor)
-        .padding(.horizontal)
-        .foregroundStyle(storedColor.contrastColor)
-        .fontWeight(.semibold)
-        .font(.title)
-        .padding()
+      Section("Workouts") {
+        Toggle("Allow multiple workouts per day", isOn: $allowMultipleWorkoutsPerDay)
+      }
     }
+    .tint(storedColor)
+    .navigationTitle("Settings")
+    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

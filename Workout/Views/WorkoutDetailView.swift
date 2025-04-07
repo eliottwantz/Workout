@@ -9,6 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct WorkoutDetailView: View {
+  @AppStorage("allowMultipleWorkoutsPerDay") var allowMultipleWorkoutsPerDay: Bool = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
   @Bindable var workout: Workout
@@ -18,6 +19,7 @@ struct WorkoutDetailView: View {
   @State private var showingAddExerciseView = false
   @State private var showingCopyToTodayAlert = false
   @State private var showingStartedWorkoutView = false
+  @State private var showingMultipleWorkoutAlert = false
 
   // For previews
   init(workout: Workout) {
@@ -114,6 +116,14 @@ struct WorkoutDetailView: View {
     } message: {
       Text("Do you want to copy this workout to today?")
     }
+    .alert("Workout Already Exists", isPresented: $showingMultipleWorkoutAlert) {
+        Button("Go to Settings") {
+          navigationPath.append("settings")
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("You already have a workout for today. Enable 'Allow multiple workouts per day' in settings to create more than one workout per day.")
+      }
   }
 
   private func moveItems(from source: IndexSet, to destination: Int) {
@@ -145,6 +155,26 @@ struct WorkoutDetailView: View {
   }
 
   private func copyWorkoutToToday() {
+    
+    var descriptor = FetchDescriptor<Workout>(
+      sortBy: [.init(\Workout.date, order: .reverse)]
+    )
+    descriptor.fetchLimit = 1
+    
+    do {
+      let allWorkouts = try modelContext.fetch(descriptor)
+      let hasWorkoutForToday = allWorkouts.contains { Calendar.current.isDateInToday($0.date) }
+      
+      if hasWorkoutForToday && !allowMultipleWorkoutsPerDay {
+        // Show alert if multiple workouts per day are not allowed
+        showingCopyToTodayAlert = false
+        showingMultipleWorkoutAlert = true
+        return
+      }
+    } catch {
+      print("Failed to fetch workouts: \(error)")
+    }
+    
     // Create a new workout with today's date
     let todayWorkout = Workout(date: Date())
 

@@ -17,6 +17,7 @@ final class Workout {
 
   // Using a dedicated WorkoutItem class to handle the mixed list of Exercises and Supersets
   // The order property on WorkoutItem will manage the display sequence.
+  // When a Workout is deleted, all its WorkoutItems should be deleted
   @Relationship(deleteRule: .cascade, inverse: \WorkoutItem.workout)
   var items: [WorkoutItem]? = []  // Use optional array initialization for SwiftData best practice
 
@@ -60,7 +61,7 @@ final class Workout {
 final class WorkoutItem {
   var order: Int = 0  // Defines the sequence within the Workout
 
-  var workout: Workout?  // Inverse relationship back to the Workout
+  var workout: Workout?
 
   // A WorkoutItem represents EITHER a single Exercise OR a Superset
   @Relationship(deleteRule: .cascade, inverse: \Exercise.workoutItem)
@@ -129,7 +130,6 @@ final class Exercise {
   @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
   var orderedSets: [SetEntry]? = []  // Use optional array initialization
 
-  // Inverse relationship: Where does this exercise instance live?
   var workoutItem: WorkoutItem?  // If it's directly in a Workout
   var containingSuperset: Superset?  // If it's part of a Superset
   var workout: Workout
@@ -208,7 +208,6 @@ final class SetEntry {
   var reps: Int
   var weight: Double  // Using Double for flexibility (e.g., 2.5 kg/lb plates)
 
-  // Inverse relationship: Which Exercise instance does this set belong to?
   var exercise: Exercise?
 
   init(order: Int = 0, reps: Int, weight: Double) {

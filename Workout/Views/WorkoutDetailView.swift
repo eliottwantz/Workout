@@ -118,14 +118,14 @@ struct WorkoutDetailView: View {
 
   private func deleteItems(offsets: IndexSet) {
     withAnimation {
-      var items = workout.orderedItems
-      items.remove(atOffsets: offsets)
-
-      for (index, item) in items.enumerated() {
-        item.order = index
+      for index in offsets {
+        modelContext.delete(workout.orderedItems[index])
       }
 
-      workout.items = items
+      // Update the order of remaining items
+      for (index, item) in workout.orderedItems.enumerated() {
+        item.order = index
+      }
 
       try? modelContext.save()
     }

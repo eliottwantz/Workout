@@ -90,7 +90,12 @@ struct ExerciseDetailView: View {
     }
     .navigationTitle(exercise.definition?.name ?? "Exercise Detail")
     .toolbar {
-      ToolbarItem(placement: .primaryAction) {
+      ToolbarItemGroup(placement: .primaryAction) {
+        Button {
+          addSet()
+        } label: {
+          Label("Add set", systemImage: "plus")
+        }
         EditButton()
       }
     }

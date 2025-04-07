@@ -12,11 +12,24 @@ struct WorkoutDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
   @Bindable var workout: Workout
+  @Binding var navigationPath: NavigationPath
 
   @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
   @State private var showingCopyToTodayAlert = false
   @State private var showingStartedWorkoutView = false
+
+  // For previews
+  init(workout: Workout) {
+    self.workout = workout
+    self._navigationPath = .constant(NavigationPath())
+  }
+
+  // For actual use
+  init(workout: Workout, navigationPath: Binding<NavigationPath>) {
+    self.workout = workout
+    self._navigationPath = navigationPath
+  }
 
   var body: some View {
     List {
@@ -194,6 +207,9 @@ struct WorkoutDetailView: View {
     // Insert the new workout into the model context
     modelContext.insert(todayWorkout)
     try? modelContext.save()
+
+    // Navigate back to home screen
+    navigationPath.removeLast(navigationPath.count)
   }
 }
 

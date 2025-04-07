@@ -48,7 +48,7 @@ struct WorkoutListView: View {
       }
       .navigationTitle("Workout Log")
       .navigationDestination(for: Workout.self) { workout in
-        WorkoutDetailView(workout: workout)
+        WorkoutDetailView(workout: workout, navigationPath: $path)
       }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {

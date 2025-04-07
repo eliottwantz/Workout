@@ -260,7 +260,6 @@ struct WorkoutItemRowView: View {
 
   // Adding some sample data for the preview
   let modelContext = container.mainContext
-  AppContainer.addSampleData(modelContext)
 
   let workoutFetchDescriptor = FetchDescriptor<Workout>()
   let workouts = try! modelContext.fetch(workoutFetchDescriptor)

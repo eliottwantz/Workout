@@ -11,7 +11,7 @@ import SwiftUI
 struct WorkoutListView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
-  @AppStorage("allowMultipleWorkoutsPerDay") private var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) private var allowMultipleWorkoutsPerDay: Bool = false
 
   @State private var showingNewWorkoutAlert = false
   @State private var showingMultipleWorkoutAlert = false
@@ -63,7 +63,9 @@ struct WorkoutListView: View {
         }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text("You already have a workout for today. Enable 'Allow multiple workouts per day' in settings to create more than one workout per day.")
+        Text(
+          "You already have a workout for today. Enable 'Allow multiple workouts per day' in settings to create more than one workout per day."
+        )
       }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {
@@ -88,7 +90,7 @@ struct WorkoutListView: View {
     // Check if workout already exists for today
     let calendar = Calendar.current
     let hasWorkoutForToday = workouts.contains { calendar.isDateInToday($0.date) }
-    
+
     if hasWorkoutForToday && !allowMultipleWorkoutsPerDay {
       // Show alert if multiple workouts per day are not allowed
       showingMultipleWorkoutAlert = true

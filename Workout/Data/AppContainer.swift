@@ -200,4 +200,6 @@ extension AppContainer {
       return nil
     }
   }
+
+  static let allowMultipleWorkoutsPerDayKey: String = "allowMultipleWorkoutsPerDay"
 }

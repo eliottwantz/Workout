@@ -55,13 +55,20 @@ struct StartedWorkoutView: View {
         if currentExerciseIndex + 1 < superset.exercises.count {
           // Next exercise in superset
           return superset.exercises[currentExerciseIndex + 1]
-        } else if currentItemIndex + 1 < workout.orderedItems.count {
-          // Next item
-          let nextItem = workout.orderedItems[currentItemIndex + 1]
-          if let nextExercise = nextItem.exercise {
-            return nextExercise
-          } else if let nextSuperset = nextItem.superset, !nextSuperset.exercises.isEmpty {
-            return nextSuperset.exercises[0]
+        } else {
+          // Current exercise is the last in the superset
+          // Check if there are more sets for this exercise
+          if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {
+            // If there are more sets, the next exercise is the first in the superset
+            return superset.exercises[0]
+          } else if currentItemIndex + 1 < workout.orderedItems.count {
+            // If no more sets, check the next workout item
+            let nextItem = workout.orderedItems[currentItemIndex + 1]
+            if let nextExercise = nextItem.exercise {
+              return nextExercise
+            } else if let nextSuperset = nextItem.superset, !nextSuperset.exercises.isEmpty {
+              return nextSuperset.exercises[0]
+            }
           }
         }
       }
@@ -209,7 +216,20 @@ struct StartedWorkoutView: View {
       isResting = false
       moveToNextExerciseOrSet()
     } else {
-      if let item = currentItem, let superset = item.superset {
+      // Check if this is the last set of the last exercise
+      let isLastSet = currentSetIndex + 1 >= currentExercise?.sets.count ?? 0
+      let isLastExerciseInSuperset = currentItem?.superset != nil && currentExerciseIndex >= (currentItem?.superset?.exercises.count ?? 0) - 1
+      let isLastItem = currentItemIndex + 1 >= workout.orderedItems.count
+      
+      let isWorkoutComplete = isLastSet && 
+                              (currentItem?.exercise != nil || isLastExerciseInSuperset) && 
+                              isLastItem
+      
+      if isWorkoutComplete {
+        // Last set of the last exercise, no need for rest timer
+        // Move directly to the next state which will show the finish button
+        moveToNextExerciseOrSet()
+      } else if let item = currentItem, let superset = item.superset {
         if currentExerciseIndex < superset.exercises.count - 1 {
           // In a superset but not the last exercise, just move to next exercise
           currentExerciseIndex += 1
@@ -262,7 +282,6 @@ struct StartedWorkoutView: View {
           .foregroundColor(.clear)
           .padding()
       }
-      .frame(height: 90, alignment: .top)
       .frame(maxWidth: .infinity)
 
       if let exercise = currentExercise, let exerciseDefinition = exercise.definition, let set = currentSet {
@@ -307,92 +326,106 @@ struct StartedWorkoutView: View {
           .cornerRadius(15)
           .padding(.horizontal)
         }
-      } else {
-        Text("Workout Complete!")
-          .font(.largeTitle)
-          .fontWeight(.bold)
-      }
 
-      Spacer()
+        Spacer()
 
-      // Middle action button or rest timer
-      VStack {
-        if isResting {
-          CountdownTimer(
-            time: getRestTime(),
-            id: currentTimerId,
-            onComplete: {
-              isResting = false
-              moveToNextExerciseOrSet()
+        // Middle action button or rest timer
+        VStack {
+          if isResting {
+            CountdownTimer(
+              time: getRestTime(),
+              id: currentTimerId,
+              onComplete: {
+                isResting = false
+                moveToNextExerciseOrSet()
+              }
+            )
+
+            Button("Skip Rest") {
+              handleDoneSet()
             }
-          )
-
-          Button("Skip Rest") {
-            handleDoneSet()
-          }
-          .padding(.top, 20)
-        } else if currentExercise != nil {
-          Button {
-            handleDoneSet()
-          } label: {
-            Text("Done Set")
-              .font(.headline)
-              .frame(width: 200, height: 60)
-              .background(userAccentColor)
-              .foregroundStyle(userAccentColor.contrastColor)
-              .cornerRadius(15)
-          }
-        } else {
-          Button {
-            dismiss()
-          } label: {
-            Text("Finish Workout")
-              .font(.headline)
-              .frame(width: 200, height: 60)
-              .background(userAccentColor)
-              .foregroundStyle(userAccentColor.contrastColor)
-              .cornerRadius(15)
+            .padding(.top, 20)
+          } else if currentExercise != nil {
+            Button {
+              handleDoneSet()
+            } label: {
+              Text("Done Set")
+                .font(.headline)
+                .frame(width: 200, height: 60)
+                .background(userAccentColor)
+                .foregroundStyle(userAccentColor.contrastColor)
+                .cornerRadius(15)
+            }
           }
         }
-      }
-      .padding()
+        .padding()
 
-      Spacer()
+        Spacer()
 
-      // Next exercise information
-      if let nextExercise = nextExercise, let nextDefinition = nextExercise.definition, let nextSet = nextSet {
+        // Next exercise information
         VStack(spacing: 10) {
           Text("NEXT")
             .font(.caption)
             .foregroundColor(.secondary)
 
-          Text(nextDefinition.name)
-            .font(.headline)
+          if let nextExercise = nextExercise, let nextDefinition = nextExercise.definition, let nextSet = nextSet {
+            Text(nextDefinition.name)
+              .font(.headline)
 
-          HStack(spacing: 30) {
-            VStack {
-              Text("REPS")
-                .font(.caption)
-                .foregroundColor(.secondary)
-              Text("\(nextSet.reps)")
-                .font(.title3)
-            }
+            HStack(spacing: 30) {
+              VStack {
+                Text("REPS")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+                Text("\(nextSet.reps)")
+                  .font(.title3)
+              }
 
-            VStack {
-              Text("WEIGHT")
-                .font(.caption)
-                .foregroundColor(.secondary)
-              Text("\(nextSet.weight, specifier: "%.1f") kg")
-                .font(.title3)
+              VStack {
+                Text("WEIGHT")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+                Text("\(nextSet.weight, specifier: "%.1f") kg")
+                  .font(.title3)
+              }
             }
+          } else {
+            Text("Congratulations! You've got one more set to go!")
+              .font(.headline)
+              .foregroundColor(.secondary)
+              .padding(.vertical, 10)
+              .multilineTextAlignment(.center)
+              .frame(maxWidth: .infinity)
           }
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 100)
         .padding(25)
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
         .padding(.horizontal)
+      } else {
+        Text("Workout Complete!")
+          .font(.largeTitle)
+          .fontWeight(.bold)
+        Spacer()
+        Text("🏆🏆🏆")
+          .font(.largeTitle)
+          .fontWeight(.bold)
+        Spacer()
+        Button {
+          dismiss()
+        } label: {
+          Text("Finish")
+            .font(.headline)
+            .frame(width: 200, height: 60)
+            .background(userAccentColor)
+            .foregroundStyle(userAccentColor.contrastColor)
+            .cornerRadius(15)
+
+        }
       }
+
     }
     .onAppear {
       requestNotificationPermissions()

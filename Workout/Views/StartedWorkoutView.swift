@@ -10,114 +10,111 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
+// Define a struct to represent a single set in our flattened workout sequence
+struct WorkoutSet: Identifiable {
+  let id = UUID()
+  let itemIndex: Int  // Index of the WorkoutItem in the workout
+  let exerciseIndex: Int  // Index of the Exercise within a superset (0 for regular exercises)
+  let setIndex: Int  // Index of the SetEntry within the exercise
+  let exercise: Exercise  // Reference to the actual exercise
+  let set: SetEntry  // Reference to the actual set
+  let isSuperset: Bool  // Whether this set is part of a superset
+
+  // Helper computed properties
+  var exerciseDefinition: ExerciseDefinition? { exercise.definition }
+  var exerciseName: String { exerciseDefinition?.name ?? "Unknown Exercise" }
+  var restTime: Int {
+    if isSuperset {
+      // For supersets, use the superset's rest time
+      return exercise.containingSuperset?.restTime ?? 0
+    } else {
+      // For regular exercises, use the exercise's rest time
+      return exercise.restTime
+    }
+  }
+
+  // Determines if rest should be shown after this set
+  var shouldShowRest: Bool {
+    if isSuperset {
+      // Only show rest after the last exercise in a superset
+      if let superset = exercise.containingSuperset {
+        let lastExerciseInSuperset = superset.exercises.last
+        return exercise == lastExerciseInSuperset
+      }
+      return false
+    } else {
+      // Always show rest after a regular exercise set (unless rest time is 0)
+      return restTime > 0
+    }
+  }
+}
+
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
   @Bindable var workout: Workout
 
-  @State private var currentItemIndex = 0
-  @State private var currentExerciseIndex = 0
+  // State for tracking current position in workout
   @State private var currentSetIndex = 0
   @State private var isResting = false
   @State private var currentTimerId = UUID().uuidString
 
-  private var currentItem: WorkoutItem? {
-    guard currentItemIndex < workout.orderedItems.count else { return nil }
-    return workout.orderedItems[currentItemIndex]
+  // Our flattened list of all sets in the workout, in order
+  @State private var workoutSets = [WorkoutSet]()
+
+  // Computed properties to access the current and next set
+  private var currentWorkoutSet: WorkoutSet? {
+    guard !workoutSets.isEmpty, currentSetIndex < workoutSets.count else { return nil }
+    return workoutSets[currentSetIndex]
   }
 
-  private var currentExercise: Exercise? {
-    if let item = currentItem {
+  private var nextWorkoutSet: WorkoutSet? {
+    guard !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else { return nil }
+    return workoutSets[currentSetIndex + 1]
+  }
+
+  // Function to build the flattened list of workout sets
+  private func buildWorkoutSetsList() {
+    var sets: [WorkoutSet] = []
+
+    for (itemIndex, item) in workout.orderedItems.enumerated() {
       if let exercise = item.exercise {
-        return exercise
-      } else if let superset = item.superset {
-        guard currentExerciseIndex < superset.exercises.count else { return nil }
-        return superset.exercises[currentExerciseIndex]
-      }
-    }
-    return nil
-  }
-
-  private var nextExercise: Exercise? {
-    if let item = currentItem {
-      if item.exercise != nil {
-        // Check if there's another item
-        if currentItemIndex + 1 < workout.orderedItems.count {
-          let nextItem = workout.orderedItems[currentItemIndex + 1]
-          if let nextExercise = nextItem.exercise {
-            return nextExercise
-          } else if let nextSuperset = nextItem.superset, !nextSuperset.exercises.isEmpty {
-            return nextSuperset.exercises[0]
-          }
+        // Regular exercise - add all its sets
+        for (setIndex, set) in exercise.sets.enumerated() {
+          sets.append(
+            WorkoutSet(
+              itemIndex: itemIndex,
+              exerciseIndex: 0,
+              setIndex: setIndex,
+              exercise: exercise,
+              set: set,
+              isSuperset: false
+            )
+          )
         }
-        return nil
       } else if let superset = item.superset {
-        if currentExerciseIndex + 1 < superset.exercises.count {
-          // Next exercise in superset
-          return superset.exercises[currentExerciseIndex + 1]
-        } else {
-          // Current exercise is the last in the superset
-          // Check if there are more sets for this exercise
-          if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {
-            // If there are more sets, the next exercise is the first in the superset
-            return superset.exercises[0]
-          } else if currentItemIndex + 1 < workout.orderedItems.count {
-            // If no more sets, check the next workout item
-            let nextItem = workout.orderedItems[currentItemIndex + 1]
-            if let nextExercise = nextItem.exercise {
-              return nextExercise
-            } else if let nextSuperset = nextItem.superset, !nextSuperset.exercises.isEmpty {
-              return nextSuperset.exercises[0]
-            }
+        // Superset - add first set of each exercise in the superset, then second set, etc.
+        let maxNumberOfSets = (superset.exercises.map { $0.sets.count }.max()) ?? 0
+        for setIndex in 0..<maxNumberOfSets {
+          for exercise in superset.exercises {
+            guard setIndex < exercise.sets.count else { continue }
+            let set = exercise.sets[setIndex]
+            sets.append(
+              WorkoutSet(
+                itemIndex: itemIndex,
+                exerciseIndex: exercise.orderWithinSuperset,
+                setIndex: set.order,
+                exercise: exercise,
+                set: set,
+                isSuperset: true
+              )
+            )
           }
         }
       }
     }
-    return nil
-  }
 
-  private var currentSet: SetEntry? {
-    guard let exercise = currentExercise, currentSetIndex < exercise.sets.count else { return nil }
-    return exercise.sets[currentSetIndex]
-  }
-
-  private var nextSet: SetEntry? {
-    if let exercise = currentExercise {
-      if currentSetIndex + 1 < exercise.sets.count {
-        return exercise.sets[currentSetIndex + 1]
-      }
-    }
-
-    if let nextExercise = nextExercise, !nextExercise.sets.isEmpty {
-      return nextExercise.sets[0]
-    }
-
-    return nil
-  }
-
-  private func startRestTimer() {
-    var restTime = 0
-    if let item = currentItem, let superset = item.superset {
-      // For supersets, only start timer when it's the last exercise in the superset
-      if currentExerciseIndex == superset.exercises.count - 1 {
-        restTime = superset.restTime
-      }
-    } else if let exercise = currentExercise {
-      restTime = exercise.restTime
-    }
-
-    if restTime > 0 {
-      isResting = true
-
-      // Generate a new timer ID for this rest period
-      currentTimerId = UUID().uuidString
-
-      // Schedule a notification for when rest is finished
-      scheduleRestFinishedNotification(timeInterval: TimeInterval(restTime))
-    } else {
-      // Move to the next exercise/set directly if no rest time
-      moveToNextExerciseOrSet()
-    }
+    workoutSets = sets
   }
 
   // Request notification permissions
@@ -131,6 +128,45 @@ struct StartedWorkoutView: View {
     }
   }
 
+  // Updated function to move to the next set
+  private func moveToNextSet() {
+    removeAllPendingNotifications()
+    currentSetIndex += 1
+  }
+
+  // Function to handle when user completes a set
+  private func handleDoneSet() {
+    if isResting {
+      // If we're resting, just move to next set
+      isResting = false
+      moveToNextSet()
+    } else {
+      // Check if there's a rest period after this set
+      if let currentSet = currentWorkoutSet, currentSet.shouldShowRest {
+        startRestTimer()
+      } else {
+        // No rest needed, just move to next set
+        moveToNextSet()
+      }
+    }
+  }
+
+  // Start the rest timer
+  private func startRestTimer() {
+    guard let currentSet = currentWorkoutSet, currentSet.restTime > 0 else {
+      moveToNextSet()
+      return
+    }
+
+    isResting = true
+
+    // Generate a new timer ID for this rest period
+    currentTimerId = UUID().uuidString
+
+    // Schedule a notification for when rest is finished
+    scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
+  }
+
   // Function to schedule a notification for when rest time is finished
   private func scheduleRestFinishedNotification(timeInterval: TimeInterval) {
     // Remove any pending notifications first
@@ -139,7 +175,7 @@ struct StartedWorkoutView: View {
     // Create notification content
     let content = UNMutableNotificationContent()
 
-    if let nextDefinition = nextSet?.exercise?.definition {
+    if let nextDefinition = nextWorkoutSet?.exerciseDefinition {
       // Next exercise exists, notify about the next exercise
       content.title = "Rest Time Finished!"
       content.body = "Time to start your next set of \(nextDefinition.name)"
@@ -177,87 +213,6 @@ struct StartedWorkoutView: View {
     print("Removed all pending notifications")
   }
 
-  private func moveToNextExerciseOrSet() {
-    // Remove any pending notifications when manually moving to next exercise
-    removeAllPendingNotifications()
-
-    if let item = currentItem {
-      if item.exercise != nil {
-        if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {
-          // Move to next set within the same exercise
-          currentSetIndex += 1
-        } else {
-          // Move to next item
-          currentItemIndex += 1
-          currentExerciseIndex = 0
-          currentSetIndex = 0
-        }
-      } else if let superset = item.superset {
-        if currentExerciseIndex + 1 < superset.exercises.count && currentSetIndex >= currentExercise?.sets.count ?? 0 {
-          // Current set index has reached the end for current exercise
-          // Move to next exercise in superset and reset set index
-          currentExerciseIndex += 1
-          currentSetIndex = 0
-        } else if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {
-          // Still have sets left for current exercise
-          currentSetIndex += 1
-        } else if currentExerciseIndex + 1 >= superset.exercises.count {
-          // Reached the end of exercises in superset and current set index
-          // Move to next workout item
-          currentItemIndex += 1
-          currentExerciseIndex = 0
-          currentSetIndex = 0
-        }
-      }
-    }
-  }
-
-  private func handleDoneSet() {
-    if isResting {
-      isResting = false
-      moveToNextExerciseOrSet()
-    } else {
-      // Check if this is the last set of the last exercise
-      let isLastSet = currentSetIndex + 1 >= currentExercise?.sets.count ?? 0
-      let isLastExerciseInSuperset = currentItem?.superset != nil && currentExerciseIndex >= (currentItem?.superset?.exercises.count ?? 0) - 1
-      let isLastItem = currentItemIndex + 1 >= workout.orderedItems.count
-      
-      let isWorkoutComplete = isLastSet && 
-                              (currentItem?.exercise != nil || isLastExerciseInSuperset) && 
-                              isLastItem
-      
-      if isWorkoutComplete {
-        // Last set of the last exercise, no need for rest timer
-        // Move directly to the next state which will show the finish button
-        moveToNextExerciseOrSet()
-      } else if let item = currentItem, let superset = item.superset {
-        if currentExerciseIndex < superset.exercises.count - 1 {
-          // In a superset but not the last exercise, just move to next exercise
-          currentExerciseIndex += 1
-        } else {
-          // Last exercise in superset, start rest timer
-          startRestTimer()
-        }
-      } else {
-        // Regular exercise, start rest timer
-        startRestTimer()
-      }
-    }
-  }
-
-  // Helper method to get the rest time for the current exercise or superset
-  private func getRestTime() -> Int {
-    if let item = currentItem, let superset = item.superset {
-      // For supersets, only start timer when it's the last exercise in the superset
-      if currentExerciseIndex == superset.exercises.count - 1 {
-        return superset.restTime
-      }
-    } else if let exercise = currentExercise {
-      return exercise.restTime
-    }
-    return 0
-  }
-
   var body: some View {
     VStack {
       HStack {
@@ -285,29 +240,29 @@ struct StartedWorkoutView: View {
       }
       .frame(maxWidth: .infinity)
 
-      if let exercise = currentExercise, let exerciseDefinition = exercise.definition, let set = currentSet {
+      if let currentSet = currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
         // Current exercise and set
-        VStack(spacing: 20) {
-          Text(exerciseDefinition.name)
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .multilineTextAlignment(.center)
+        VStack(spacing: 12) {
+          HStack {
+            Text(exerciseDefinition.name)
+              .font(.title)
+              .fontWeight(.bold)
+              .multilineTextAlignment(.center)
+
+            Spacer()
+
+            Text("SET \(currentSet.setIndex + 1)/\(currentSet.exercise.sets.count)")
+              .font(.headline)
+              .foregroundColor(.secondary)
+          }
+          .padding(.horizontal)
 
           HStack(spacing: 35) {
-            VStack {
-              Text("SET")
-                .font(.caption)
-                .foregroundColor(.secondary)
-              Text("\(currentSetIndex + 1)/\(exercise.sets.count)")
-                .font(.title2)
-                .fontWeight(.semibold)
-            }
-
             VStack {
               Text("REPS")
                 .font(.caption)
                 .foregroundColor(.secondary)
-              Text("\(set.reps)")
+              Text("\(currentSet.set.reps)")
                 .font(.title2)
                 .fontWeight(.semibold)
             }
@@ -316,13 +271,13 @@ struct StartedWorkoutView: View {
               Text("WEIGHT")
                 .font(.caption)
                 .foregroundColor(.secondary)
-              Text("\(set.weight, specifier: "%.1f") kg")
+              Text("\(currentSet.set.weight, specifier: "%.1f") kg")
                 .font(.title2)
                 .fontWeight(.semibold)
             }
           }
           .frame(maxWidth: .infinity)
-          .padding(35)
+          .padding(25)
           .background(Color(UIColor.secondarySystemBackground))
           .cornerRadius(15)
           .padding(.horizontal)
@@ -334,11 +289,11 @@ struct StartedWorkoutView: View {
         VStack {
           if isResting {
             CountdownTimer(
-              time: getRestTime(),
+              time: currentSet.restTime,
               id: currentTimerId,
               onComplete: {
                 isResting = false
-                moveToNextExerciseOrSet()
+                moveToNextSet()
               }
             )
 
@@ -346,7 +301,7 @@ struct StartedWorkoutView: View {
               handleDoneSet()
             }
             .padding(.top, 20)
-          } else if currentExercise != nil {
+          } else {
             Button {
               handleDoneSet()
             } label: {
@@ -363,22 +318,28 @@ struct StartedWorkoutView: View {
 
         Spacer()
 
-        // Next exercise information
-        VStack(spacing: 10) {
-          Text("NEXT")
-            .font(.caption)
-            .foregroundColor(.secondary)
+        // Next set information
+        if let nextSet = nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition {
+          VStack(spacing: 12) {
+            HStack {
+              Text("NEXT: \(nextDefinition.name)")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
-          if let nextExercise = nextExercise, let nextDefinition = nextExercise.definition, let nextSet = nextSet {
-            Text(nextDefinition.name)
-              .font(.headline)
+              Spacer()
 
-            HStack(spacing: 30) {
+              Text("SET \(nextSet.setIndex + 1)/\(nextSet.exercise.sets.count)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+
+            HStack(spacing: 35) {
               VStack {
                 Text("REPS")
                   .font(.caption)
                   .foregroundColor(.secondary)
-                Text("\(nextSet.reps)")
+                Text("\(nextSet.set.reps)")
                   .font(.title3)
               }
 
@@ -386,25 +347,35 @@ struct StartedWorkoutView: View {
                 Text("WEIGHT")
                   .font(.caption)
                   .foregroundColor(.secondary)
-                Text("\(nextSet.weight, specifier: "%.1f") kg")
+                Text("\(nextSet.set.weight, specifier: "%.1f") kg")
                   .font(.title3)
               }
             }
-          } else {
-            Text("Congratulations! You've got one more set to go!")
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(15)
+            .padding(.horizontal)
+          }
+        } else {
+          VStack(spacing: 10) {
+            Text("WORKOUT COMPLETE")
               .font(.headline)
+              .foregroundColor(.secondary)
+
+            Text("No more sets in this workout")
+              .font(.body)
               .foregroundColor(.secondary)
               .padding(.vertical, 10)
               .multilineTextAlignment(.center)
               .frame(maxWidth: .infinity)
           }
+          .frame(maxWidth: .infinity)
+          .padding(25)
+          .background(Color(UIColor.secondarySystemBackground))
+          .cornerRadius(15)
+          .padding(.horizontal)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 100)
-        .padding(25)
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(15)
-        .padding(.horizontal)
       } else {
         Text("Workout Complete!")
           .font(.largeTitle)
@@ -423,13 +394,12 @@ struct StartedWorkoutView: View {
             .background(userAccentColor)
             .foregroundStyle(userAccentColor.contrastColor)
             .cornerRadius(15)
-
         }
       }
-
     }
     .onAppear {
       requestNotificationPermissions()
+      buildWorkoutSetsList()
     }
   }
 }

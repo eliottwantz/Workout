@@ -32,8 +32,10 @@ struct ExerciseDetailView: View {
         }
       }
 
-      Section("Rest time") {
-        RestTimePicker(exercise: exercise)
+      if exercise.containingSuperset == nil {
+        Section("Rest time") {
+          RestTimePicker(exercise: exercise)
+        }
       }
 
       if let sets = exercise.orderedSets, !sets.isEmpty {

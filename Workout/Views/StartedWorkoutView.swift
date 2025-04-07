@@ -19,6 +19,7 @@ struct WorkoutSet: Identifiable {
   let exercise: Exercise  // Reference to the actual exercise
   let set: SetEntry  // Reference to the actual set
   let isSuperset: Bool  // Whether this set is part of a superset
+  var isLastSetInWorkout: Bool = false
 
   // Helper computed properties
   var exerciseDefinition: ExerciseDefinition? { exercise.definition }
@@ -35,6 +36,10 @@ struct WorkoutSet: Identifiable {
 
   // Determines if rest should be shown after this set
   var shouldShowRest: Bool {
+    if isLastSetInWorkout {
+      return false
+    }
+
     if isSuperset {
       // Only show rest after the last exercise in a superset
       if let superset = exercise.containingSuperset {
@@ -114,6 +119,7 @@ struct StartedWorkoutView: View {
       }
     }
 
+    sets[sets.count - 1].isLastSetInWorkout = true
     workoutSets = sets
   }
 

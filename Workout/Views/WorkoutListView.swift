@@ -19,20 +19,21 @@ struct WorkoutListView: View {
     NavigationStack(path: $path) {
       List {
         if !workouts.isEmpty {
-          Button {
-            createNewWorkout()
-          } label: {
-            Label("Add Workout", systemImage: "plus")
+          Section("Workouts") {
+            Button {
+              createNewWorkout()
+            } label: {
+              Label("Add Workout", systemImage: "plus")
+            }
+            .padding(.vertical, 8)
+            ForEach(workouts) { workout in
+              NavigationLink(value: workout) {
+                WorkoutRowView(workout: workout)
+              }
+            }
+            .onDelete(perform: deleteWorkouts)
           }
-          .padding(.vertical, 6)
         }
-
-        ForEach(workouts) { workout in
-          NavigationLink(value: workout) {
-            WorkoutRowView(workout: workout)
-          }
-        }
-        .onDelete(perform: deleteWorkouts)
       }
       .overlay {
         if workouts.isEmpty {
@@ -109,7 +110,4 @@ struct WorkoutRowView: View {
 #Preview {
   WorkoutListView()
     .modelContainer(AppContainer.preview.modelContainer)
-    .task {
-      AppContainer.addSampleData(AppContainer.preview.modelContainer.mainContext)
-    }
 }

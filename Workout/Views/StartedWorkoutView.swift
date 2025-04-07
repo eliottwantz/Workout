@@ -193,16 +193,17 @@ struct StartedWorkoutView: View {
           currentSetIndex = 0
         }
       } else if let superset = item.superset {
-        if currentExerciseIndex + 1 < superset.exercises.count {
-          // Move to next exercise in superset
+        if currentExerciseIndex + 1 < superset.exercises.count && currentSetIndex >= currentExercise?.sets.count ?? 0 {
+          // Current set index has reached the end for current exercise
+          // Move to next exercise in superset and reset set index
           currentExerciseIndex += 1
           currentSetIndex = 0
         } else if currentSetIndex + 1 < currentExercise?.sets.count ?? 0 {
-          // Move to next set, restart with first exercise in superset
+          // Still have sets left for current exercise
           currentSetIndex += 1
-          currentExerciseIndex = 0
-        } else {
-          // Move to next item
+        } else if currentExerciseIndex + 1 >= superset.exercises.count {
+          // Reached the end of exercises in superset and current set index
+          // Move to next workout item
           currentItemIndex += 1
           currentExerciseIndex = 0
           currentSetIndex = 0

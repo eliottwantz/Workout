@@ -32,9 +32,20 @@ final class Workout {
     (items ?? []).sorted { $0.order < $1.order }
   }
 
-  @Transient var formattedDate: String {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
+  // Convenience method to add a new item (Exercise or Superset) and maintain order
+  func addItem(_ item: WorkoutItem) {
+    item.order = (items?.count ?? 0)  // Append to the end
+    items?.append(item)
+    item.workout = self  // Set the inverse relationship
+    item.updateContainedItemWorkouts()  // Update workout relationship on contained items
+  }
+}
+
+extension Workout {
+  static var dateFormatter = DateFormatter()
+  
+  var formattedDate: String {
+    Workout.dateFormatter.dateStyle = .medium
 
     let calendar = Calendar.current
     if calendar.isDateInToday(date) {
@@ -42,16 +53,8 @@ final class Workout {
     } else if calendar.isDateInYesterday(date) {
       return "Yesterday"
     } else {
-      return formatter.string(from: date)
+      return Workout.dateFormatter.string(from: date)
     }
-  }
-
-  // Convenience method to add a new item (Exercise or Superset) and maintain order
-  func addItem(_ item: WorkoutItem) {
-    item.order = (items?.count ?? 0)  // Append to the end
-    items?.append(item)
-    item.workout = self  // Set the inverse relationship
-    item.updateContainedItemWorkouts()  // Update workout relationship on contained items
   }
 }
 

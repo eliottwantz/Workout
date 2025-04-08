@@ -63,6 +63,7 @@ struct ExerciseDetailView: View {
 
           ForEach(exercise.sets) { set in
             EditableSetRowView(set: set)
+              .frame(minHeight: 50)
           }
           .onDelete(perform: deleteSets)
           .onMove(perform: moveSets)
@@ -72,6 +73,7 @@ struct ExerciseDetailView: View {
           } label: {
             Label("Add Set", systemImage: "plus")
           }
+          .frame(minHeight: 40)
         }
       }
     }

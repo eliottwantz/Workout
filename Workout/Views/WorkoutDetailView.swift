@@ -40,6 +40,7 @@ struct WorkoutDetailView: View {
         Section("Exercises") {
           ForEach(workout.orderedItems) { workoutItem in
             WorkoutItemRowView(workoutItem: workoutItem)
+              .frame(minHeight: 60)
           }
           .onMove(perform: moveItems)
           .onDelete(perform: deleteItems)
@@ -49,6 +50,7 @@ struct WorkoutDetailView: View {
           } label: {
             Label("Add Exercises", systemImage: "plus")
           }
+          .frame(minHeight: 40)
         }
       }
     }

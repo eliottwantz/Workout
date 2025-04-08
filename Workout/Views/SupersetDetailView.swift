@@ -20,8 +20,8 @@ struct SupersetDetailView: View {
       Section("Rest time") {
         RestTimePicker(superset: superset)
       }
-      Section("Exercises") {
-        if let exercises = superset.orderedExercises, !exercises.isEmpty {
+      if !superset.exercises.isEmpty {
+        Section("Exercises") {
           ForEach(superset.exercises) { exercise in
             if let definition = exercise.definition {
               NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
@@ -33,20 +33,30 @@ struct SupersetDetailView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 2)
+                .frame(minHeight: 60)
               }
-            } else {
-              Text("Unknown Exercise")
-                .foregroundColor(.secondary)
             }
           }
           .onDelete(perform: deleteExercises)
           .onMove(perform: moveExercises)
-        } else {
-          Text("No exercises in this superset")
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
+          
+          Button {
+            showingAddExerciseView = true
+          } label: {
+            Label("Add Exercises", systemImage: "plus")
+          }
+          .frame(minHeight: 40)
+        }
+      }
+    }
+    .overlay {
+      if superset.exercises.isEmpty {
+        ContentUnavailableView {
+          Label("No exercises", systemImage: "figure.strengthtraining.traditional")
+        } actions: {
+          Button("Add Exercises", systemImage: "plus") {
+            showingAddExerciseView = true
+          }
         }
       }
     }

@@ -27,10 +27,11 @@ struct WorkoutListView: View {
             } label: {
               Label("Add Workout", systemImage: "plus")
             }
-            .padding(.vertical, 8)
+            .frame(minHeight: 40)
             ForEach(workouts) { workout in
               NavigationLink(value: workout) {
                 WorkoutRowView(workout: workout)
+                  .frame(minHeight: 60)
               }
             }
             .onDelete(perform: deleteWorkouts)

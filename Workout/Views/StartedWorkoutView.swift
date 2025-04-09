@@ -306,10 +306,22 @@ struct StartedWorkoutView: View {
         // Current exercise and set
         VStack(spacing: 12) {
           HStack {
-            Text(exerciseDefinition.name)
-              .font(.title)
-              .fontWeight(.bold)
-              .multilineTextAlignment(.center)
+            VStack(alignment: .leading, spacing: 4) {
+              if currentSet.isSuperset {
+                Text("SUPERSET")
+                  .font(.callout)
+                  .fontWeight(.semibold)
+                  .foregroundColor(userAccentColor)
+                  .padding(.horizontal, 8)
+                  .padding(.vertical, 3)
+                  .background(userAccentColor.opacity(0.2))
+                  .cornerRadius(4)
+              }
+              Text(exerciseDefinition.name)
+                .font(.title)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+            }
 
             Spacer()
 
@@ -490,7 +502,6 @@ struct StartedWorkoutView: View {
 #Preview {
   let container = AppContainer.preview.modelContainer
   let modelContext = container.mainContext
-  AppContainer.addSampleData(modelContext)
 
   let workoutFetchDescriptor = FetchDescriptor<Workout>()
   let workouts = try! modelContext.fetch(workoutFetchDescriptor)

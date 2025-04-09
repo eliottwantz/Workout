@@ -698,6 +698,9 @@
         }
       }
     },
+    "SUPERSET" : {
+      "shouldTranslate" : false
+    },
     "Superset Detail" : {
       "localizations" : {
         "fr" : {

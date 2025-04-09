@@ -32,6 +32,7 @@ struct WorkoutDetailEditorView: View {
             showingAddExerciseView = true
           } label: {
             Label("Add Exercises", systemImage: "plus")
+              .foregroundStyle(userAccentColor)
           }
           .frame(minHeight: 40)
         }

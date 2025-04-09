@@ -428,6 +428,26 @@
         }
       }
     },
+    "Edit" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier"
+          }
+        }
+      }
+    },
+    "Edit Workout" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le Workout"
+          }
+        }
+      }
+    },
     "Enter the name of the exercise you want to add." : {
       "localizations" : {
         "fr" : {
@@ -757,7 +777,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Session de Workout"
+            "value" : "Workout en cours"
           }
         }
       }

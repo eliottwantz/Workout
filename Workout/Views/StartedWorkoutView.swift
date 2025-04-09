@@ -64,6 +64,7 @@ struct StartedWorkoutView: View {
   @State private var currentSetIndex = 0
   @State private var isResting = false
   @State private var currentTimerId = UUID().uuidString
+  @State private var showingWorkoutEditor = false
 
   // Our flattened list of all sets in the workout, in order
   @State private var workoutSets = [WorkoutSet]()
@@ -239,11 +240,9 @@ struct StartedWorkoutView: View {
 
         Spacer()
 
-        // Empty view for symmetry
-        Image(systemName: "xmark")
-          .font(.title2)
-          .foregroundColor(.clear)
-          .padding()
+        Button("Edit") {
+          showingWorkoutEditor = true
+        }
       }
       .frame(maxWidth: .infinity)
 
@@ -417,6 +416,14 @@ struct StartedWorkoutView: View {
     .onAppear {
       requestNotificationPermissions()
       buildWorkoutSetsList()
+    }
+    .sheet(isPresented: $showingWorkoutEditor, onDismiss: {
+      buildWorkoutSetsList()
+    }) {
+      NavigationStack {
+        WorkoutDetailEditorView(workout: workout)
+      }
+      .dismissKeyboardOnTap()
     }
   }
 }

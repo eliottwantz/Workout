@@ -122,7 +122,7 @@ struct CountdownTimer: View {
       Circle()
         .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
         .stroke(
-          userAccentColor.gradient,
+          userAccentColor,
           style: StrokeStyle(
             lineWidth: lineWidth,
             lineCap: .round,

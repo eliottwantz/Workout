@@ -1,3 +1,10 @@
+//
+//  SettingsView.swift
+//  Workout
+//
+//  Created by Eliott on 2025-04-06.
+//
+
 import SwiftUI
 
 struct SettingsView: View {

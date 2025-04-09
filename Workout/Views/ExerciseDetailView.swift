@@ -1,3 +1,10 @@
+//
+//  ExerciseDetailView.swift
+//  Workout
+//
+//  Created by Eliott on 2025-04-03.
+//
+
 import SwiftData
 import SwiftUI
 
@@ -8,7 +15,7 @@ struct ExerciseDetailView: View {
   @State private var isEditingMode = false
   @State private var restTime: Int
   @State private var editMode = EditMode.inactive
-  @AppStorage("displayWeightInLbs") private var displayWeightInLbs: Bool = false
+  @AppStorage(AppContainer.displayWeightInLbsKey) private var displayWeightInLbs: Bool = false
 
   init(exercise: Exercise) {
     self.exercise = exercise
@@ -160,7 +167,7 @@ private struct EditableSetRowView: View {
 
   @State private var reps: Int
   @State private var weight: Double
-  @AppStorage("displayWeightInLbs") private var displayWeightInLbs: Bool = false
+  var displayWeightInLbs: Bool = false
 
   init(set: SetEntry, displayWeightInLbs: Bool) {
     self.set = set
@@ -185,10 +192,9 @@ private struct EditableSetRowView: View {
       RepsInputField(reps: $set.reps)
 
       // Weight column - editable
-      WeightInputField(weight: $weight, displayWeightInLbs: displayWeightInLbs)
-        .onChange(of: weight) { newValue in
+      WeightInputField(weight: $weight)
+        .onChange(of: weight) { _, newValue in
           set.weight = displayWeightInLbs ? newValue / 2.20462 : newValue
-          try? modelContext.save()
         }
     }
     .padding(.vertical, 4)
@@ -241,7 +247,6 @@ private struct RestTimePicker: View {
 private struct WeightInputField: View {
   @Binding var weight: Double
   @FocusState var isFocused: Bool
-  var displayWeightInLbs: Bool
 
   var body: some View {
     TextField("Weight", value: $weight, format: .number.precision(.fractionLength(1)))

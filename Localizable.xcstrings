@@ -4,13 +4,16 @@
     "  %@" : {
       "shouldTranslate" : false
     },
+    "(kg)" : {
+      "shouldTranslate" : false
+    },
     "(lbs)" : {
       "shouldTranslate" : false
     },
     "#" : {
       "shouldTranslate" : false
     },
-    "%.1f kg" : {
+    "%.1f" : {
       "shouldTranslate" : false
     },
     "%@" : {
@@ -385,6 +388,16 @@
         }
       }
     },
+    "Display weight in lbs" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le poids en lbs"
+          }
+        }
+      }
+    },
     "Do you want to copy this workout to today?" : {
       "localizations" : {
         "fr" : {
@@ -685,6 +698,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "POIDS"
+          }
+        }
+      }
+    },
+    "Weight Display" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unité de poids"
           }
         }
       }

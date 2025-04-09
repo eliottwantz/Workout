@@ -1,3 +1,10 @@
+//
+//  WorkoutListView.swift
+//  Workout
+//
+//  Created by Eliott on 2025-04-05.
+//
+
 import Combine
 import SwiftData
 import SwiftUI
@@ -51,6 +58,7 @@ struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
   @Bindable var workout: Workout
+  @AppStorage(AppContainer.displayWeightInLbsKey) private var displayWeightInLbs: Bool = false
 
   // State for tracking current position in workout
   @State private var currentSetIndex = 0
@@ -267,10 +275,15 @@ struct StartedWorkoutView: View {
             }
 
             VStack {
-              Text("WEIGHT")
-                .font(.caption)
-                .foregroundColor(.secondary)
-              Text("\(currentSet.set.weight, specifier: "%.1f") kg")
+              HStack(alignment: .bottom, spacing: 6) {
+                Text("WEIGHT")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+                Text(displayWeightInLbs ? "(lbs)" : "(kg)")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+              }
+              Text("\(currentSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                 .font(.title2)
                 .fontWeight(.semibold)
             }
@@ -343,10 +356,15 @@ struct StartedWorkoutView: View {
               }
 
               VStack {
-                Text("WEIGHT")
-                  .font(.caption)
-                  .foregroundColor(.secondary)
-                Text("\(nextSet.set.weight, specifier: "%.1f") kg")
+                HStack(alignment: .bottom, spacing: 6) {
+                  Text("WEIGHT")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                  Text(displayWeightInLbs ? "(lbs)" : "(kg)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+                Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                   .font(.title3)
               }
             }

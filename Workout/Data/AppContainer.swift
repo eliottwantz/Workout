@@ -202,4 +202,5 @@ extension AppContainer {
   }
 
   static let allowMultipleWorkoutsPerDayKey: String = "allowMultipleWorkoutsPerDay"
+  static let displayWeightInLbsKey: String = "displayWeightInLbs"
 }

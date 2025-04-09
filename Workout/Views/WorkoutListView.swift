@@ -58,14 +58,14 @@ struct WorkoutListView: View {
           SettingsView()
         }
       }
-      .alert("Workout Already Exists", isPresented: $showingMultipleWorkoutAlert) {
-        Button("Go to Settings") {
+      .alert("Can't add another workout for today", isPresented: $showingMultipleWorkoutAlert) {
+        Button("Settings") {
           path.append("settings")
         }
         Button("Cancel", role: .cancel) {}
       } message: {
         Text(
-          "You already have a workout for today. Enable 'Allow multiple workouts per day' in settings to create more than one workout per day."
+          "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day."
         )
       }
       .toolbar {

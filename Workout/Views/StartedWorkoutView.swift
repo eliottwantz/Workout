@@ -259,11 +259,6 @@ struct StartedWorkoutView: View {
 
         Spacer()
 
-        Text("Workout Session")
-          .font(.headline)
-
-        Spacer()
-
         Button("Edit") {
           showingWorkoutEditor = true
         }
@@ -443,10 +438,6 @@ struct StartedWorkoutView: View {
           }
         } else {
           VStack(spacing: 10) {
-            Text("WORKOUT COMPLETE")
-              .font(.headline)
-              .foregroundColor(.secondary)
-
             Text("No more sets in this workout")
               .font(.body)
               .foregroundColor(.secondary)
@@ -461,7 +452,7 @@ struct StartedWorkoutView: View {
           .padding(.horizontal)
         }
       } else {
-        Text("Workout Complete!")
+        Text("Workout Completed!")
           .font(.largeTitle)
           .fontWeight(.bold)
         Spacer()

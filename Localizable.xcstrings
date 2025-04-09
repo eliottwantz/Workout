@@ -329,7 +329,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajouter un Workout"
+            "value" : "Ajouter un entraînement"
           }
         }
       }
@@ -339,7 +339,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autoriser plusieurs workouts par jour"
+            "value" : "Autoriser plusieurs entraînements par jour"
           }
         }
       }
@@ -350,6 +350,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apparence"
+          }
+        }
+      }
+    },
+    "Can't add another workout for today" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous ne pouvez pas ajouter un autre entraînement aujourd’hui"
           }
         }
       }
@@ -399,7 +409,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copier ce Workout a Aujourd’hui"
+            "value" : "Copier cet entraînement pour Aujourd’hui"
           }
         }
       }
@@ -419,7 +429,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous copiez ce workout a aujourd’hui"
+            "value" : "Voulez-vous copiez cet entraînement pour aujourd’hui"
           }
         }
       }
@@ -459,7 +469,17 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modifier le Workout"
+            "value" : "Modifier l’entraînement"
+          }
+        }
+      }
+    },
+    "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez l’option “Autoriser plusieurs entraînements par jour” dans les réglages pour créer plus d’un entraînement par jour."
           }
         }
       }
@@ -504,16 +524,6 @@
         }
       }
     },
-    "Go to Settings" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vers réglages"
-          }
-        }
-      }
-    },
     "Individual Exercises" : {
       "localizations" : {
         "fr" : {
@@ -549,7 +559,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucun set restant dans ce workout"
+            "value" : "Aucun set restant dans cet entraînement"
           }
         }
       }
@@ -569,7 +579,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucun workout"
+            "value" : "Aucun entraînement"
           }
         }
       }
@@ -629,7 +639,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sélectionnez les exercises à ajouter au workout"
+            "value" : "Sélectionnez les exercises à ajouter à l’entraînement"
           }
         }
       }
@@ -683,7 +693,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Commencer ce Workout"
+            "value" : "Commencer cet entraînement"
           }
         }
       }
@@ -751,32 +761,12 @@
         }
       }
     },
-    "Workout Already Exists" : {
+    "Workout Completed!" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ce Workout existe déjà"
-          }
-        }
-      }
-    },
-    "WORKOUT COMPLETE" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "WORKOUT Terminé"
-          }
-        }
-      }
-    },
-    "Workout Complete!" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Workout Terminé!"
+            "value" : "Entraînement terminé"
           }
         }
       }
@@ -786,17 +776,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workouts"
-          }
-        }
-      }
-    },
-    "Workout Session" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Workout en cours"
+            "value" : "Entraînements"
           }
         }
       }
@@ -806,7 +786,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workouts"
+            "value" : "Entraînements"
           }
         }
       }
@@ -817,16 +797,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hier"
-          }
-        }
-      }
-    },
-    "You already have a workout for today. Enable 'Allow multiple workouts per day' in settings to create more than one workout per day." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vous avez déjà un workout défini aujourd’hui. Activez l’option “Autoriser plusieurs workouts par jour” dans les réglages pour créer plus d’un workout par jour."
           }
         }
       }

@@ -220,6 +220,30 @@ struct StartedWorkoutView: View {
     notificationCenter.removeAllPendingNotificationRequests()
     print("Removed all pending notifications")
   }
+  
+  // Function to navigate to the previous set
+  private func navigateToPreviousSet() {
+    if currentSetIndex > 0 {
+      // Cancel any ongoing rest timer
+      if isResting {
+        isResting = false
+        removeAllPendingNotifications()
+      }
+      currentSetIndex -= 1
+    }
+  }
+  
+  // Function to navigate to the next set
+  private func navigateToNextSet() {
+    if currentSetIndex < workoutSets.count - 1 {
+      // Cancel any ongoing rest timer
+      if isResting {
+        isResting = false
+        removeAllPendingNotifications()
+      }
+      currentSetIndex += 1
+    }
+  }
 
   var body: some View {
     VStack {
@@ -247,6 +271,38 @@ struct StartedWorkoutView: View {
       .frame(maxWidth: .infinity)
 
       if let currentSet = currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+        // Set navigation controls
+        HStack {
+          Button {
+            navigateToPreviousSet()
+          } label: {
+            Image(systemName: "chevron.left")
+              .font(.title2)
+              .padding(10)
+              .foregroundColor(currentSetIndex > 0 ? .primary : .gray)
+          }
+          .disabled(currentSetIndex <= 0)
+          
+          Spacer()
+          
+          Text("\(currentSetIndex + 1) of \(workoutSets.count)")
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+          
+          Spacer()
+          
+          Button {
+            navigateToNextSet()
+          } label: {
+            Image(systemName: "chevron.right")
+              .font(.title2)
+              .padding(10)
+              .foregroundColor(currentSetIndex < workoutSets.count - 1 ? .primary : .gray)
+          }
+          .disabled(currentSetIndex >= workoutSets.count - 1)
+        }
+        .padding(.horizontal)
+        
         // Current exercise and set
         VStack(spacing: 12) {
           HStack {

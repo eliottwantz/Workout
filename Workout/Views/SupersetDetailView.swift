@@ -39,7 +39,7 @@ struct SupersetDetailView: View {
           }
           .onDelete(perform: deleteExercises)
           .onMove(perform: moveExercises)
-          
+
           Button {
             showingAddExerciseView = true
           } label: {

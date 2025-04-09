@@ -220,7 +220,7 @@ struct StartedWorkoutView: View {
     notificationCenter.removeAllPendingNotificationRequests()
     print("Removed all pending notifications")
   }
-  
+
   // Function to navigate to the previous set
   private func navigateToPreviousSet() {
     if currentSetIndex > 0 {
@@ -232,7 +232,7 @@ struct StartedWorkoutView: View {
       currentSetIndex -= 1
     }
   }
-  
+
   // Function to navigate to the next set
   private func navigateToNextSet() {
     if currentSetIndex < workoutSets.count - 1 {
@@ -282,15 +282,15 @@ struct StartedWorkoutView: View {
               .foregroundColor(currentSetIndex > 0 ? .primary : .gray)
           }
           .disabled(currentSetIndex <= 0)
-          
+
           Spacer()
-          
+
           Text("\(currentSetIndex + 1) of \(workoutSets.count)")
             .font(.subheadline)
             .foregroundColor(.secondary)
-          
+
           Spacer()
-          
+
           Button {
             navigateToNextSet()
           } label: {
@@ -302,7 +302,7 @@ struct StartedWorkoutView: View {
           .disabled(currentSetIndex >= workoutSets.count - 1)
         }
         .padding(.horizontal)
-        
+
         // Current exercise and set
         VStack(spacing: 12) {
           HStack {
@@ -473,9 +473,12 @@ struct StartedWorkoutView: View {
       requestNotificationPermissions()
       buildWorkoutSetsList()
     }
-    .sheet(isPresented: $showingWorkoutEditor, onDismiss: {
-      buildWorkoutSetsList()
-    }) {
+    .sheet(
+      isPresented: $showingWorkoutEditor,
+      onDismiss: {
+        buildWorkoutSetsList()
+      }
+    ) {
       NavigationStack {
         WorkoutDetailEditorView(workout: workout)
       }

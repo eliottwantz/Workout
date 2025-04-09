@@ -45,7 +45,7 @@ extension Workout {
   var formattedDate: LocalizedStringResource {
     "\(date, format: .dateTime.day().month(.wide).year())"
   }
-  
+
   var smartFormattedDate: LocalizedStringResource {
     let calendar = Calendar.current
     if calendar.isDateInToday(date) {

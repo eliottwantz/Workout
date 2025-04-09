@@ -1,10 +1,3 @@
-//
-//  WorkoutListView.swift
-//  Workout
-//
-//  Created by Eliott on 2025-04-05.
-//
-
 import Combine
 import SwiftData
 import SwiftUI

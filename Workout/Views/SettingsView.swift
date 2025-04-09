@@ -1,15 +1,9 @@
-//
-//  SettingsView.swift
-//  Workout
-//
-//  Created by Eliott on 2025-04-06.
-//
-
 import SwiftUI
 
 struct SettingsView: View {
   @AppStorage("userAccentColor") var storedColor: Color = .yellow
   @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage("displayWeightInLbs") private var displayWeightInLbs: Bool = false
 
   var body: some View {
     List {
@@ -19,6 +13,10 @@ struct SettingsView: View {
 
       Section("Workouts") {
         Toggle("Allow multiple workouts per day", isOn: $allowMultipleWorkoutsPerDay)
+      }
+
+      Section("Weight Display") {
+        Toggle("Display weight in lbs", isOn: $displayWeightInLbs)
       }
     }
     .tint(storedColor)

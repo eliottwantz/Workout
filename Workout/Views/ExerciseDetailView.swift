@@ -33,7 +33,7 @@ struct ExerciseDetailView: View {
       }
 
       if exercise.containingSuperset == nil {
-        Section("Rest time") {
+        Section("Rest Time") {
           RestTimePicker(exercise: exercise)
         }
       }
@@ -85,7 +85,7 @@ struct ExerciseDetailView: View {
           Button {
             addSet()
           } label: {
-            Label("Add set", systemImage: "plus")
+            Label("Add Set", systemImage: "plus")
           }
         }
       }
@@ -96,7 +96,7 @@ struct ExerciseDetailView: View {
         Button {
           addSet()
         } label: {
-          Label("Add set", systemImage: "plus")
+          Label("Add Set", systemImage: "plus")
         }
         EditButton()
       }

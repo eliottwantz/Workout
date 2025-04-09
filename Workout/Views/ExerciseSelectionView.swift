@@ -22,11 +22,11 @@ struct ExerciseSelectionView<ActionButton: View>: View {
 
   // Custom button to be provided by parent views
   let actionButton: ActionButton
-  let headerText: String
+  let headerText: LocalizedStringResource
 
   init(
     selectedExercises: Binding<Set<PersistentIdentifier>>,
-    headerText: String,
+    headerText: LocalizedStringResource,
     @ViewBuilder actionButton: () -> ActionButton
   ) {
     self._selectedExercises = selectedExercises
@@ -44,7 +44,7 @@ struct ExerciseSelectionView<ActionButton: View>: View {
       List(filteredExerciseDefinitions, selection: $selectedExercises) { definition in
         Text(definition.name)
       }
-      .searchable(text: $searchText, prompt: "Exercise name")
+      .searchable(text: $searchText, prompt: "Exercise Name")
       .environment(\.editMode, .constant(.active))
       .listStyle(.inset)
 

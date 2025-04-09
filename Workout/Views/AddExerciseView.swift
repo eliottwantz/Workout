@@ -43,15 +43,15 @@ struct AddExerciseView: View {
         } label: {
           Text(
             selectedOption == .individual
-              ? "Add ^[\(selectedExercises.count) Exercise](inflect: true)"
-              : "Add Superset with ^[\(selectedExercises.count) Exercise](inflect: true)"
+              ? "Add \(selectedExercises.count) Exercises"
+              : "Add Superset with \(selectedExercises.count) Exercises"
           )
           .frame(maxWidth: .infinity)
         }
         .disabled(selectedOption == .individual ? selectedExercises.isEmpty : selectedExercises.count < 2)
       }
     }
-    .navigationTitle("Add Exercise")
+    .navigationTitle("Add Exercises")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .cancellationAction) {

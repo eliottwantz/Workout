@@ -121,12 +121,12 @@ struct WorkoutRowView: View {
         .font(.headline)
 
       if let name = workout.name {
-        Text("^[\(workout.orderedItems.count) exercise](inflect: true) - \(name)")
+        Text("\(workout.orderedItems.count) exercises - \(name)")
           .font(.subheadline)
           .foregroundColor(.secondary)
       } else {
 
-        Text("^[\(workout.orderedItems.count) exercise](inflect: true)")
+        Text("\(workout.orderedItems.count) exercises")
           .font(.subheadline)
           .foregroundColor(.secondary)
       }

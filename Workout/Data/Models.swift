@@ -42,18 +42,18 @@ final class Workout {
 }
 
 extension Workout {
-  static var dateFormatter = DateFormatter()
+  var formattedDate: LocalizedStringResource {
+    "\(date, format: .dateTime.day().month(.wide).year())"
+  }
   
-  var formattedDate: String {
-    Workout.dateFormatter.dateStyle = .medium
-
+  var smartFormattedDate: LocalizedStringResource {
     let calendar = Calendar.current
     if calendar.isDateInToday(date) {
       return "Today"
     } else if calendar.isDateInYesterday(date) {
       return "Yesterday"
     } else {
-      return Workout.dateFormatter.string(from: date)
+      return formattedDate
     }
   }
 }

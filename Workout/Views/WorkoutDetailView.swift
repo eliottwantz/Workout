@@ -82,7 +82,7 @@ struct WorkoutDetailView: View {
         .background(Color(UIColor.systemBackground))
       }
     }
-    .navigationTitle(workout.formattedDate)
+    .navigationTitle(String(localized: workout.smartFormattedDate))
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
         if !Calendar.current.isDateInToday(workout.date) {
@@ -266,7 +266,7 @@ struct WorkoutItemRowView: View {
           }
           Spacer()
 
-          Text("^[\(exercise.sets.count) set](inflect: true)")
+          Text("\(exercise.sets.count) sets")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -295,7 +295,7 @@ struct WorkoutItemRowView: View {
           }
           Spacer()
 
-          Text("^[\(superset.exercises.flatMap {$0.sets}.count) set](inflect: true)")
+          Text("\(superset.exercises.flatMap {$0.sets}.count) sets")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }

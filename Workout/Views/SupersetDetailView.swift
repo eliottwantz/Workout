@@ -17,7 +17,7 @@ struct SupersetDetailView: View {
 
   var body: some View {
     List {
-      Section("Rest time") {
+      Section("Rest Time") {
         RestTimePicker(superset: superset)
       }
       if !superset.exercises.isEmpty {

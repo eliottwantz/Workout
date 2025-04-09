@@ -25,7 +25,7 @@ struct AddExerciseToSupersetView: View {
         addSelectedExercisesToSuperset()
         dismiss()
       } label: {
-        Text("Add ^[\(selectedExercises.count) Exercise](inflect: true) to Superset")
+        Text("Add \(selectedExercises.count) Exercises to Superset")
           .frame(maxWidth: .infinity)
       }
       .disabled(selectedExercises.isEmpty)

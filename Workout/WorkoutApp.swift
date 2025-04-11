@@ -14,6 +14,7 @@ struct WorkoutApp: App {
   @State private var keyboardIsShown = false
   @State private var keyboardHideMonitor: AnyCancellable? = nil
   @State private var keyboardShownMonitor: AnyCancellable? = nil
+  @State var startedWorkoutViewModel = StartedWorkoutViewModel()
   @AppStorage("userAccentColor") private var userAccentColor: Color = .yellow
 
   init() {
@@ -31,6 +32,7 @@ struct WorkoutApp: App {
       ContentView()
         .environment(\.userAccentColor, userAccentColor)
         .environment(\.keyboardIsShown, keyboardIsShown)
+        .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
         .onAppear { setupKeyboardMonitors() }
         .onDisappear { dismantleKeyboarMonitors() }
         .tint(userAccentColor)

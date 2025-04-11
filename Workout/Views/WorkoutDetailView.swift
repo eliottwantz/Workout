@@ -12,6 +12,7 @@ struct WorkoutDetailView: View {
   @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var workout: Workout
   @Binding var navigationPath: NavigationPath
 
@@ -34,6 +35,8 @@ struct WorkoutDetailView: View {
   }
 
   var body: some View {
+    @Bindable var startedWorkoutViewModel = startedWorkoutViewModel
+    
     List {
       if !workout.orderedItems.isEmpty {
 
@@ -66,9 +69,9 @@ struct WorkoutDetailView: View {
       }
     }
     .safeAreaInset(edge: .bottom) {
-      if !workout.orderedItems.isEmpty {
+      if !workout.orderedItems.isEmpty && !startedWorkoutViewModel.isPresented {
         Button {
-          showingStartedWorkoutView = true
+          startedWorkoutViewModel.start(workout: workout)
         } label: {
           Text("Start Workout")
             .font(.headline)
@@ -106,9 +109,6 @@ struct WorkoutDetailView: View {
       NavigationStack {
         AddExerciseView(workout: workout)
       }
-    }
-    .fullScreenCover(isPresented: $showingStartedWorkoutView) {
-      StartedWorkoutView(workout: workout)
     }
     .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
       Button("Copy", role: .none) {

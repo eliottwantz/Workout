@@ -57,6 +57,7 @@ struct WorkoutSet: Identifiable {
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var workout: Workout
   @AppStorage(AppContainer.displayWeightInLbsKey) private var displayWeightInLbs: Bool = false
 
@@ -249,7 +250,9 @@ struct StartedWorkoutView: View {
     VStack {
       HStack {
         Button {
-          dismiss()
+          withAnimation {
+            startedWorkoutViewModel.stop()
+          }
         } label: {
           Image(systemName: "xmark")
             .font(.title2)
@@ -258,10 +261,6 @@ struct StartedWorkoutView: View {
         }
 
         Spacer()
-
-        Button("Edit") {
-          showingWorkoutEditor = true
-        }
       }
       .frame(maxWidth: .infinity)
 

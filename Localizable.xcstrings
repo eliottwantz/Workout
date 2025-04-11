@@ -455,6 +455,7 @@
       }
     },
     "Edit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -720,6 +721,9 @@
           }
         }
       }
+    },
+    "This is the collapsed content" : {
+
     },
     "Today" : {
       "localizations" : {

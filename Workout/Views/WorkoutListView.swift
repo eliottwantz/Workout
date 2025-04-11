@@ -11,7 +11,7 @@ import SwiftUI
 struct WorkoutListView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
-  @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) private var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage(AllowMultipleWorkoutsPerDayKey) private var allowMultipleWorkoutsPerDay: Bool = false
 
   @State private var showingNewWorkoutAlert = false
   @State private var showingMultipleWorkoutAlert = false

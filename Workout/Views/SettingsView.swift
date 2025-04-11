@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
   @AppStorage("userAccentColor") var storedColor: Color = .yellow
-  @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage(AllowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
   @AppStorage("displayWeightInLbs") private var displayWeightInLbs: Bool = false
 
   var body: some View {

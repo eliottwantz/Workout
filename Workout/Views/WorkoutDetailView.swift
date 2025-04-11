@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct WorkoutDetailView: View {
-  @AppStorage(AppContainer.allowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage(AllowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
@@ -35,7 +35,6 @@ struct WorkoutDetailView: View {
   }
 
   var body: some View {
-    @Bindable var startedWorkoutViewModel = startedWorkoutViewModel
     
     List {
       if !workout.orderedItems.isEmpty {
@@ -69,7 +68,7 @@ struct WorkoutDetailView: View {
       }
     }
     .safeAreaInset(edge: .bottom) {
-      if !workout.orderedItems.isEmpty && !startedWorkoutViewModel.isPresented {
+      if !workout.orderedItems.isEmpty && startedWorkoutViewModel.workout == nil {
         Button {
           startedWorkoutViewModel.start(workout: workout)
         } label: {

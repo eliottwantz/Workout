@@ -6,41 +6,8 @@
 //
 
 import SwiftUI
+import SwiftData
 
-@Observable
-class StartedWorkoutViewModel {
-  var isExpanded: Bool = true
-  var workout: Workout?
-
-  var isPresented: Bool {
-    workout != nil
-  }
-
-  func start(workout: Workout) {
-    withAnimation {
-      self.workout = workout
-      self.isExpanded = true
-    }
-  }
-
-  func stop() {
-    withAnimation {
-      self.workout = nil
-      self.isExpanded = false
-    }
-  }
-}
-
-private struct StartedWorkoutViewModelKey: EnvironmentKey {
-  static let defaultValue = StartedWorkoutViewModel()
-}
-
-extension EnvironmentValues {
-  var startedWorkoutViewModel: StartedWorkoutViewModel {
-    get { self[StartedWorkoutViewModelKey.self] }
-    set { self[StartedWorkoutViewModelKey.self] = newValue }
-  }
-}
 
 struct RoundedCorner: Shape {
   var radius: CGFloat = .infinity
@@ -71,14 +38,22 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.userAccentColor) private var userAccentColor
 
+  
   var parentView: ParentView
   private var collapsedHeight: CGFloat = 120
+  private var bottomPadding: CGFloat
   @State var offset: CGFloat = 0
   @State var lastOffset: CGFloat = 0
   @GestureState var gestureOffset: CGFloat = 0
+  @State private var isExpanded: Bool = true
+  
+  var isPresented: Bool {
+    viewModel.workout != nil
+  }
   
   init(parentView: ParentView) {
     self.parentView = parentView
+    self.bottomPadding = collapsedHeight - 47
   }
 
   var body: some View {
@@ -86,7 +61,7 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
     
     ZStack {
       parentView
-        .padding(.bottom, viewModel.isPresented ? 80 : 0)
+        .padding(.bottom, isPresented ? 80 : 0)
       
       if let workout = viewModel.workout {
         
@@ -106,22 +81,22 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
                 .foregroundStyle(.gray)
             }
             .frame(maxWidth: .infinity)
-            .padding(.top, viewModel.isExpanded ? 50 : 8)
+            .padding(.top, isExpanded ? 50 : 8)
             .onTapGesture {
               withAnimation(.snappy(duration: 0.3)) {
-                if viewModel.isExpanded {
+                if isExpanded {
                   offset = 0
                   lastOffset = offset
-                  viewModel.isExpanded = false
+                  isExpanded = false
                 } else {
                   offset = -height + collapsedHeight
                   lastOffset = offset
-                  viewModel.isExpanded = true
+                  isExpanded = true
                 }
               }
             }
             
-            if viewModel.isExpanded {
+            if isExpanded {
               StartedWorkoutView(workout: workout)
                 .padding(.bottom, 30)
             } else {
@@ -131,14 +106,14 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
               }
               .onTapGesture {
                 withAnimation(.snappy(duration: 0.3)) {
-                  if viewModel.isExpanded {
+                  if isExpanded {
                     offset = 0
                     lastOffset = offset
-                    viewModel.isExpanded = false
+                    isExpanded = false
                   } else {
                     offset = -height + collapsedHeight
                     lastOffset = offset
-                    viewModel.isExpanded = true
+                    isExpanded = true
                   }
                 }
               }
@@ -183,15 +158,15 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
                   
                   lastOffset = offset
                   if lastOffset == 0 {
-                    viewModel.isExpanded = false
+                    isExpanded = false
                   } else {
-                    viewModel.isExpanded = true
+                    isExpanded = true
                   }
                   
                 }
                 
                 print("after onEnded offset: \(offset)")
-                print("IsExpended after onEnded: \(viewModel.isExpanded)")
+                print("IsExpended after onEnded: \(isExpanded)")
               }
           )
           .onAppear {
@@ -211,11 +186,16 @@ struct StartedWorkoutBottomSheetView<ParentView: View>: View {
 
 #Preview {
   @Previewable @State var startedWorkoutViewModel = StartedWorkoutViewModel()
-
-  VStack {
-    WorkoutListView()
-      .startedWorkoutBottomSheet()
+  let workouts = try? AppContainer.preview.modelContainer.mainContext.fetch(FetchDescriptor<Workout>())
+  if let workouts = workouts, let workout = workouts.first {
+    
+    VStack {
+      WorkoutDetailView(workout: workout)
+        .startedWorkoutBottomSheet()
+    }
+    .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
+    .modelContainer(AppContainer.preview.modelContainer)
+  } else {
+    Text("Failed no workout")
   }
-  .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
-  .modelContainer(AppContainer.preview.modelContainer)
 }

@@ -10,241 +10,14 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
-// Define a struct to represent a single set in our flattened workout sequence
-struct WorkoutSet: Identifiable {
-  let id = UUID()
-  let itemIndex: Int  // Index of the WorkoutItem in the workout
-  let exerciseIndex: Int  // Index of the Exercise within a superset (0 for regular exercises)
-  let setIndex: Int  // Index of the SetEntry within the exercise
-  let exercise: Exercise  // Reference to the actual exercise
-  let set: SetEntry  // Reference to the actual set
-  let isSuperset: Bool  // Whether this set is part of a superset
-  var isLastSetInWorkout: Bool = false
 
-  // Helper computed properties
-  var exerciseDefinition: ExerciseDefinition? { exercise.definition }
-  var exerciseName: String { exerciseDefinition?.name ?? "Unknown Exercise" }
-  var restTime: Int {
-    if isSuperset {
-      // For supersets, use the superset's rest time
-      return exercise.containingSuperset?.restTime ?? 0
-    } else {
-      // For regular exercises, use the exercise's rest time
-      return exercise.restTime
-    }
-  }
-
-  // Determines if rest should be shown after this set
-  var shouldShowRest: Bool {
-    if isLastSetInWorkout {
-      return false
-    }
-
-    if isSuperset {
-      // Only show rest after the last exercise in a superset
-      if let superset = exercise.containingSuperset {
-        let lastExerciseInSuperset = superset.exercises.last
-        return exercise == lastExerciseInSuperset
-      }
-      return false
-    } else {
-      // Always show rest after a regular exercise set (unless rest time is 0)
-      return restTime > 0
-    }
-  }
-}
 
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var workout: Workout
-  @AppStorage(AppContainer.displayWeightInLbsKey) private var displayWeightInLbs: Bool = false
-
-  // State for tracking current position in workout
-  @State private var currentSetIndex = 0
-  @State private var isResting = false
-  @State private var currentTimerId = UUID().uuidString
   @State private var showingWorkoutEditor = false
-
-  // Our flattened list of all sets in the workout, in order
-  @State private var workoutSets = [WorkoutSet]()
-
-  // Computed properties to access the current and next set
-  private var currentWorkoutSet: WorkoutSet? {
-    guard !workoutSets.isEmpty, currentSetIndex < workoutSets.count else { return nil }
-    return workoutSets[currentSetIndex]
-  }
-
-  private var nextWorkoutSet: WorkoutSet? {
-    guard !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else { return nil }
-    return workoutSets[currentSetIndex + 1]
-  }
-
-  // Function to build the flattened list of workout sets
-  private func buildWorkoutSetsList() {
-    var sets: [WorkoutSet] = []
-
-    for (itemIndex, item) in workout.orderedItems.enumerated() {
-      if let exercise = item.exercise {
-        // Regular exercise - add all its sets
-        for (setIndex, set) in exercise.sets.enumerated() {
-          sets.append(
-            WorkoutSet(
-              itemIndex: itemIndex,
-              exerciseIndex: 0,
-              setIndex: setIndex,
-              exercise: exercise,
-              set: set,
-              isSuperset: false
-            )
-          )
-        }
-      } else if let superset = item.superset {
-        // Superset - add first set of each exercise in the superset, then second set, etc.
-        let maxNumberOfSets = (superset.exercises.map { $0.sets.count }.max()) ?? 0
-        for setIndex in 0..<maxNumberOfSets {
-          for exercise in superset.exercises {
-            guard setIndex < exercise.sets.count else { continue }
-            let set = exercise.sets[setIndex]
-            sets.append(
-              WorkoutSet(
-                itemIndex: itemIndex,
-                exerciseIndex: exercise.orderWithinSuperset,
-                setIndex: set.order,
-                exercise: exercise,
-                set: set,
-                isSuperset: true
-              )
-            )
-          }
-        }
-      }
-    }
-
-    sets[sets.count - 1].isLastSetInWorkout = true
-    workoutSets = sets
-  }
-
-  // Request notification permissions
-  private func requestNotificationPermissions() {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-      if granted {
-        print("Notification permission granted")
-      } else if let error = error {
-        print("Error requesting notification permissions: \(error.localizedDescription)")
-      }
-    }
-  }
-
-  // Updated function to move to the next set
-  private func moveToNextSet() {
-    removeAllPendingNotifications()
-    currentSetIndex += 1
-  }
-
-  // Function to handle when user completes a set
-  private func handleDoneSet() {
-    if isResting {
-      // If we're resting, just move to next set
-      isResting = false
-      moveToNextSet()
-    } else {
-      // Check if there's a rest period after this set
-      if let currentSet = currentWorkoutSet, currentSet.shouldShowRest {
-        startRestTimer()
-      } else {
-        // No rest needed, just move to next set
-        moveToNextSet()
-      }
-    }
-  }
-
-  // Start the rest timer
-  private func startRestTimer() {
-    guard let currentSet = currentWorkoutSet, currentSet.restTime > 0 else {
-      moveToNextSet()
-      return
-    }
-
-    isResting = true
-
-    // Generate a new timer ID for this rest period
-    currentTimerId = UUID().uuidString
-
-    // Schedule a notification for when rest is finished
-    scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
-  }
-
-  // Function to schedule a notification for when rest time is finished
-  private func scheduleRestFinishedNotification(timeInterval: TimeInterval) {
-    // Remove any pending notifications first
-    removeAllPendingNotifications()
-
-    // Create notification content
-    let content = UNMutableNotificationContent()
-
-    if let nextDefinition = nextWorkoutSet?.exerciseDefinition {
-      // Next exercise exists, notify about the next exercise
-      content.title = "Rest Time Finished!"
-      content.body = "Time to start your next set of \(nextDefinition.name)"
-    } else {
-      // No next exercise, workout is complete
-      content.title = "Workout Complete!"
-      content.body = "Great job! You've finished your workout."
-    }
-
-    content.sound = .default
-
-    // Create trigger (fire immediately)
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-    // Create request
-    let request = UNNotificationRequest(
-      identifier: UUID().uuidString,
-      content: content,
-      trigger: trigger
-    )
-
-    // Add request to notification center
-    print("Schedule notification for rest timer: \(timeInterval) seconds")
-    UNUserNotificationCenter.current().add(request) { error in
-      if let error = error {
-        print("Error scheduling notification: \(error.localizedDescription)")
-      }
-    }
-  }
-
-  // Function to remove all pending notifications
-  private func removeAllPendingNotifications() {
-    let notificationCenter = UNUserNotificationCenter.current()
-    notificationCenter.removeAllPendingNotificationRequests()
-    print("Removed all pending notifications")
-  }
-
-  // Function to navigate to the previous set
-  private func navigateToPreviousSet() {
-    if currentSetIndex > 0 {
-      // Cancel any ongoing rest timer
-      if isResting {
-        isResting = false
-        removeAllPendingNotifications()
-      }
-      currentSetIndex -= 1
-    }
-  }
-
-  // Function to navigate to the next set
-  private func navigateToNextSet() {
-    if currentSetIndex < workoutSets.count - 1 {
-      // Cancel any ongoing rest timer
-      if isResting {
-        isResting = false
-        removeAllPendingNotifications()
-      }
-      currentSetIndex += 1
-    }
-  }
 
   var body: some View {
     VStack {
@@ -264,36 +37,36 @@ struct StartedWorkoutView: View {
       }
       .frame(maxWidth: .infinity)
 
-      if let currentSet = currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+      if let currentSet = startedWorkoutViewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
         // Set navigation controls
         HStack {
           Button {
-            navigateToPreviousSet()
+            startedWorkoutViewModel.navigateToPreviousSet()
           } label: {
             Image(systemName: "chevron.left")
               .font(.title2)
               .padding(10)
-              .foregroundColor(currentSetIndex > 0 ? .primary : .gray)
+              .foregroundColor(startedWorkoutViewModel.currentSetIndex > 0 ? .primary : .gray)
           }
-          .disabled(currentSetIndex <= 0)
+          .disabled(startedWorkoutViewModel.currentSetIndex <= 0)
 
           Spacer()
 
-          Text("\(currentSetIndex + 1) of \(workoutSets.count)")
+          Text("\(startedWorkoutViewModel.currentSetIndex + 1) of \(startedWorkoutViewModel.workoutSets.count)")
             .font(.subheadline)
             .foregroundColor(.secondary)
 
           Spacer()
 
           Button {
-            navigateToNextSet()
+            startedWorkoutViewModel.navigateToNextSet()
           } label: {
             Image(systemName: "chevron.right")
               .font(.title2)
               .padding(10)
-              .foregroundColor(currentSetIndex < workoutSets.count - 1 ? .primary : .gray)
+              .foregroundColor(startedWorkoutViewModel.currentSetIndex < startedWorkoutViewModel.workoutSets.count - 1 ? .primary : .gray)
           }
-          .disabled(currentSetIndex >= workoutSets.count - 1)
+          .disabled(startedWorkoutViewModel.currentSetIndex >= startedWorkoutViewModel.workoutSets.count - 1)
         }
         .padding(.horizontal)
 
@@ -340,11 +113,11 @@ struct StartedWorkoutView: View {
                 Text("WEIGHT")
                   .font(.caption)
                   .foregroundColor(.secondary)
-                Text(displayWeightInLbs ? "(lbs)" : "(kg)")
+                Text(startedWorkoutViewModel.displayWeightInLbs ? "(lbs)" : "(kg)")
                   .font(.caption)
                   .foregroundColor(.secondary)
               }
-              Text("\(currentSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
+              Text("\(currentSet.set.weight.weightValue(inLbs: startedWorkoutViewModel.displayWeightInLbs), specifier: "%.1f")")
                 .font(.title2)
                 .fontWeight(.semibold)
             }
@@ -360,23 +133,22 @@ struct StartedWorkoutView: View {
 
         // Middle action button or rest timer
         VStack {
-          if isResting {
+          if startedWorkoutViewModel.isResting {
             CountdownTimer(
               time: currentSet.restTime,
-              id: currentTimerId,
+              id: startedWorkoutViewModel.currentTimerId,
               onComplete: {
-                isResting = false
-                moveToNextSet()
+                startedWorkoutViewModel.timerDidComplete()
               }
             )
 
             Button("Skip Rest") {
-              handleDoneSet()
+              startedWorkoutViewModel.skipRest()
             }
             .padding(.top, 20)
           } else {
             Button {
-              handleDoneSet()
+              startedWorkoutViewModel.handleDoneSet()
             } label: {
               Text("Done Set")
                 .font(.headline)
@@ -392,7 +164,7 @@ struct StartedWorkoutView: View {
         Spacer()
 
         // Next set information
-        if let nextSet = nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition {
+        if let nextSet = startedWorkoutViewModel.nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition {
           VStack(spacing: 12) {
             HStack {
               Text("NEXT: \(nextDefinition.name)")
@@ -421,11 +193,11 @@ struct StartedWorkoutView: View {
                   Text("WEIGHT")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                  Text(displayWeightInLbs ? "(lbs)" : "(kg)")
+                  Text(startedWorkoutViewModel.displayWeightInLbs ? "(lbs)" : "(kg)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 }
-                Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
+                Text("\(nextSet.set.weight.weightValue(inLbs: startedWorkoutViewModel.displayWeightInLbs), specifier: "%.1f")")
                   .font(.title3)
               }
             }
@@ -450,7 +222,7 @@ struct StartedWorkoutView: View {
           .cornerRadius(15)
           .padding(.horizontal)
         }
-      } else {
+      } else if startedWorkoutViewModel.isWorkoutComplete {
         Text("Workout Completed!")
           .font(.largeTitle)
           .fontWeight(.bold)
@@ -460,7 +232,7 @@ struct StartedWorkoutView: View {
           .fontWeight(.bold)
         Spacer()
         Button {
-          dismiss()
+          startedWorkoutViewModel.stop()
         } label: {
           Text("Finish")
             .font(.headline)
@@ -472,13 +244,13 @@ struct StartedWorkoutView: View {
       }
     }
     .onAppear {
-      requestNotificationPermissions()
-      buildWorkoutSetsList()
+      // No need to call these individually since they're handled in the view model
+      // when the workout is started
     }
     .sheet(
       isPresented: $showingWorkoutEditor,
       onDismiss: {
-        buildWorkoutSetsList()
+        startedWorkoutViewModel.buildWorkoutSetsList()
       }
     ) {
       NavigationStack {

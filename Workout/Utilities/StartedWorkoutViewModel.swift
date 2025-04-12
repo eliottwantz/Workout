@@ -52,25 +52,25 @@ class StartedWorkoutViewModel {
 
   // Call this to start a workout session
   func start(workout: Workout) {
-    self.workout = workout
-    // Reset state for the new workout
-    self.currentSetIndex = 0
-    self.isResting = false
-    self.workoutSets = []  // Clear previous sets
-    self.currentTimerId = UUID().uuidString  // Reset timer ID
-    buildWorkoutSetsList()  // Build sets for the new workout
-    requestNotificationPermissions()  // Ensure permissions are requested
+    withAnimation {
+      self.workout = workout
+      // Reset state for the new workout
+      self.currentSetIndex = 0
+      self.isResting = false
+      self.workoutSets = []  // Clear previous sets
+      self.currentTimerId = UUID().uuidString  // Reset timer ID
+      buildWorkoutSetsList()  // Build sets for the new workout
+      requestNotificationPermissions()  // Ensure permissions are requested
+    }
   }
 
   // Call this to end the workout session
   func stop() {
-    removeAllPendingNotifications()  // Clean up notifications
-    withAnimation {
+      removeAllPendingNotifications()  // Clean up notifications
       self.workout = nil
       self.currentSetIndex = 0
       self.isResting = false
       self.workoutSets = []
-    }
   }
 
   // --- Workout Progression Methods ---

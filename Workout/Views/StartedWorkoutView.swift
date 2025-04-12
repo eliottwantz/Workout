@@ -11,7 +11,6 @@ import SwiftUI
 import UserNotifications
 
 
-
 struct StartedWorkoutView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
@@ -21,21 +20,6 @@ struct StartedWorkoutView: View {
 
   var body: some View {
     VStack {
-      HStack {
-        Button {
-          withAnimation {
-            startedWorkoutViewModel.stop()
-          }
-        } label: {
-          Image(systemName: "xmark")
-            .font(.title2)
-            .foregroundColor(.primary)
-            .padding()
-        }
-
-        Spacer()
-      }
-      .frame(maxWidth: .infinity)
 
       if let currentSet = startedWorkoutViewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
         // Set navigation controls
@@ -244,19 +228,7 @@ struct StartedWorkoutView: View {
       }
     }
     .onAppear {
-      // No need to call these individually since they're handled in the view model
-      // when the workout is started
-    }
-    .sheet(
-      isPresented: $showingWorkoutEditor,
-      onDismiss: {
-        startedWorkoutViewModel.buildWorkoutSetsList()
-      }
-    ) {
-      NavigationStack {
-        WorkoutDetailEditorView(workout: workout)
-      }
-      .dismissKeyboardOnTap()
+      print("Showing StartedWorkoutView")
     }
   }
 }

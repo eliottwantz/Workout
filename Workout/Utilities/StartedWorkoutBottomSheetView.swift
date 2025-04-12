@@ -54,13 +54,18 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
 private struct StartedWorkoutBottomSheetView: View {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.userAccentColor) private var userAccentColor
+  @Environment(\.colorScheme) private var colorScheme
+
+  private var isDarkTheme: Bool {
+    colorScheme == .dark
+  }
 
   private var collapsedHeight: CGFloat = 120
   @State var offset: CGFloat = 0
   @State private var isExpanded: Bool = true
 
   var workout: Workout
-  
+
   init(workout: Workout) {
     self.workout = workout
   }
@@ -71,8 +76,7 @@ private struct StartedWorkoutBottomSheetView: View {
       let height = geometry.frame(in: .global).height
       let topOffset = -height + collapsedHeight
 
-      Color(UIColor.systemBackground)
-        .cornerRadius(30, corners: [.topLeft, .topRight])
+      Color(isDarkTheme ? UIColor.systemBackground : UIColor.secondarySystemBackground)
         .offset(y: height - collapsedHeight)
         .offset(y: offset)
 
@@ -118,6 +122,14 @@ private struct StartedWorkoutBottomSheetView: View {
           VStack {
             CollapsedWorkoutView(workout: workout)
               .frame(maxHeight: collapsedHeight)
+              .background(
+                Color(
+                  isDarkTheme
+                    ? UIColor.secondarySystemBackground
+                    : UIColor.systemBackground
+                )
+              )
+              .zIndex(10)
           }
         }
 
@@ -126,7 +138,7 @@ private struct StartedWorkoutBottomSheetView: View {
       .frame(maxWidth: .infinity)
       //        .background(userAccentColor.opacity(0.2))
       .background(isExpanded ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
-      .cornerRadius(30, corners: [.topLeft, .topRight])
+      .cornerRadius(20, corners: [.topLeft, .topRight])
       .offset(y: height - collapsedHeight)
       .offset(y: offset)
       .onChange(of: isExpanded) { oldValue, newValue in

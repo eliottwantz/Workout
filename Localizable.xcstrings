@@ -119,7 +119,7 @@
       }
     },
     "%lld reps" : {
-
+      "shouldTranslate" : false
     },
     "%lld sets" : {
       "localizations" : {
@@ -145,7 +145,7 @@
       "shouldTranslate" : false
     },
     "•" : {
-
+      "shouldTranslate" : false
     },
     "🏆🏆🏆" : {
       "shouldTranslate" : false
@@ -460,27 +460,6 @@
         }
       }
     },
-    "Edit" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifier"
-          }
-        }
-      }
-    },
-    "Edit Workout" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifier l’entraînement"
-          }
-        }
-      }
-    },
     "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day." : {
       "localizations" : {
         "fr" : {
@@ -669,7 +648,8 @@
             "value" : "Set %1$lld/%2$lld"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "SET %lld/%lld" : {
       "localizations" : {
@@ -789,7 +769,14 @@
       }
     },
     "Workout Completed! 🏆" : {
-
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entraînement terminé! 🏆"
+          }
+        }
+      }
     },
     "Workout Log" : {
       "localizations" : {

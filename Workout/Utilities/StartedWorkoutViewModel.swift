@@ -24,7 +24,10 @@ class StartedWorkoutViewModel {
   var currentSetIndex = 0
   var isResting = false
   var currentTimerId = UUID().uuidString
-  var workoutSets = [WorkoutSet]()
+//  var workoutSets = [WorkoutSet]()
+  var workoutSets: [WorkoutSet] {
+    return buildWorkoutSetsList()
+  }
 
   var currentWorkoutSet: WorkoutSet? {
     guard workout != nil, !workoutSets.isEmpty, currentSetIndex < workoutSets.count else { return nil }
@@ -50,9 +53,7 @@ class StartedWorkoutViewModel {
       // Reset state for the new workout
       self.currentSetIndex = 0
       self.isResting = false
-      self.workoutSets = []  // Clear previous sets
       self.currentTimerId = UUID().uuidString  // Reset timer ID
-      buildWorkoutSetsList()  // Build sets for the new workout
       requestNotificationPermissions()  // Ensure permissions are requested
     }
   }
@@ -63,18 +64,15 @@ class StartedWorkoutViewModel {
     self.workout = nil
     self.currentSetIndex = 0
     self.isResting = false
-    self.workoutSets = []
   }
 
   // --- Workout Progression Methods ---
 
-  func buildWorkoutSetsList() {
-    guard let workout = workout else {
-      workoutSets = []
-      return
-    }
-
+  func buildWorkoutSetsList() -> [WorkoutSet] {
     var sets = [WorkoutSet]()
+    guard let workout = workout else {
+      return sets
+    }
 
     for (itemIndex, item) in workout.orderedItems.enumerated() {
       if let exercise = item.exercise {
@@ -115,13 +113,14 @@ class StartedWorkoutViewModel {
     if !sets.isEmpty {
       sets[sets.count - 1].isLastSetInWorkout = true
     }
-    workoutSets = sets
 
     // Adjust index if the list changed (e.g., workout edited mid-session)
     if currentSetIndex >= sets.count {
       currentSetIndex = max(0, sets.count - 1)
       if sets.isEmpty { currentSetIndex = 0 }  // Handle case where workout becomes empty
     }
+    
+    return sets
   }
 
   private func requestNotificationPermissions() {

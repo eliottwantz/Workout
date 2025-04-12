@@ -38,7 +38,6 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.keyboardIsShown) private var keyboardIsShown
 
   func body(content: Content) -> some View {
-
     content
       .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 80 : 0)
       .overlay(
@@ -49,6 +48,7 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
         }
       )
   }
+
 }
 
 private struct StartedWorkoutBottomSheetView: View {
@@ -59,15 +59,13 @@ private struct StartedWorkoutBottomSheetView: View {
   @State var offset: CGFloat = 0
   @State private var isExpanded: Bool = true
 
-  @Bindable var workout: Workout
-
+  var workout: Workout
+  
   init(workout: Workout) {
     self.workout = workout
   }
 
   var body: some View {
-    @Bindable var viewModel = viewModel
-
     GeometryReader { geometry in
 
       let height = geometry.frame(in: .global).height
@@ -190,11 +188,7 @@ private struct CollapsedWorkoutView: View {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.userAccentColor) private var userAccentColor
 
-  @Bindable var workout: Workout
-
-  init(workout: Workout) {
-    self.workout = workout
-  }
+  var workout: Workout
 
   var body: some View {
     HStack(spacing: 16) {

@@ -247,7 +247,7 @@ struct WorkoutDetailView: View {
 }
 
 struct WorkoutItemRowView: View {
-  let workoutItem: WorkoutItem
+  @Bindable var workoutItem: WorkoutItem
 
   var body: some View {
     if let exercise = workoutItem.exercise, let definition = exercise.definition {

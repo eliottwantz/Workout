@@ -106,59 +106,113 @@ struct CountdownTimer: View {
   private var lineWidth: CGFloat = 20
   // Optional completion handler
   var onComplete: (() -> Void)?
+  var compact: Bool = false
 
-  init(time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil) {
+  init(time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil, compact: Bool = false) {
     self.time = time
     self._timerModel = State(initialValue: CountdownTimerModel(seconds: time, id: id, onComplete: onComplete))
     self.onComplete = onComplete
+    self.compact = compact
   }
 
   var body: some View {
-    ZStack {
-      Circle()
-        .stroke(lineWidth: lineWidth)
-        .foregroundStyle(userAccentColor.opacity(0.3))
+    if compact {
+      // Compact timer for the collapsed view (small circular timer)
+      ZStack {
+        Circle()
+          .stroke(lineWidth: 8)
+          .foregroundStyle(userAccentColor.opacity(0.3))
 
-      Circle()
-        .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
-        .stroke(
-          userAccentColor,
-          style: StrokeStyle(
-            lineWidth: lineWidth,
-            lineCap: .round,
-            lineJoin: .round
+        Circle()
+          .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
+          .stroke(
+            userAccentColor,
+            style: StrokeStyle(
+              lineWidth: 8,
+              lineCap: .round,
+              lineJoin: .round
+            )
           )
-        )
-        .rotationEffect(.degrees(-90))
-        .shadow(radius: 2)
+          .rotationEffect(.degrees(-90))
+          .shadow(radius: 1)
 
-      Text(displayTime(timerModel.secondsRemaining))
-        .font(.system(size: 50, weight: .bold, design: .rounded))
-        .monospacedDigit()
-        .contentTransition(.numericText())
-        .foregroundStyle(.primary)
-        .animation(.linear, value: timerModel.secondsRemaining)
-    }
-    .frame(width: 200, height: 200)
-    .animation(.easeInOut, value: timerModel.secondsRemaining)
-    .onChange(of: scenePhase) { oldPhase, newPhase in
-      if newPhase == .active && oldPhase == .background {
-        // App came back to foreground
-        timerModel.updateOnForeground()
+        Text(displayTime(timerModel.secondsRemaining))
+          .font(.system(size: 14, weight: .bold, design: .rounded))
+          .monospacedDigit()
+          .contentTransition(.numericText())
+          .foregroundStyle(.primary)
+          .animation(.linear, value: timerModel.secondsRemaining)
       }
-    }
-    .onAppear {
-      timerModel.start()
-    }
-    .sensoryFeedback(
-      trigger: timerModel.secondsRemaining
-    ) { oldValue, newValue in
-      if oldValue == 1 && newValue == 0 {
-        return .error
-      } else if newValue <= 5 {
-        return .impact
-      } else {
-        return nil
+      .frame(width: 50, height: 50) // Smaller size for the compact version
+      .animation(.easeInOut, value: timerModel.secondsRemaining)
+      .onChange(of: scenePhase) { oldPhase, newPhase in
+        if newPhase == .active && oldPhase == .background {
+          // App came back to foreground
+          timerModel.updateOnForeground()
+        }
+      }
+      .onAppear {
+        timerModel.start()
+      }
+      .sensoryFeedback(
+        trigger: timerModel.secondsRemaining
+      ) { oldValue, newValue in
+        if oldValue == 1 && newValue == 0 {
+          return .error
+        } else if newValue <= 5 {
+          return .impact
+        } else {
+          return nil
+        }
+      }
+    } else {
+      // Full-sized circular timer
+      ZStack {
+        Circle()
+          .stroke(lineWidth: lineWidth)
+          .foregroundStyle(userAccentColor.opacity(0.3))
+
+        Circle()
+          .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
+          .stroke(
+            userAccentColor,
+            style: StrokeStyle(
+              lineWidth: lineWidth,
+              lineCap: .round,
+              lineJoin: .round
+            )
+          )
+          .rotationEffect(.degrees(-90))
+          .shadow(radius: 2)
+
+        Text(displayTime(timerModel.secondsRemaining))
+          .font(.system(size: 50, weight: .bold, design: .rounded))
+          .monospacedDigit()
+          .contentTransition(.numericText())
+          .foregroundStyle(.primary)
+          .animation(.linear, value: timerModel.secondsRemaining)
+      }
+      .frame(width: 200, height: 200)
+      .animation(.easeInOut, value: timerModel.secondsRemaining)
+      .onChange(of: scenePhase) { oldPhase, newPhase in
+        if newPhase == .active && oldPhase == .background {
+          // App came back to foreground
+          timerModel.updateOnForeground()
+        }
+      }
+      .onAppear {
+        timerModel.start()
+      }
+      .sensoryFeedback(
+        trigger: timerModel.secondsRemaining
+      ) { oldValue, newValue in
+        if oldValue == 1 && newValue == 0 {
+          return .error
+        } else if newValue <= 5 {
+          return .impact
+        } else {
+          return nil
+        }
       }
     }
   }

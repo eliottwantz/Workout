@@ -16,6 +16,16 @@
     "%.1f" : {
       "shouldTranslate" : false
     },
+    "%.1f %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$.1f %2$@"
+          }
+        }
+      }
+    },
     "%@" : {
       "shouldTranslate" : false
     },
@@ -118,6 +128,9 @@
         }
       }
     },
+    "%lld reps" : {
+
+    },
     "%lld sets" : {
       "localizations" : {
         "en" : {
@@ -140,6 +153,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "•" : {
+
     },
     "🏆🏆🏆" : {
       "shouldTranslate" : false
@@ -655,6 +671,16 @@
         }
       }
     },
+    "Set %lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Set %1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "SET %lld/%lld" : {
       "localizations" : {
         "en" : {
@@ -722,9 +748,6 @@
         }
       }
     },
-    "This is the collapsed content" : {
-
-    },
     "Today" : {
       "localizations" : {
         "fr" : {
@@ -774,6 +797,9 @@
           }
         }
       }
+    },
+    "Workout Completed! 🏆" : {
+
     },
     "Workout Log" : {
       "localizations" : {

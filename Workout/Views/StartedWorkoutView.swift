@@ -10,8 +10,8 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
-
 struct StartedWorkoutView: View {
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = true
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
@@ -21,7 +21,9 @@ struct StartedWorkoutView: View {
   var body: some View {
     VStack {
 
-      if let currentSet = startedWorkoutViewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+      if let currentSet = startedWorkoutViewModel.currentWorkoutSet,
+        let exerciseDefinition = currentSet.exerciseDefinition
+      {
         // Set navigation controls
         HStack {
           Button {
@@ -48,7 +50,9 @@ struct StartedWorkoutView: View {
             Image(systemName: "chevron.right")
               .font(.title2)
               .padding(10)
-              .foregroundColor(startedWorkoutViewModel.currentSetIndex < startedWorkoutViewModel.workoutSets.count - 1 ? .primary : .gray)
+              .foregroundColor(
+                startedWorkoutViewModel.currentSetIndex < startedWorkoutViewModel.workoutSets.count - 1
+                  ? .primary : .gray)
           }
           .disabled(startedWorkoutViewModel.currentSetIndex >= startedWorkoutViewModel.workoutSets.count - 1)
         }
@@ -97,11 +101,11 @@ struct StartedWorkoutView: View {
                 Text("WEIGHT")
                   .font(.caption)
                   .foregroundColor(.secondary)
-                Text(startedWorkoutViewModel.displayWeightInLbs ? "(lbs)" : "(kg)")
+                Text(displayWeightInLbs ? "(lbs)" : "(kg)")
                   .font(.caption)
                   .foregroundColor(.secondary)
               }
-              Text("\(currentSet.set.weight.weightValue(inLbs: startedWorkoutViewModel.displayWeightInLbs), specifier: "%.1f")")
+              Text("\(currentSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                 .font(.title2)
                 .fontWeight(.semibold)
             }
@@ -177,11 +181,11 @@ struct StartedWorkoutView: View {
                   Text("WEIGHT")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                  Text(startedWorkoutViewModel.displayWeightInLbs ? "(lbs)" : "(kg)")
+                  Text(displayWeightInLbs ? "(lbs)" : "(kg)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 }
-                Text("\(nextSet.set.weight.weightValue(inLbs: startedWorkoutViewModel.displayWeightInLbs), specifier: "%.1f")")
+                Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                   .font(.title3)
               }
             }

@@ -16,16 +16,6 @@
     "%.1f" : {
       "shouldTranslate" : false
     },
-    "%.1f %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$.1f %2$@"
-          }
-        }
-      }
-    },
     "%@" : {
       "shouldTranslate" : false
     },

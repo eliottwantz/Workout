@@ -35,7 +35,7 @@ struct WorkoutDetailView: View {
   }
 
   var body: some View {
-    
+
     List {
       if !workout.orderedItems.isEmpty {
 

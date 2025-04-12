@@ -20,18 +20,11 @@ extension EnvironmentValues {
 class StartedWorkoutViewModel {
   var workout: Workout? = nil  // Make workout optional
 
-  // App Preferences
-  var displayWeightInLbs: Bool = false
-
   // Workout Progress State
   var currentSetIndex = 0
   var isResting = false
   var currentTimerId = UUID().uuidString
   var workoutSets = [WorkoutSet]()
-
-  init() {
-    self.displayWeightInLbs = UserDefaults.standard.bool(forKey: DisplayWeightInLbsKey)
-  }
 
   var currentWorkoutSet: WorkoutSet? {
     guard workout != nil, !workoutSets.isEmpty, currentSetIndex < workoutSets.count else { return nil }
@@ -66,11 +59,11 @@ class StartedWorkoutViewModel {
 
   // Call this to end the workout session
   func stop() {
-      removeAllPendingNotifications()  // Clean up notifications
-      self.workout = nil
-      self.currentSetIndex = 0
-      self.isResting = false
-      self.workoutSets = []
+    removeAllPendingNotifications()  // Clean up notifications
+    self.workout = nil
+    self.currentSetIndex = 0
+    self.isResting = false
+    self.workoutSets = []
   }
 
   // --- Workout Progression Methods ---

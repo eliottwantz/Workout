@@ -35,11 +35,12 @@ extension View {
 
 private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.startedWorkoutViewModel) private var viewModel
+  @Environment(\.keyboardIsShown) private var keyboardIsShown
 
   func body(content: Content) -> some View {
 
     content
-      .padding(.bottom, viewModel.workout != nil ? 80 : 0)
+      .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 80 : 0)
       .overlay(
         Group {
           if let workout = viewModel.workout {
@@ -188,18 +189,19 @@ private struct StartedWorkoutBottomSheetView: View {
 private struct CollapsedWorkoutView: View {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.userAccentColor) private var userAccentColor
-  
+
   @Bindable var workout: Workout
-  
+
   init(workout: Workout) {
     self.workout = workout
   }
-  
+
   var body: some View {
     HStack(spacing: 16) {
       if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
         // Left side: Show next set info if resting, otherwise current set info
-        if viewModel.isResting, let nextSet = viewModel.nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition {
+        if viewModel.isResting, let nextSet = viewModel.nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition
+        {
           // When resting, show the next set information on the left
           CollapsedExerciseInfoView(
             exerciseDefinition: nextDefinition,
@@ -207,7 +209,6 @@ private struct CollapsedWorkoutView: View {
             setIndex: nextSet.setIndex,
             totalSets: nextSet.exercise.sets.count,
             isSuperset: nextSet.isSuperset,
-            displayWeightInLbs: viewModel.displayWeightInLbs,
             isPrefixedWithNext: true
           )
         } else {
@@ -218,12 +219,11 @@ private struct CollapsedWorkoutView: View {
             setIndex: currentSet.setIndex,
             totalSets: currentSet.exercise.sets.count,
             isSuperset: currentSet.isSuperset,
-            displayWeightInLbs: viewModel.displayWeightInLbs
           )
         }
-        
+
         Spacer()
-        
+
         // Right side: Action button or rest timer
         if viewModel.isResting {
           // Show compact timer when resting
@@ -252,22 +252,21 @@ private struct CollapsedWorkoutView: View {
 /// A reusable view that displays exercise information in the collapsed workout view
 private struct CollapsedExerciseInfoView: View {
   @Environment(\.userAccentColor) private var userAccentColor
-  
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = true
+
   let exerciseDefinition: ExerciseDefinition
   let set: SetEntry
   let setIndex: Int
   let totalSets: Int
   let isSuperset: Bool
-  let displayWeightInLbs: Bool
   let isPrefixedWithNext: Bool
-  
+
   init(
     exerciseDefinition: ExerciseDefinition,
     set: SetEntry,
     setIndex: Int,
     totalSets: Int,
     isSuperset: Bool,
-    displayWeightInLbs: Bool,
     isPrefixedWithNext: Bool = false
   ) {
     self.exerciseDefinition = exerciseDefinition
@@ -275,10 +274,9 @@ private struct CollapsedExerciseInfoView: View {
     self.setIndex = setIndex
     self.totalSets = totalSets
     self.isSuperset = isSuperset
-    self.displayWeightInLbs = displayWeightInLbs
     self.isPrefixedWithNext = isPrefixedWithNext
   }
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
       HStack(spacing: 4) {
@@ -292,13 +290,13 @@ private struct CollapsedExerciseInfoView: View {
             .background(userAccentColor.opacity(0.2))
             .cornerRadius(4)
         }
-        
+
         Text(isPrefixedWithNext ? "NEXT: \(exerciseDefinition.name)" : exerciseDefinition.name)
           .font(.title3)
           .fontWeight(.semibold)
           .lineLimit(1)
       }
-      
+
       CollapsedSetDetailsView(
         setIndex: setIndex,
         totalSets: totalSets,
@@ -318,26 +316,26 @@ private struct CollapsedSetDetailsView: View {
   let reps: Int
   let weight: Double
   let displayWeightInLbs: Bool
-  
+
   var body: some View {
     HStack(spacing: 8) {
       Text("Set \(setIndex + 1)/\(totalSets)")
         .font(.subheadline)
         .foregroundColor(.secondary)
-      
+
       Text("•")
         .font(.subheadline)
         .foregroundColor(.secondary)
-      
+
       Text("\(reps) reps")
         .font(.subheadline)
         .foregroundColor(.secondary)
-      
+
       Text("•")
         .font(.subheadline)
         .foregroundColor(.secondary)
-      
-      Text("\(weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f") \(displayWeightInLbs ? "lbs" : "kg")")
+
+      Text("\(weight.formattedWeight(inLbs: displayWeightInLbs))")
         .font(.subheadline)
         .foregroundColor(.secondary)
     }
@@ -349,7 +347,7 @@ private struct CollapsedTimerView: View {
   let time: Int
   let timerId: String
   let onComplete: () -> Void
-  
+
   var body: some View {
     CountdownTimer(
       time: time,
@@ -364,10 +362,10 @@ private struct CollapsedTimerView: View {
 /// A reusable action button for the collapsed workout view
 private struct CollapsedActionButtonView: View {
   @Environment(\.userAccentColor) private var userAccentColor
-  
+
   let title: String
   let action: () -> Void
-  
+
   var body: some View {
     Button {
       action()
@@ -388,9 +386,9 @@ private struct CollapsedActionButtonView: View {
 /// A view displayed when the workout is complete
 private struct CollapsedCompletionView: View {
   @Environment(\.userAccentColor) private var userAccentColor
-  
+
   let stopAction: () -> Void
-  
+
   var body: some View {
     HStack {
       VStack(alignment: .leading) {
@@ -399,9 +397,9 @@ private struct CollapsedCompletionView: View {
           .fontWeight(.semibold)
       }
       .padding(.leading, 16)
-      
+
       Spacer()
-      
+
       CollapsedActionButtonView(
         title: "Finish",
         action: stopAction

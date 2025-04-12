@@ -15,7 +15,7 @@ struct ExerciseDetailView: View {
   @State private var isEditingMode = false
   @State private var restTime: Int
   @State private var editMode = EditMode.inactive
-  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = true
 
   init(exercise: Exercise) {
     self.exercise = exercise

@@ -143,7 +143,7 @@ struct CountdownTimer: View {
           .foregroundStyle(.primary)
           .animation(.linear, value: timerModel.secondsRemaining)
       }
-      .frame(width: 50, height: 50) // Smaller size for the compact version
+      .frame(width: 50, height: 50)  // Smaller size for the compact version
       .animation(.easeInOut, value: timerModel.secondsRemaining)
       .onChange(of: scenePhase) { oldPhase, newPhase in
         if newPhase == .active && oldPhase == .background {

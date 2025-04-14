@@ -240,6 +240,17 @@
         }
       }
     },
+    "Add Exercise" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un exe"
+          }
+        }
+      }
+    },
     "Add Exercises" : {
       "localizations" : {
         "fr" : {
@@ -470,7 +481,7 @@
         }
       }
     },
-    "Enter the name of the exercise you want to add." : {
+    "Enter the name for the new exercise." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {

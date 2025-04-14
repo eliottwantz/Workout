@@ -15,7 +15,7 @@ extension String {
 
     let trimmed = self.trimmingCharacters(in: .whitespacesAndNewlines)
     return trimmed.split(separator: " ")
-      .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+      .map { $0.prefix(1).uppercased() + $0.dropFirst() }
       .joined(separator: " ")
   }
 }

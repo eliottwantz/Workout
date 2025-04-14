@@ -66,13 +66,15 @@ struct ExerciseSelectionView<ActionButton: View>: View {
     .presentationDetents([.fraction(0.65), .large])
     .alert("Add New Exercise", isPresented: $showingAddNewExerciseDialog) {
       TextField("Exercise Name", text: $newExerciseName)
+        .autocapitalization(.words)
 
       Button("Cancel", role: .cancel) {}
       Button("Add") {
         addNewExerciseDefinition()
       }
+      .disabled(newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     } message: {
-      Text("Enter the name of the exercise you want to add.")
+      Text("Enter the name for the new exercise.")
     }
   }
 
@@ -87,11 +89,7 @@ struct ExerciseSelectionView<ActionButton: View>: View {
   }
 
   private func addNewExerciseDefinition() {
-    guard !newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-      return
-    }
-
-    if ExerciseUtilities.createNewExerciseDefinition(with: newExerciseName, in: modelContext) != nil {
+    if ExerciseDefinition.createAndSave(with: newExerciseName, in: modelContext) != nil {
       // Reset the input field after successful creation
       newExerciseName = ""
     }

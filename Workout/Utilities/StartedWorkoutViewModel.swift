@@ -24,6 +24,7 @@ class StartedWorkoutViewModel {
   var currentSetIndex = 0
   var isResting = false
   var currentTimerId = UUID().uuidString
+  var isWorkoutComplete = false
   var workoutSets: [WorkoutSet] {
     return buildWorkoutSetsList()
   }
@@ -38,18 +39,13 @@ class StartedWorkoutViewModel {
     return workoutSets[currentSetIndex + 1]
   }
 
-  var isWorkoutComplete: Bool {
-    guard workout != nil else { return false }  // Not complete if no workout
-    return !workoutSets.isEmpty && currentSetIndex >= workoutSets.count
-  }
-
   // --- Lifecycle Methods ---
 
   // Call this to start a workout session
   func start(workout: Workout) {
     withAnimation {
       self.workout = workout
-      // Reset state for the new workout
+      self.isWorkoutComplete = false
       self.currentSetIndex = 0
       self.isResting = false
       self.currentTimerId = UUID().uuidString  // Reset timer ID
@@ -61,8 +57,6 @@ class StartedWorkoutViewModel {
   func stop() {
     removeAllPendingNotifications()  // Clean up notifications
     self.workout = nil
-    self.currentSetIndex = 0
-    self.isResting = false
   }
 
   // --- Workout Progression Methods ---
@@ -134,12 +128,12 @@ class StartedWorkoutViewModel {
 
   private func moveToNextSet() {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
-    if currentSetIndex < workoutSets.count - 1 {
-      currentSetIndex += 1
-    } else {
-      // Mark workout as complete by advancing index beyond the last item
-      currentSetIndex = workoutSets.count
+    if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
+      // Mark workout as complete
+      isWorkoutComplete = true
+      print("Workout complete!")
     }
+    currentSetIndex += 1
     isResting = false  // Ensure resting state is reset when moving
   }
 

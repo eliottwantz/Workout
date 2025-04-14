@@ -23,9 +23,30 @@ struct StartedWorkoutView: View {
   var body: some View {
     VStack {
 
-      if let currentSet = startedWorkoutViewModel.currentWorkoutSet,
+      // MARK: - Workout completed view
+      if startedWorkoutViewModel.isWorkoutComplete {
+        Text("Workout Completed!")
+          .font(.largeTitle)
+          .fontWeight(.bold)
+        Spacer()
+        Text("🏆🏆🏆")
+          .font(.largeTitle)
+          .fontWeight(.bold)
+        Spacer()
+        Button {
+          startedWorkoutViewModel.stop()  // Keep the stop action
+        } label: {
+          Text("Finish")
+            .font(.headline)
+            .frame(width: 200, height: 60)
+            .background(userAccentColor)
+            .foregroundStyle(userAccentColor.contrastColor)
+            .cornerRadius(15)
+        }
+      } else if let currentSet = startedWorkoutViewModel.currentWorkoutSet,
         let exerciseDefinition = currentSet.exerciseDefinition
       {
+        // MARK: - Workout in progress
         // Set navigation controls
         HStack {
           Button {
@@ -135,7 +156,6 @@ struct StartedWorkoutView: View {
             )
             .matchedGeometryEffect(id: "timer", in: ns)
 
-
             Button("Skip Rest") {
               startedWorkoutViewModel.skipRest()
             }
@@ -216,25 +236,6 @@ struct StartedWorkoutView: View {
           .background(Color(UIColor.secondarySystemBackground))
           .cornerRadius(15)
           .padding(.horizontal)
-        }
-      } else if startedWorkoutViewModel.isWorkoutComplete {
-        Text("Workout Completed!")
-          .font(.largeTitle)
-          .fontWeight(.bold)
-        Spacer()
-        Text("🏆🏆🏆")
-          .font(.largeTitle)
-          .fontWeight(.bold)
-        Spacer()
-        Button {
-          startedWorkoutViewModel.stop()
-        } label: {
-          Text("Finish")
-            .font(.headline)
-            .frame(width: 200, height: 60)
-            .background(userAccentColor)
-            .foregroundStyle(userAccentColor.contrastColor)
-            .cornerRadius(15)
         }
       }
     }

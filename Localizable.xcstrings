@@ -102,18 +102,18 @@
         }
       }
     },
-    "%lld of %lld" : {
+    "%lld of %lld sets" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld of %2$lld"
+            "value" : "%1$lld of %2$lld sets"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld de %lld"
+            "value" : "Set %lld sur %lld"
           }
         }
       }

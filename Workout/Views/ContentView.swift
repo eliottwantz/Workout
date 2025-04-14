@@ -19,5 +19,6 @@ struct ContentView: View {
 
 #Preview {
   ContentView()
+    .withGeometryEnvironment()
     .modelContainer(AppContainer.preview.modelContainer)
 }

@@ -36,6 +36,7 @@ struct WorkoutApp: App {
         .onAppear { setupKeyboardMonitors() }
         .onDisappear { dismantleKeyboarMonitors() }
         .tint(userAccentColor)
+        .withGeometryEnvironment()
     }
     .modelContainer(AppContainer.shared.modelContainer)
   }

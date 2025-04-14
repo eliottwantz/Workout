@@ -18,6 +18,8 @@ struct StartedWorkoutView: View {
   @Bindable var workout: Workout
   @State private var showingWorkoutEditor = false
 
+  var ns: Namespace.ID
+
   var body: some View {
     VStack {
 
@@ -38,7 +40,7 @@ struct StartedWorkoutView: View {
 
           Spacer()
 
-          Text("\(startedWorkoutViewModel.currentSetIndex + 1) of \(startedWorkoutViewModel.workoutSets.count)")
+          Text("\(startedWorkoutViewModel.currentSetIndex + 1) of \(startedWorkoutViewModel.workoutSets.count) sets")
             .font(.subheadline)
             .foregroundColor(.secondary)
 
@@ -75,7 +77,9 @@ struct StartedWorkoutView: View {
               Text(exerciseDefinition.name)
                 .font(.title)
                 .fontWeight(.bold)
+                .lineLimit(1)
                 .multilineTextAlignment(.center)
+                .matchedGeometryEffect(id: "exercise", in: ns)
             }
 
             Spacer()
@@ -129,6 +133,8 @@ struct StartedWorkoutView: View {
                 startedWorkoutViewModel.timerDidComplete()
               }
             )
+            .matchedGeometryEffect(id: "timer", in: ns)
+
 
             Button("Skip Rest") {
               startedWorkoutViewModel.skipRest()
@@ -145,6 +151,7 @@ struct StartedWorkoutView: View {
                 .foregroundStyle(userAccentColor.contrastColor)
                 .cornerRadius(15)
             }
+            .matchedGeometryEffect(id: "done_set", in: ns)
           }
         }
         .padding()
@@ -238,6 +245,7 @@ struct StartedWorkoutView: View {
 }
 
 #Preview {
+  @Previewable @Namespace var ns
   let container = AppContainer.preview.modelContainer
   let modelContext = container.mainContext
 
@@ -245,6 +253,6 @@ struct StartedWorkoutView: View {
   let workouts = try! modelContext.fetch(workoutFetchDescriptor)
   let sampleWorkout = workouts.first ?? Workout(date: Date())
 
-  return StartedWorkoutView(workout: sampleWorkout)
+  return StartedWorkoutView(workout: sampleWorkout, ns: ns)
     .modelContainer(container)
 }

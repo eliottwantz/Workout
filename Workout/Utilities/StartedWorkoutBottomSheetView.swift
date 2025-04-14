@@ -24,15 +24,15 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.keyboardIsShown) private var keyboardIsShown
 
   func body(content: Content) -> some View {
-    content
-      .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 80 : 0)
-      .overlay(
-        Group {
-          if let workout = viewModel.workout {
-            StartedWorkoutBottomSheetView(workout: workout)
-          }
-        }
-      )
+    ZStack {
+      content
+        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 80 : 0)
+
+      if let workout = viewModel.workout {
+        StartedWorkoutBottomSheetView(workout: workout)
+      }
+
+    }
   }
 
 }
@@ -41,130 +41,132 @@ private struct StartedWorkoutBottomSheetView: View {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.mainWindowSize) var windowSize
+  @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
+
+  @Namespace private var ns
+
+  var workout: Workout
+  private var collapsedHeight: CGFloat = 120
+  @State private var offset: CGFloat = 0
+  @State private var isExpanded: Bool = true
+
+  @State private var baseOffsetY: CGFloat = 0
+  @State private var dragOffsetY: CGFloat = 0
+  @State private var endOffsetY: CGFloat = 0
+
+  @State private var showStopAlert: Bool = false
+
+  private var screenHeight: CGFloat {
+    windowSize.height + safeAreaInsets.top + safeAreaInsets.bottom
+  }
+
+  private var cappedDragOffsetY: CGFloat {
+    endOffsetY == 0
+      ? min(dragOffsetY, 0)
+      : max(dragOffsetY, 0)
+  }
+
+  private var isCollapsed: Bool {
+    endOffsetY == 0
+  }
 
   private var isDarkTheme: Bool {
     colorScheme == .dark
   }
-
-  private var collapsedHeight: CGFloat = 120
-  @State var offset: CGFloat = 0
-  @State private var isExpanded: Bool = true
-  @State private var showStopAlert: Bool = false
-
-  var workout: Workout
 
   init(workout: Workout) {
     self.workout = workout
   }
 
   var body: some View {
-    GeometryReader { geometry in
 
-      let height = geometry.frame(in: .global).height
-      let topOffset = -height + collapsedHeight
+    ZStack {
 
-      Color(isDarkTheme ? UIColor.systemBackground : UIColor.secondarySystemBackground)
-        .offset(y: height - collapsedHeight)
-        .offset(y: offset)
+      Color(.systemBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 30))
+        .offset(y: baseOffsetY)
+        .offset(y: cappedDragOffsetY)
+        .offset(y: endOffsetY)
+        .ignoresSafeArea()
 
-      VStack {
-        if isExpanded {
-          HStack {
+      VStack(spacing: 0) {
+        // MARK: - Header
+        HStack {
+          if !isCollapsed {
             Button {
               showStopAlert = true
             } label: {
               Image(systemName: "xmark")
                 .font(.title2)
-                .foregroundColor(.gray)
+                .foregroundColor(isCollapsed ? .clear : .gray)
                 .padding()
             }
+          }
 
-            Spacer()
-            Capsule()
-              .frame(width: 40, height: 5)
-              .foregroundStyle(.gray)
-            Spacer()
+          Spacer()
+          Capsule()
+            .frame(width: 40, height: 5)
+            .foregroundStyle(.gray)
+          Spacer()
 
-            // For symmetry
+          // For symmetry
+          if !isCollapsed {
             Image(systemName: "xmark")
               .font(.title2)
               .foregroundColor(.clear)
               .padding()
           }
-          .frame(maxWidth: .infinity)
-          .padding(.top, isExpanded ? 50 : 8)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.top, isCollapsed ? 6 : safeAreaInsets.top)
+        .padding(.bottom, isCollapsed ? 2 : 10)
 
-        if isExpanded {
-          StartedWorkoutView(workout: workout)
-            .padding(.bottom, 47)
+        // MARK: - Workout View
+        if isCollapsed {
+          CollapsedWorkoutView(workout: workout, ns: ns)
+            .padding(.bottom, safeAreaInsets.bottom)
+            .frame(maxHeight: collapsedHeight + abs(cappedDragOffsetY))
         } else {
-          VStack {
-            CollapsedWorkoutView(workout: workout)
-              .frame(maxHeight: collapsedHeight)
-          }
+          StartedWorkoutView(workout: workout, ns: ns)
+            .padding(.bottom, safeAreaInsets.bottom)
         }
-
       }
-      .frame(maxHeight: .infinity, alignment: .top)
       .frame(maxWidth: .infinity)
       .background(userAccentColor.opacity(0.2))
-      .cornerRadius(20, corners: [.topLeft, .topRight])
-      .offset(y: height - collapsedHeight)
-      .offset(y: offset)
-      .onChange(of: isExpanded) { oldValue, newValue in
-        withAnimation(.smooth(duration: 0.2)) {
-          print("onChange isExpanded: \(newValue)")
-          if newValue {
-            offset = topOffset
-          } else {
-            offset = 0
-          }
-          print("onChange isExpanded offset: \(offset)")
-        }
-      }
-      .onTapGesture {
-        guard !isExpanded else { return }
-        isExpanded = true
-      }
+      .clipShape(RoundedRectangle(cornerRadius: 30))
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      .offset(y: baseOffsetY)
+      .offset(y: cappedDragOffsetY)
+      .offset(y: endOffsetY)
+      .ignoresSafeArea()
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
-            withAnimation(.linear(duration: 0.1)) {
-              guard isExpanded else { return }
-              print("onChanged value: \(value.translation.height)")
-              let translation = max(value.translation.height, 0)
-              offset = topOffset + translation
-              print("onChanged offset: \(offset)")
+            withAnimation(.linear(duration: 0.2)) {
+              dragOffsetY = value.translation.height
             }
           }
           .onEnded { value in
-            guard isExpanded else { return }
-            withAnimation(.snappy(duration: 0.3)) {
-
-              print("onEnded value: \(value.translation.height)")
-              print("onEnded offset: \(offset)")
-
-              let translation = max(value.translation.height, 0)
-              let velocity = value.predictedEndTranslation.height
-
-              if translation > 100 && translation + velocity > (geometry.size.height * 0.5) {
-                isExpanded = false
-                offset = 0
-              } else {
-                isExpanded = true
-                offset = topOffset
+            withAnimation(.spring) {
+              if dragOffsetY < -150 {
+                endOffsetY = -baseOffsetY
+              } else if endOffsetY != 0 && dragOffsetY > 150 {
+                endOffsetY = 0
               }
+              dragOffsetY = 0
             }
           }
       )
-      .onAppear {
-        withAnimation(.snappy(duration: 0.3)) {
-          offset = topOffset
-        }
-      }
     }
-    .ignoresSafeArea(edges: .all)
+    .onAppear {
+      print("windowSize \(windowSize)")
+      print("screenSize: \(screenHeight)")
+      baseOffsetY = screenHeight - collapsedHeight
+      endOffsetY = -baseOffsetY
+      print("baseOffsetY \(baseOffsetY)")
+    }
+    .navigationBarBackButtonHidden(!isCollapsed)
     .alert("Stop Workout", isPresented: $showStopAlert) {
       Button("Stop", role: .none) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -178,6 +180,7 @@ private struct StartedWorkoutBottomSheetView: View {
     } message: {
       Text("Do you want to copy this workout to today?")
     }
+
   }
 
 }
@@ -187,6 +190,7 @@ private struct CollapsedWorkoutView: View {
   @Environment(\.userAccentColor) private var userAccentColor
 
   var workout: Workout
+  var ns: Namespace.ID
 
   var body: some View {
     HStack(spacing: 16) {
@@ -201,7 +205,8 @@ private struct CollapsedWorkoutView: View {
             setIndex: nextSet.setIndex,
             totalSets: nextSet.exercise.sets.count,
             isSuperset: nextSet.isSuperset,
-            isPrefixedWithNext: true
+            isPrefixedWithNext: true,
+            ns: ns
           )
         } else {
           // When not resting, show current set info
@@ -211,6 +216,7 @@ private struct CollapsedWorkoutView: View {
             setIndex: currentSet.setIndex,
             totalSets: currentSet.exercise.sets.count,
             isSuperset: currentSet.isSuperset,
+            ns: ns
           )
         }
 
@@ -224,12 +230,14 @@ private struct CollapsedWorkoutView: View {
             timerId: viewModel.currentTimerId,
             onComplete: viewModel.timerDidComplete
           )
+            .matchedGeometryEffect(id: "timer", in: ns)
         } else {
           // Show Done Set button when not resting
           CollapsedActionButtonView(
             title: "Done Set",
             action: viewModel.handleDoneSet
           )
+            .matchedGeometryEffect(id: "done_set", in: ns)
         }
       } else if viewModel.isWorkoutComplete {
         CollapsedCompletionView(
@@ -252,6 +260,7 @@ private struct CollapsedExerciseInfoView: View {
   let totalSets: Int
   let isSuperset: Bool
   let isPrefixedWithNext: Bool
+  let ns: Namespace.ID
 
   init(
     exerciseDefinition: ExerciseDefinition,
@@ -259,7 +268,8 @@ private struct CollapsedExerciseInfoView: View {
     setIndex: Int,
     totalSets: Int,
     isSuperset: Bool,
-    isPrefixedWithNext: Bool = false
+    isPrefixedWithNext: Bool = false,
+    ns: Namespace.ID
   ) {
     self.exerciseDefinition = exerciseDefinition
     self.set = set
@@ -267,6 +277,7 @@ private struct CollapsedExerciseInfoView: View {
     self.totalSets = totalSets
     self.isSuperset = isSuperset
     self.isPrefixedWithNext = isPrefixedWithNext
+    self.ns = ns
   }
 
   var body: some View {
@@ -283,10 +294,19 @@ private struct CollapsedExerciseInfoView: View {
             .cornerRadius(4)
         }
 
-        Text(isPrefixedWithNext ? "NEXT: \(exerciseDefinition.name)" : exerciseDefinition.name)
-          .font(.title3)
-          .fontWeight(.semibold)
-          .lineLimit(1)
+        HStack {
+          if isPrefixedWithNext {
+            Text("NEXT: ")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          Text(exerciseDefinition.name)
+            .font(.title)
+            .fontWeight(.bold)
+            .lineLimit(1)
+            .multilineTextAlignment(.center)
+            .matchedGeometryEffect(id: "exercise", in: ns)
+        }
       }
 
       CollapsedSetDetailsView(
@@ -294,7 +314,8 @@ private struct CollapsedExerciseInfoView: View {
         totalSets: totalSets,
         reps: set.reps,
         weight: set.weight,
-        displayWeightInLbs: displayWeightInLbs
+        displayWeightInLbs: displayWeightInLbs,
+        ns: ns
       )
     }
     .padding(.leading, 16)
@@ -308,6 +329,7 @@ private struct CollapsedSetDetailsView: View {
   let reps: Int
   let weight: Double
   let displayWeightInLbs: Bool
+  let ns: Namespace.ID
 
   var body: some View {
     HStack(spacing: 8) {
@@ -409,6 +431,7 @@ private struct CollapsedCompletionView: View {
       WorkoutDetailView(workout: workout)
         .startedWorkoutBottomSheet()
     }
+    .withGeometryEnvironment()
     .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
     .modelContainer(AppContainer.preview.modelContainer)
   } else {

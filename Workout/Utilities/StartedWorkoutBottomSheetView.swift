@@ -8,20 +8,6 @@
 import SwiftData
 import SwiftUI
 
-private struct RoundedCorner: Shape {
-  var radius: CGFloat = .infinity
-  var corners: UIRectCorner = .allCorners
-
-  func path(in rect: CGRect) -> Path {
-    let path = UIBezierPath(
-      roundedRect: rect,
-      byRoundingCorners: corners,
-      cornerRadii: CGSize(width: radius, height: radius)
-    )
-    return Path(path.cgPath)
-  }
-}
-
 extension View {
   /// Adds a bottom sheet to the view.
   func startedWorkoutBottomSheet() -> some View {
@@ -29,7 +15,7 @@ extension View {
   }
 
   func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-    clipShape(RoundedCorner(radius: radius, corners: corners))
+    clipShape(RoundedRectangle(cornerRadius: radius))
   }
 }
 
@@ -63,6 +49,7 @@ private struct StartedWorkoutBottomSheetView: View {
   private var collapsedHeight: CGFloat = 120
   @State var offset: CGFloat = 0
   @State private var isExpanded: Bool = true
+  @State private var showStopAlert: Bool = false
 
   var workout: Workout
 
@@ -84,12 +71,7 @@ private struct StartedWorkoutBottomSheetView: View {
         if isExpanded {
           HStack {
             Button {
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                viewModel.stop()
-              }
-              withAnimation(.snappy(duration: 0.3)) {
-                offset = 0
-              }
+              showStopAlert = true
             } label: {
               Image(systemName: "xmark")
                 .font(.title2)
@@ -111,8 +93,6 @@ private struct StartedWorkoutBottomSheetView: View {
           }
           .frame(maxWidth: .infinity)
           .padding(.top, isExpanded ? 50 : 8)
-          .background(Color(UIColor.systemBackground))
-          .onTapGesture { isExpanded = false }
         }
 
         if isExpanded {
@@ -122,27 +102,18 @@ private struct StartedWorkoutBottomSheetView: View {
           VStack {
             CollapsedWorkoutView(workout: workout)
               .frame(maxHeight: collapsedHeight)
-              .background(
-                Color(
-                  isDarkTheme
-                    ? UIColor.secondarySystemBackground
-                    : UIColor.systemBackground
-                )
-              )
-              .zIndex(10)
           }
         }
 
       }
       .frame(maxHeight: .infinity, alignment: .top)
       .frame(maxWidth: .infinity)
-      //        .background(userAccentColor.opacity(0.2))
-      .background(isExpanded ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
+      .background(userAccentColor.opacity(0.2))
       .cornerRadius(20, corners: [.topLeft, .topRight])
       .offset(y: height - collapsedHeight)
       .offset(y: offset)
       .onChange(of: isExpanded) { oldValue, newValue in
-        withAnimation(.snappy(duration: 0.3)) {
+        withAnimation(.smooth(duration: 0.2)) {
           print("onChange isExpanded: \(newValue)")
           if newValue {
             offset = topOffset
@@ -157,13 +128,15 @@ private struct StartedWorkoutBottomSheetView: View {
         isExpanded = true
       }
       .gesture(
-        DragGesture()
+        DragGesture(minimumDistance: 0)
           .onChanged { value in
-            guard isExpanded else { return }
-            print("onChanged value: \(value.translation.height)")
-            let translation = max(value.translation.height, 0)
-            offset = topOffset + translation
-            print("onChanged offset: \(offset)")
+            withAnimation(.linear(duration: 0.1)) {
+              guard isExpanded else { return }
+              print("onChanged value: \(value.translation.height)")
+              let translation = max(value.translation.height, 0)
+              offset = topOffset + translation
+              print("onChanged offset: \(offset)")
+            }
           }
           .onEnded { value in
             guard isExpanded else { return }
@@ -175,7 +148,7 @@ private struct StartedWorkoutBottomSheetView: View {
               let translation = max(value.translation.height, 0)
               let velocity = value.predictedEndTranslation.height
 
-              if translation + velocity > (geometry.size.height * 0.5) {
+              if translation > 100 && translation + velocity > (geometry.size.height * 0.5) {
                 isExpanded = false
                 offset = 0
               } else {
@@ -192,6 +165,19 @@ private struct StartedWorkoutBottomSheetView: View {
       }
     }
     .ignoresSafeArea(edges: .all)
+    .alert("Stop Workout", isPresented: $showStopAlert) {
+      Button("Stop", role: .none) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          viewModel.stop()
+        }
+        withAnimation(.snappy(duration: 0.3)) {
+          offset = 0
+        }
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("Do you want to copy this workout to today?")
+    }
   }
 
 }

@@ -24,7 +24,6 @@ class StartedWorkoutViewModel {
   var currentSetIndex = 0
   var isResting = false
   var currentTimerId = UUID().uuidString
-//  var workoutSets = [WorkoutSet]()
   var workoutSets: [WorkoutSet] {
     return buildWorkoutSetsList()
   }
@@ -119,7 +118,7 @@ class StartedWorkoutViewModel {
       currentSetIndex = max(0, sets.count - 1)
       if sets.isEmpty { currentSetIndex = 0 }  // Handle case where workout becomes empty
     }
-    
+
     return sets
   }
 

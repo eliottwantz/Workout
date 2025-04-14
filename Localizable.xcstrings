@@ -695,6 +695,26 @@
         }
       }
     },
+    "Stop" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter"
+          }
+        }
+      }
+    },
+    "Stop Workout" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter l’entraînement"
+          }
+        }
+      }
+    },
     "Superset" : {
       "localizations" : {
         "fr" : {

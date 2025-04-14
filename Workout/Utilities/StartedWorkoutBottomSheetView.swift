@@ -146,6 +146,16 @@ private struct StartedWorkoutBottomSheetView: View {
             withAnimation(.linear(duration: 0.2)) {
               dragOffsetY = value.translation.height
             }
+            
+            withAnimation(.spring) {
+              if dragOffsetY <= -80 {
+                endOffsetY = -baseOffsetY
+                dragOffsetY = 0
+              } else if endOffsetY != 0 && dragOffsetY > 80 {
+                endOffsetY = 0
+                dragOffsetY = 0
+              }
+            }
           }
           .onEnded { value in
             let predictedY = value.predictedEndTranslation.height

@@ -520,6 +520,16 @@
         }
       }
     },
+    "NEXT: " : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PROCHAIN:"
+          }
+        }
+      }
+    },
     "NEXT: %@" : {
       "localizations" : {
         "fr" : {
@@ -734,6 +744,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Détails du Superset"
+          }
+        }
+      }
+    },
+    "This will stop the workout. Are you sure you want to stop?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela va arrêter l’entraînement. Êtes-vous sûr de vouloir arrêter?"
           }
         }
       }

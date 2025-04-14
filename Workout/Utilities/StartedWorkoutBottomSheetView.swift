@@ -48,8 +48,6 @@ private struct StartedWorkoutBottomSheetView: View {
 
   var workout: Workout
   private var collapsedHeight: CGFloat = 120
-  @State private var offset: CGFloat = 0
-  @State private var isExpanded: Bool = true
 
   @State private var baseOffsetY: CGFloat = 0
   @State private var dragOffsetY: CGFloat = 0
@@ -133,7 +131,7 @@ private struct StartedWorkoutBottomSheetView: View {
         }
       }
       .frame(maxWidth: .infinity)
-      .background(userAccentColor.opacity(0.2))
+      .background(userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
       .clipShape(RoundedRectangle(cornerRadius: 30))
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .offset(y: baseOffsetY)
@@ -146,12 +144,12 @@ private struct StartedWorkoutBottomSheetView: View {
             withAnimation(.linear(duration: 0.2)) {
               dragOffsetY = value.translation.height
             }
-            
+
             withAnimation(.spring) {
-              if dragOffsetY <= -80 {
+              if dragOffsetY <= -150 {
                 endOffsetY = -baseOffsetY
                 dragOffsetY = 0
-              } else if endOffsetY != 0 && dragOffsetY > 80 {
+              } else if endOffsetY != 0 && dragOffsetY > 150 {
                 endOffsetY = 0
                 dragOffsetY = 0
               }
@@ -159,7 +157,7 @@ private struct StartedWorkoutBottomSheetView: View {
           }
           .onEnded { value in
             let predictedY = value.predictedEndTranslation.height
-            
+
             withAnimation(.spring) {
               if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
                 endOffsetY = -baseOffsetY
@@ -175,22 +173,26 @@ private struct StartedWorkoutBottomSheetView: View {
       print("windowSize \(windowSize)")
       print("screenSize: \(screenHeight)")
       baseOffsetY = screenHeight - collapsedHeight
-      endOffsetY = -baseOffsetY
-      print("baseOffsetY \(baseOffsetY)")
+
+      withAnimation(.spring) {
+        endOffsetY = -baseOffsetY
+        print("baseOffsetY \(baseOffsetY)")
+      }
     }
     .navigationBarBackButtonHidden(!isCollapsed)
     .alert("Stop Workout", isPresented: $showStopAlert) {
       Button("Stop", role: .none) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
           viewModel.stop()
         }
-        withAnimation(.snappy(duration: 0.3)) {
-          offset = 0
+        withAnimation(.snappy(duration: 0.5)) {
+          endOffsetY = 0 + collapsedHeight
+          print("baseOffsetY \(baseOffsetY)")
         }
       }
       Button("Cancel", role: .cancel) {}
     } message: {
-      Text("Do you want to copy this workout to today?")
+      Text("This will stop the workout. Are you sure you want to stop?")
     }
 
   }
@@ -242,14 +244,14 @@ private struct CollapsedWorkoutView: View {
             timerId: viewModel.currentTimerId,
             onComplete: viewModel.timerDidComplete
           )
-            .matchedGeometryEffect(id: "timer", in: ns)
+          .matchedGeometryEffect(id: "timer", in: ns)
         } else {
           // Show Done Set button when not resting
           CollapsedActionButtonView(
             title: "Done Set",
             action: viewModel.handleDoneSet
           )
-            .matchedGeometryEffect(id: "done_set", in: ns)
+          .matchedGeometryEffect(id: "done_set", in: ns)
         }
       } else if viewModel.isWorkoutComplete {
         CollapsedCompletionView(

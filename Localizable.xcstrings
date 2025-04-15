@@ -471,6 +471,16 @@
         }
       }
     },
+    "Edit Exercise" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier l’exercice"
+          }
+        }
+      }
+    },
     "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day." : {
       "localizations" : {
         "fr" : {

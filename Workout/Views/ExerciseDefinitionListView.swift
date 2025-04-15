@@ -15,6 +15,7 @@ struct ExerciseDefinitionListView: View {
   @State private var showingAddExerciseAlert = false
   @State private var newExerciseName = ""
 
+
   var body: some View {
     NavigationStack {
       List {

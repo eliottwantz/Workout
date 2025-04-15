@@ -13,25 +13,22 @@ struct ExerciseDefinitionEditView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) var dismiss
 
-  @FocusState private var isFocused: Bool
-
   var body: some View {
     Form {
-      TextField("Exercise Name", text: $exerciseDefinition.name)
-        .autocapitalization(.words)
-        .focused($isFocused)
-        .padding()
-        .font(.title2)
-        .fontWeight(.semibold)
-    }
-    .onAppear {
-      isFocused = true
+      Section("Edit Exercise") {
+        
+        TextField("Exercise Name", text: $exerciseDefinition.name)
+          .autocapitalization(.words)
+          .padding()
+          .font(.title2)
+          .fontWeight(.semibold)
+      }
+      
     }
     .navigationTitle(exerciseDefinition.name)
     .navigationBarTitleDisplayMode(.inline)
   }
 }
-
 
 #Preview {
   let container = AppContainer.preview.modelContainer

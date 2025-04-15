@@ -241,7 +241,6 @@
       }
     },
     "Add Exercise" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -371,6 +370,16 @@
         }
       }
     },
+    "Basic Information" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information de base"
+          }
+        }
+      }
+    },
     "Can't add another workout for today" : {
       "localizations" : {
         "fr" : {
@@ -431,6 +440,26 @@
         }
       }
     },
+    "Delete" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        }
+      }
+    },
+    "Delete %@?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer %@?"
+          }
+        }
+      }
+    },
     "Display weight in lbs" : {
       "localizations" : {
         "fr" : {
@@ -471,6 +500,16 @@
         }
       }
     },
+    "Edit" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier"
+          }
+        }
+      }
+    },
     "Edit Exercise" : {
       "localizations" : {
         "fr" : {
@@ -487,6 +526,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Activez l’option “Autoriser plusieurs entraînements par jour” dans les réglages pour créer plus d’un entraînement par jour."
+          }
+        }
+      }
+    },
+    "Enter any notes or instructions here..." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez des notes ou des instructions ici..."
           }
         }
       }
@@ -521,6 +570,16 @@
         }
       }
     },
+    "Favorite" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favori"
+          }
+        }
+      }
+    },
     "Finish" : {
       "localizations" : {
         "fr" : {
@@ -537,6 +596,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exercices individuels"
+          }
+        }
+      }
+    },
+    "It's empty here. Add some notes!" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est vide ici. Ajoute une note!"
+          }
+        }
+      }
+    },
+    "Muscle Group" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groupe Musculaire"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom"
           }
         }
       }
@@ -637,6 +726,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temps de repos"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer"
           }
         }
       }
@@ -789,6 +888,16 @@
         }
       }
     },
+    "Toggle Favorite" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre en favori"
+          }
+        }
+      }
+    },
     "Weight" : {
       "localizations" : {
         "fr" : {
@@ -855,6 +964,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entraînements"
+          }
+        }
+      }
+    },
+    "Yes, delete %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oui, supprimer %@"
           }
         }
       }

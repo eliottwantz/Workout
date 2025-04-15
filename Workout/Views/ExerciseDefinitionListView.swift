@@ -12,9 +12,7 @@ struct ExerciseDefinitionListView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \ExerciseDefinition.name) private var exercises: [ExerciseDefinition]
 
-  @State private var showingAddExerciseAlert = false
-  @State private var newExerciseName = ""
-
+  @State private var isEditorPresented = false
 
   var body: some View {
     NavigationStack {
@@ -28,9 +26,13 @@ struct ExerciseDefinitionListView: View {
         .onDelete(perform: deleteExerciseDefinitions)
       }
       .navigationDestination(for: ExerciseDefinition.self) { definition in
-        ExerciseDefinitionEditView(exerciseDefinition: definition)
+        ExerciseDefinitionDetailView(exercise: definition)
       }
       .navigationTitle("Exercises")
+      .sheet(isPresented: $isEditorPresented) {
+        ExerciseDefinitionEditor(exerciseDefinition: nil)
+          .interactiveDismissDisabled()
+      }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {
           NavigationLink(destination: SettingsView()) {
@@ -38,37 +40,16 @@ struct ExerciseDefinitionListView: View {
           }
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
+        ToolbarItemGroup(placement: .primaryAction) {
           EditButton()
 
           Button {
-            showingAddExerciseAlert = true
+            isEditorPresented = true
           } label: {
             Image(systemName: "plus")
           }
         }
       }
-      .alert("Add New Exercise", isPresented: $showingAddExerciseAlert) {
-        TextField("Exercise Name", text: $newExerciseName)
-          .autocapitalization(.words)
-        Button("Cancel", role: .cancel) {
-          newExerciseName = ""
-        }
-
-        Button("Add") {
-          addExerciseDefinition()
-        }
-        .disabled(newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-      } message: {
-        Text("Enter the name for the new exercise.")
-      }
-    }
-  }
-
-  private func addExerciseDefinition() {
-    if ExerciseDefinition.createAndSave(with: newExerciseName, in: modelContext) != nil {
-      newExerciseName = ""
     }
   }
 

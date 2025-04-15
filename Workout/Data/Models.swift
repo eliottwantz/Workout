@@ -228,12 +228,44 @@ final class ExerciseDefinition {
   // Make the name unique to avoid duplicate exercise definitions
   @Attribute(.unique) var name: String
 
-  // SwiftData automatically handles the inverse relationship from Exercise.definition
-  // We don't strictly need to store a list of all instances here unless needed for specific queries.
+  // Additional properties for better exercise management
+  var muscleGroup: String = MuscleGroup.other.rawValue
+  var notes: String?
+  var favorite: Bool = false
 
-  init(name: String) {
+  init(name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false) {
     self.name = name
+    self.muscleGroup = muscleGroup.rawValue
+    self.notes = notes
+    self.favorite = favorite
   }
+}
+
+// MARK: - Supporting Enums for Exercise Definitions
+
+enum MuscleGroup: String, Codable, CaseIterable, Identifiable {
+
+  case abs = "Abs"
+  case chest = "Chest"
+  case back = "Back"
+  case lowerBack = "Lower Back"
+  case trapezius = "Trapezius"
+  case shoulders = "Shoulders"
+  case biceps = "Biceps"
+  case triceps = "Triceps"
+  case forearms = "Forearms"
+  case glutes = "Glutes"
+  case hamstrings = "Hamstrings"
+  case quadriceps = "Quadriceps"
+  case calves = "Calves"
+  case abductors = "Abductors"
+  case adductors = "Adductors"
+  case neck = "Neck"
+
+  case other = "Other"
+
+  var id: String { self.rawValue }
+
 }
 
 extension ExerciseDefinition {

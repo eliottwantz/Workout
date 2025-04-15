@@ -151,6 +151,7 @@
       "shouldTranslate" : false
     },
     "Add" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -541,6 +542,7 @@
       }
     },
     "Enter the name for the new exercise." : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {

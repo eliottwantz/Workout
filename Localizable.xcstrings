@@ -150,17 +150,6 @@
     "🏆🏆🏆" : {
       "shouldTranslate" : false
     },
-    "Add" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter"
-          }
-        }
-      }
-    },
     "Add %lld Exercises" : {
       "localizations" : {
         "en" : {
@@ -246,7 +235,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajouter un exe"
+            "value" : "Ajouter un exercice"
           }
         }
       }

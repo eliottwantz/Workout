@@ -13,9 +13,10 @@ struct ExerciseDefinitionListView: View {
   @Query(sort: \ExerciseDefinition.name) private var exercises: [ExerciseDefinition]
 
   @State private var isEditorPresented = false
+  @State private var path = NavigationPath()
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       List {
         ForEach(exercises) { definition in
           NavigationLink(value: definition) {
@@ -37,12 +38,12 @@ struct ExerciseDefinitionListView: View {
         }
       }
       .navigationDestination(for: ExerciseDefinition.self) { definition in
-        ExerciseDefinitionDetailView(exercise: definition)
+        ExerciseDefinitionDetailView(exercise: definition, path: $path)
       }
       .navigationTitle("Exercises")
       .sheet(isPresented: $isEditorPresented) {
-        ExerciseDefinitionEditor(exerciseDefinition: nil)
-          .interactiveDismissDisabled()
+          ExerciseDefinitionEditor(exerciseDefinition: nil)
+            .interactiveDismissDisabled()
       }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {

@@ -35,37 +35,36 @@ struct ExerciseDefinitionEditor: View {
 
   var body: some View {
     NavigationStack {
-
       Form {
         Section("Basic Information") {
           HStack {
             Text("Name")
               .foregroundStyle(.secondary)
-
+            
             TextField("Exercise Name", text: $name)
               .autocapitalization(.words)
               .disableAutocorrection(true)
           }
-
+          
           Picker("Muscle Group", selection: $muscleGroup) {
-            ForEach(MuscleGroup.allCases) { group in
+            ForEach(MuscleGroup.allCases.sorted(by: { $0.rawValue < $1.rawValue })) { group in
               Text(group.rawValue).tag(group)
             }
           }
-
+          
           HStack {
             Text("Favorite")
             Spacer()
             EditableFavoriteButton(isSet: $favorite)
           }
         }
-
+        
         // MARK: - Notes
         Section("Notes") {
           ZStack(alignment: .topLeading) {
             TextEditor(text: $notes)
               .frame(minHeight: 100)
-
+            
             if notes.isEmpty {
               Text("Enter any notes or instructions here...")
                 .foregroundStyle(.secondary)
@@ -76,17 +75,15 @@ struct ExerciseDefinitionEditor: View {
           }
         }
       }
+      .navigationTitle(String(localized: editorTitle))
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel", role: .cancel) {
             dismiss()
           }
         }
-
-        ToolbarItem(placement: .principal) {
-          Text(editorTitle)
-        }
-
+        
         ToolbarItem(placement: .confirmationAction) {
           Button("Save") {
             withAnimation {
@@ -97,7 +94,6 @@ struct ExerciseDefinitionEditor: View {
           .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
       }
-
     }
   }
 
@@ -121,11 +117,8 @@ struct ExerciseDefinitionEditor: View {
 }
 
 #Preview("Add Exercise Definition") {
-
-  NavigationStack {
-    ExerciseDefinitionEditor(exerciseDefinition: nil)
-      .modelContainer(AppContainer.preview.modelContainer)
-  }
+  ExerciseDefinitionEditor(exerciseDefinition: nil)
+    .modelContainer(AppContainer.preview.modelContainer)
 }
 
 #Preview("Edit Exercise Definition") {
@@ -137,8 +130,8 @@ struct ExerciseDefinitionEditor: View {
     favorite: true)
   container.mainContext.insert(sampleExercise)
 
-  return NavigationStack {
+  return
     ExerciseDefinitionEditor(exerciseDefinition: sampleExercise)
       .modelContainer(container)
-  }
+
 }

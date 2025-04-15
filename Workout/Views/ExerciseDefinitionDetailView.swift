@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ExerciseDefinitionDetailView: View {
   var exercise: ExerciseDefinition
+  @Binding var path: NavigationPath
 
   @State private var isEditing = false
   @State private var isDeleting = false
@@ -65,22 +66,26 @@ struct ExerciseDefinitionDetailView: View {
       }
     }
     .sheet(isPresented: $isEditing) {
-      ExerciseDefinitionEditor(exerciseDefinition: exercise)
-        .interactiveDismissDisabled()
+        ExerciseDefinitionEditor(exerciseDefinition: exercise)
+          .interactiveDismissDisabled()
     }
     .alert("Delete \(exercise.name)?", isPresented: $isDeleting) {
       Button("Yes, delete \(exercise.name)", role: .destructive) {
         exercise.deleteWithAllContainingExercises(in: modelContext)
+        path.removeLast()
       }
     }
   }
 }
 
 #Preview {
+  @Previewable @State var path = NavigationPath()
   NavigationStack {
     ExerciseDefinitionDetailView(
       exercise: .init(
-        name: "Bench Press", muscleGroup: .chest, notes: "A great exercise for building upper body strength."))
+        name: "Bench Press", muscleGroup: .chest, notes: "A great exercise for building upper body strength."),
+      path: $path
+    )
   }
   .modelContainer(AppContainer.preview.modelContainer)
 }

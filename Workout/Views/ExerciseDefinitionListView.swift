@@ -25,6 +25,17 @@ struct ExerciseDefinitionListView: View {
         }
         .onDelete(perform: deleteExerciseDefinitions)
       }
+      .overlay {
+        if exercises.isEmpty {
+          ContentUnavailableView {
+            Label("No exercises", systemImage: "dumbbell")
+          } actions: {
+            Button("Add Workout", systemImage: "plus") {
+              isEditorPresented = true
+            }
+          }
+        }
+      }
       .navigationDestination(for: ExerciseDefinition.self) { definition in
         ExerciseDefinitionDetailView(exercise: definition)
       }
@@ -56,9 +67,8 @@ struct ExerciseDefinitionListView: View {
   private func deleteExerciseDefinitions(offsets: IndexSet) {
     withAnimation {
       for index in offsets {
-        modelContext.delete(exercises[index])
+        exercises[index].deleteWithAllContainingExercises(in: modelContext)
       }
-      try? modelContext.save()
     }
   }
 }

@@ -63,12 +63,12 @@ struct SupersetDetailView: View {
     .navigationTitle("Superset Detail")
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
+        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {
           Label("Add Exercises", systemImage: "plus")
         }
-        EditButton()
       }
     }
     .environment(\.editMode, $editMode)

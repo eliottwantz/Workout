@@ -70,7 +70,7 @@ struct ExerciseDefinitionDetailView: View {
     }
     .alert("Delete \(exercise.name)?", isPresented: $isDeleting) {
       Button("Yes, delete \(exercise.name)", role: .destructive) {
-        modelContext.delete(exercise)
+        exercise.deleteWithAllContainingExercises(in: modelContext)
       }
     }
   }

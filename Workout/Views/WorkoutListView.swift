@@ -75,12 +75,12 @@ struct WorkoutListView: View {
           }
         }
         ToolbarItemGroup(placement: .primaryAction) {
+          EditButton()
           Button {
             createNewWorkout()
           } label: {
             Label("Add Workout", systemImage: "plus")
           }
-          EditButton()
         }
       }
 

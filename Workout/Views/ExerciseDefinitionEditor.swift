@@ -103,13 +103,13 @@ struct ExerciseDefinitionEditor: View {
 
   private func save() {
     if let exerciseDefinition {
-      exerciseDefinition.name = name
+      exerciseDefinition.name = name.capitalized
       exerciseDefinition.muscleGroup = muscleGroup.rawValue
       exerciseDefinition.notes = notes
       exerciseDefinition.favorite = favorite
     } else {
       let newExerciseDefinition = ExerciseDefinition(
-        name: name,
+        name: name.capitalized,
         muscleGroup: muscleGroup,
         notes: notes,
         favorite: favorite)

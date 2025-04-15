@@ -95,12 +95,12 @@ struct WorkoutDetailView: View {
           }
         }
 
+        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {
           Label("Add Exercises", systemImage: "plus")
         }
-        EditButton()
       }
     }
     .environment(\.editMode, $editMode)

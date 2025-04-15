@@ -126,7 +126,6 @@ final class Exercise {
   // but the Exercise instance itself remains (perhaps showing "Deleted Exercise").
   // Consider .noAction if you want deletion of ExerciseDefinition to fail if instances exist.
   // Or handle this logic manually before deleting definitions. Let's use nullify for flexibility.
-  @Relationship(deleteRule: .nullify)
   var definition: ExerciseDefinition?
 
   // The sets performed for this specific exercise instance
@@ -232,6 +231,8 @@ final class ExerciseDefinition {
   var muscleGroup: String = MuscleGroup.other.rawValue
   var notes: String?
   var favorite: Bool = false
+  
+  @Relationship(deleteRule: .cascade, inverse: \Exercise.definition) var exercises: [Exercise]?
 
   init(name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false) {
     self.name = name
@@ -241,6 +242,23 @@ final class ExerciseDefinition {
   }
 }
 
+extension ExerciseDefinition {
+  
+  func deleteWithAllContainingExercises(in modelContext: ModelContext) {
+    modelContext.delete(self)
+    if let exercisesUsingThisOne = self.exercises {
+      for exercise in exercisesUsingThisOne {
+        modelContext.delete(exercise)
+        if let workoutItem = exercise.workoutItem {
+          modelContext.delete(workoutItem)
+        }
+      }
+    }
+    try? modelContext.save()
+  }
+  
+}
+
 // MARK: - Supporting Enums for Exercise Definitions
 
 enum MuscleGroup: String, Codable, CaseIterable, Identifiable {
@@ -248,6 +266,7 @@ enum MuscleGroup: String, Codable, CaseIterable, Identifiable {
   case abs = "Abs"
   case chest = "Chest"
   case back = "Back"
+  case legs = "Legs"
   case lowerBack = "Lower Back"
   case trapezius = "Trapezius"
   case shoulders = "Shoulders"
@@ -266,28 +285,4 @@ enum MuscleGroup: String, Codable, CaseIterable, Identifiable {
 
   var id: String { self.rawValue }
 
-}
-
-extension ExerciseDefinition {
-  /// Creates a new exercise definition with properly capitalized name and inserts it into the model context
-  /// - Parameters:
-  ///   - exerciseName: The raw exercise name input from the user
-  ///   - modelContext: The SwiftData model context to insert the new definition into
-  /// - Returns: The newly created ExerciseDefinition, or nil if the name was empty
-  static func createAndSave(with exerciseName: String, in modelContext: ModelContext)
-    -> ExerciseDefinition?
-  {
-    let trimmedName = exerciseName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    guard !trimmedName.isEmpty else { return nil }
-
-    // Capitalize the first letter of each word
-    let capitalizedName = trimmedName.capitalizingFirstLetterOfEachWord()
-
-    let exerciseDefinition = ExerciseDefinition(name: capitalizedName)
-    modelContext.insert(exerciseDefinition)
-    try? modelContext.save()
-
-    return exerciseDefinition
-  }
 }

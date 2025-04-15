@@ -94,12 +94,12 @@ struct ExerciseDetailView: View {
     .navigationTitle(exercise.definition?.name ?? "Exercise Detail")
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
+        EditButton()
         Button {
           addSet()
         } label: {
           Label("Add Set", systemImage: "plus")
         }
-        EditButton()
       }
     }
     .environment(\.editMode, $editMode)

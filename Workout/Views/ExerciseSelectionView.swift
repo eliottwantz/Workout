@@ -17,8 +17,7 @@ struct ExerciseSelectionView<ActionButton: View>: View {
   @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
   @Binding var selectedExercises: Set<PersistentIdentifier>
   @State private var searchText = ""
-  @State private var showingAddNewExerciseDialog = false
-  @State private var newExerciseName = ""
+  @State private var isEditorPresented = false
 
   // Custom button to be provided by parent views
   let actionButton: ActionButton
@@ -56,7 +55,7 @@ struct ExerciseSelectionView<ActionButton: View>: View {
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Button {
-          showingAddNewExerciseDialog = true
+          isEditorPresented = true
         } label: {
           Label("Add New Exercise", systemImage: "plus")
         }
@@ -64,17 +63,9 @@ struct ExerciseSelectionView<ActionButton: View>: View {
     }
     .interactiveDismissDisabled()
     .presentationDetents([.fraction(0.65), .large])
-    .alert("Add New Exercise", isPresented: $showingAddNewExerciseDialog) {
-      TextField("Exercise Name", text: $newExerciseName)
-        .autocapitalization(.words)
-
-      Button("Cancel", role: .cancel) {}
-      Button("Add") {
-        addNewExerciseDefinition()
-      }
-      .disabled(newExerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-    } message: {
-      Text("Enter the name for the new exercise.")
+    .sheet(isPresented: $isEditorPresented) {
+      ExerciseDefinitionEditor(exerciseDefinition: nil)
+        .interactiveDismissDisabled()
     }
   }
 
@@ -88,10 +79,4 @@ struct ExerciseSelectionView<ActionButton: View>: View {
     }
   }
 
-  private func addNewExerciseDefinition() {
-    if ExerciseDefinition.createAndSave(with: newExerciseName, in: modelContext) != nil {
-      // Reset the input field after successful creation
-      newExerciseName = ""
-    }
-  }
 }

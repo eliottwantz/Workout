@@ -231,7 +231,7 @@ final class ExerciseDefinition {
   var muscleGroup: String = MuscleGroup.other.rawValue
   var notes: String?
   var favorite: Bool = false
-  
+
   @Relationship(deleteRule: .cascade, inverse: \Exercise.definition) var exercises: [Exercise]?
 
   init(name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false) {
@@ -243,7 +243,7 @@ final class ExerciseDefinition {
 }
 
 extension ExerciseDefinition {
-  
+
   func deleteWithAllContainingExercises(in modelContext: ModelContext) {
     modelContext.delete(self)
     if let exercisesUsingThisOne = self.exercises {
@@ -256,7 +256,7 @@ extension ExerciseDefinition {
     }
     try? modelContext.save()
   }
-  
+
 }
 
 // MARK: - Supporting Enums for Exercise Definitions

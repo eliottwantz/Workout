@@ -10,30 +10,30 @@ import SwiftUI
 
 struct ContentView: View {
 
-    enum Tab {
-        case workouts
-        case exercises
-    }
+  enum Tab {
+    case workouts
+    case exercises
+  }
 
-    @State private var selectedTab: Tab = .workouts
+  @State private var selectedTab: Tab = .workouts
 
-    var body: some View {
-        TabView(selection: $selectedTab) {
-            WorkoutListView()
-                .tabItem {
-                    Label("Workouts", systemImage: "figure.run")
-                }
-                .tag(Tab.workouts)
-
-            ExerciseDefinitionListView()
-                .tabItem {
-                    Label("Exercises", systemImage: "dumbbell")
-                }
-                .tag(Tab.exercises)
+  var body: some View {
+    TabView(selection: $selectedTab) {
+      WorkoutListView()
+        .tabItem {
+          Label("Workouts", systemImage: "figure.run")
         }
-        .dismissKeyboardOnTap()
-        .startedWorkoutBottomSheet()
+        .tag(Tab.workouts)
+
+      ExerciseDefinitionListView()
+        .tabItem {
+          Label("Exercises", systemImage: "dumbbell")
+        }
+        .tag(Tab.exercises)
     }
+    .dismissKeyboardOnTap()
+    .startedWorkoutBottomSheet()
+  }
 }
 
 #Preview {

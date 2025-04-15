@@ -42,8 +42,8 @@ struct ExerciseDefinitionListView: View {
       }
       .navigationTitle("Exercises")
       .sheet(isPresented: $isEditorPresented) {
-          ExerciseDefinitionEditor(exerciseDefinition: nil)
-            .interactiveDismissDisabled()
+        ExerciseDefinitionEditor(exerciseDefinition: nil)
+          .interactiveDismissDisabled()
       }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {

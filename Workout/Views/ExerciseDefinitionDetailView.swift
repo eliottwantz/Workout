@@ -23,7 +23,7 @@ struct ExerciseDefinitionDetailView: View {
           Spacer()
           Text(exercise.muscleGroup)
         }
-        
+
         HStack {
           Text("Favorite")
           Spacer()
@@ -34,19 +34,19 @@ struct ExerciseDefinitionDetailView: View {
 
       // MARK: - Notes
 
-        Section("Notes") {
-          if let notes = exercise.notes, !notes.isEmpty {
-            Text(notes)
-              .font(.body)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(.vertical, 4)
-          } else {
-            Text("It's empty here. Add some notes!")
-              .font(.body)
-              .foregroundStyle(.secondary)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(.vertical, 4)
-          }
+      Section("Notes") {
+        if let notes = exercise.notes, !notes.isEmpty {
+          Text(notes)
+            .font(.body)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+        } else {
+          Text("It's empty here. Add some notes!")
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+        }
       }
     }
     .navigationTitle(exercise.name)
@@ -66,8 +66,8 @@ struct ExerciseDefinitionDetailView: View {
       }
     }
     .sheet(isPresented: $isEditing) {
-        ExerciseDefinitionEditor(exerciseDefinition: exercise)
-          .interactiveDismissDisabled()
+      ExerciseDefinitionEditor(exerciseDefinition: exercise)
+        .interactiveDismissDisabled()
     }
     .alert("Delete \(exercise.name)?", isPresented: $isDeleting) {
       Button("Yes, delete \(exercise.name)", role: .destructive) {

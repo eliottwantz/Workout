@@ -40,31 +40,31 @@ struct ExerciseDefinitionEditor: View {
           HStack {
             Text("Name")
               .foregroundStyle(.secondary)
-            
+
             TextField("Exercise Name", text: $name)
               .autocapitalization(.words)
               .disableAutocorrection(true)
           }
-          
+
           Picker("Muscle Group", selection: $muscleGroup) {
             ForEach(MuscleGroup.allCases.sorted(by: { $0.rawValue < $1.rawValue })) { group in
               Text(group.rawValue).tag(group)
             }
           }
-          
+
           HStack {
             Text("Favorite")
             Spacer()
             EditableFavoriteButton(isSet: $favorite)
           }
         }
-        
+
         // MARK: - Notes
         Section("Notes") {
           ZStack(alignment: .topLeading) {
             TextEditor(text: $notes)
               .frame(minHeight: 100)
-            
+
             if notes.isEmpty {
               Text("Enter any notes or instructions here...")
                 .foregroundStyle(.secondary)
@@ -83,7 +83,7 @@ struct ExerciseDefinitionEditor: View {
             dismiss()
           }
         }
-        
+
         ToolbarItem(placement: .confirmationAction) {
           Button("Save") {
             withAnimation {
@@ -132,6 +132,6 @@ struct ExerciseDefinitionEditor: View {
 
   return
     ExerciseDefinitionEditor(exerciseDefinition: sampleExercise)
-      .modelContainer(container)
+    .modelContainer(container)
 
 }

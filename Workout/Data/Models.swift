@@ -41,23 +41,6 @@ final class Workout {
   }
 }
 
-extension Workout {
-  var formattedDate: LocalizedStringResource {
-    "\(date, format: .dateTime.day().month(.wide).year())"
-  }
-
-  var smartFormattedDate: LocalizedStringResource {
-    let calendar = Calendar.current
-    if calendar.isDateInToday(date) {
-      return "Today"
-    } else if calendar.isDateInYesterday(date) {
-      return "Yesterday"
-    } else {
-      return formattedDate
-    }
-  }
-}
-
 // MARK: - Workout Item (Wrapper for Exercise/Superset in Workout Order)
 
 @Model
@@ -134,7 +117,9 @@ final class Exercise {
 
   var workoutItem: WorkoutItem?  // If it's directly in a Workout
   var containingSuperset: Superset?  // If it's part of a Superset
-  var workout: Workout
+  var workout: Workout?
+  var workoutID: PersistentIdentifier
+  var workoutDate: Date
 
   // Computed property for sorted sets
   @Transient var sets: [SetEntry] {
@@ -153,6 +138,8 @@ final class Exercise {
     self.orderWithinSuperset = orderWithinSuperset
     self.orderedSets = []
     self.notes = notes
+    self.workoutDate = workout.date
+    self.workoutID = workout.persistentModelID
   }
 
   // Convenience method to add a set and maintain order
@@ -162,8 +149,6 @@ final class Exercise {
     set.exercise = self  // Set inverse relationship
   }
 }
-
-// MARK: - Superset Instance (within a Workout)
 
 @Model
 final class Superset {
@@ -239,6 +224,23 @@ final class ExerciseDefinition {
     self.muscleGroup = muscleGroup.rawValue
     self.notes = notes
     self.favorite = favorite
+  }
+}
+
+extension Workout {
+  var formattedDate: LocalizedStringResource {
+    "\(date, format: .dateTime.day().month(.wide).year())"
+  }
+
+  var smartFormattedDate: LocalizedStringResource {
+    let calendar = Calendar.current
+    if calendar.isDateInToday(date) {
+      return "Today"
+    } else if calendar.isDateInYesterday(date) {
+      return "Yesterday"
+    } else {
+      return formattedDate
+    }
   }
 }
 

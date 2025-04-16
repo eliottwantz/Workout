@@ -179,12 +179,12 @@ extension AppContainer {
     do {
       // Use the direct relationship to Workout now that it exists in the model
       let predicate = #Predicate<Exercise> {
-        $0.definition?.persistentModelID == definitionID && $0.workout.persistentModelID != currentWorkoutID
+        $0.definition?.persistentModelID == definitionID && $0.workoutID != currentWorkoutID
       }
 
       var descriptor = FetchDescriptor<Exercise>(
         predicate: predicate,
-        sortBy: [.init(\Exercise.workout.date, order: .reverse)]
+        sortBy: [.init(\Exercise.workoutDate, order: .reverse)]
       )
 
       // Add relationship prefetching for performance

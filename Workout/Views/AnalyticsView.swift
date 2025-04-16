@@ -92,9 +92,9 @@ struct AnalyticsView: View {
   // Aggregate best set per workout date for the selected exercise definition
   private func analyticsData(for def: ExerciseDefinition, period: Period) -> [PerformancePoint] {
     let interval = period.dateInterval
-    let exercises = (def.exercises ?? []).filter { interval.contains($0.workout.date) }
+    let exercises = (def.exercises ?? []).filter { interval.contains($0.workoutDate) }
     // For each workout date, get the best set (max weight)
-    let grouped = Dictionary(grouping: exercises, by: { $0.workout.date })
+    let grouped = Dictionary(grouping: exercises, by: { $0.workoutDate })
     var points: [PerformancePoint] = []
     for (date, exercisesOnDate) in grouped {
       // Find the best set (max weight) among all sets for this date

@@ -350,6 +350,16 @@
         }
       }
     },
+    "Analytics" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyses"
+          }
+        }
+      }
+    },
     "Appearance" : {
       "localizations" : {
         "fr" : {
@@ -386,6 +396,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuler"
+          }
+        }
+      }
+    },
+    "change in max weight" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "changement de poids maximal"
           }
         }
       }
@@ -429,6 +449,9 @@
           }
         }
       }
+    },
+    "Date" : {
+      "shouldTranslate" : false
     },
     "Delete" : {
       "localizations" : {
@@ -530,13 +553,12 @@
         }
       }
     },
-    "Enter the name for the new exercise." : {
-      "extractionState" : "stale",
+    "Exercise" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Entrez le nom de l’exercice que vous voulez ajouter"
+            "value" : "Exercice"
           }
         }
       }
@@ -641,6 +663,16 @@
         }
       }
     },
+    "No data" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune données"
+          }
+        }
+      }
+    },
     "No exercises" : {
       "localizations" : {
         "fr" : {
@@ -691,6 +723,16 @@
         }
       }
     },
+    "Period" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Période"
+          }
+        }
+      }
+    },
     "Reps" : {
       "localizations" : {
         "fr" : {
@@ -727,6 +769,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enregistrer"
+          }
+        }
+      }
+    },
+    "Select an exercise" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionnez un exercice"
           }
         }
       }

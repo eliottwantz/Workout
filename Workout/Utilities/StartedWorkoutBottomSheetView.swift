@@ -26,7 +26,7 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   func body(content: Content) -> some View {
     ZStack {
       content
-        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 80 : 0)
+        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 90 : 0)
 
       if let workout = viewModel.workout {
         StartedWorkoutBottomSheetView(workout: workout)

@@ -68,7 +68,17 @@ struct WorkoutDetailView: View {
       }
     }
     .safeAreaInset(edge: .bottom) {
-      if !workout.orderedItems.isEmpty && startedWorkoutViewModel.workout == nil {
+      if !workout.orderedItems.isEmpty &&
+          !workout.orderedItems.flatMap({ item in
+            if let exercise = item.exercise {
+              return exercise.sets
+            }
+            if let superset = item.superset {
+              return superset.exercises.flatMap({$0.sets})
+            }
+            return []
+          }).isEmpty &&
+          startedWorkoutViewModel.workout == nil {
         Button {
           startedWorkoutViewModel.start(workout: workout)
         } label: {

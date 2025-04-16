@@ -10,6 +10,7 @@ import SwiftUI
 struct RestTimePickerView: View {
   @Binding var restTime: Int
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.userAccentColor) private var userAccentColor
 
   private let restTimeOptions = [60, 90, 120, 150, 180, 240, 300]
 
@@ -26,7 +27,7 @@ struct RestTimePickerView: View {
               Spacer()
               if restTime == seconds {
                 Image(systemName: "checkmark")
-                  .foregroundColor(.blue)
+                  .foregroundColor(userAccentColor)
               }
             }
           }

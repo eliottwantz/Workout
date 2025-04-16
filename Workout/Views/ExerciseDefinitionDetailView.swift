@@ -52,12 +52,14 @@ struct ExerciseDefinitionDetailView: View {
     .navigationTitle(exercise.name)
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
+        NavigationLink(destination: AnalyticsView(exerciseToShow: exercise)) {
+          Label("Analytics", systemImage: "chart.xyaxis.line")
+        }
         Button {
           isEditing = true
         } label: {
           Label("Edit", systemImage: "pencil")
         }
-
         Button {
           isDeleting = true
         } label: {

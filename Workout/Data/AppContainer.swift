@@ -174,7 +174,7 @@ final class AppContainer {
 
 extension AppContainer {
   static func findMostRecentExercise(
-    for definitionID: PersistentIdentifier, currentWorkoutID: PersistentIdentifier, modelContext: ModelContext
+    for definitionID: PersistentIdentifier, currentWorkoutID: UUID, modelContext: ModelContext
   ) -> Exercise? {
     do {
       // Use the direct relationship to Workout now that it exists in the model

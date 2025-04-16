@@ -19,6 +19,7 @@ struct ExerciseDefinitionEditor: View {
   @State private var muscleGroup: MuscleGroup = .other
   @State private var favorite: Bool = false
   @State private var notes: String = ""
+  @State private var exerciseExists: Bool = false
 
   @Environment(\.dismiss) var dismiss
   @Environment(\.modelContext) private var modelContext
@@ -37,13 +38,23 @@ struct ExerciseDefinitionEditor: View {
     NavigationStack {
       Form {
         Section("Basic Information") {
-          HStack {
-            Text("Name")
-              .foregroundStyle(.secondary)
-
-            TextField("Exercise Name", text: $name)
-              .autocapitalization(.words)
-              .disableAutocorrection(true)
+          VStack(alignment: .leading) {
+            HStack {
+              Text("Name")
+                .foregroundStyle(.secondary)
+              
+              TextField("Exercise Name", text: $name)
+                .autocapitalization(.words)
+                .disableAutocorrection(true)
+                .onChange(of: name) { oldValue, newValue in
+                  exerciseExists = false
+                }
+            }
+            if exerciseExists {
+              Text("Exercise already exists.")
+                .foregroundColor(.red)
+                .font(.caption)
+            }
           }
 
           Picker("Muscle Group", selection: $muscleGroup) {
@@ -88,7 +99,6 @@ struct ExerciseDefinitionEditor: View {
           Button("Save") {
             withAnimation {
               save()
-              dismiss()
             }
           }
           .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -104,6 +114,16 @@ struct ExerciseDefinitionEditor: View {
       exerciseDefinition.notes = notes
       exerciseDefinition.favorite = favorite
     } else {
+      var descriptor = FetchDescriptor<ExerciseDefinition>(
+        predicate: #Predicate { $0.name == name.capitalized }
+      )
+      descriptor.fetchLimit = 1
+      let matchingExerciseCount = try? modelContext.fetchCount(descriptor)
+      guard let count = matchingExerciseCount, count == 0 else {
+        exerciseExists = true
+        return
+      }
+      
       let newExerciseDefinition = ExerciseDefinition(
         name: name.capitalized,
         muscleGroup: muscleGroup,
@@ -112,6 +132,8 @@ struct ExerciseDefinitionEditor: View {
       modelContext.insert(newExerciseDefinition)
       try? modelContext.save()
     }
+    
+    dismiss()
   }
 
 }

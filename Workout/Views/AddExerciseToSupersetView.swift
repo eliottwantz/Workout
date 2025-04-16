@@ -62,7 +62,7 @@ struct AddExerciseToSupersetView: View {
       if let workout = superset.workoutItem?.workout {
         // Look for the most recent instance of this exercise
         if let previousExercise = AppContainer.findMostRecentExercise(
-          for: definitionID, currentWorkoutID: workout.persistentModelID, modelContext: modelContext)
+          for: definitionID, currentWorkoutID: workout.id, modelContext: modelContext)
         {
           // Create a new exercise with the same definition and rest time
           let exercise = Exercise(

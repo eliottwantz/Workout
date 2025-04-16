@@ -563,6 +563,16 @@
         }
       }
     },
+    "Exercise already exists." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’exercice existe déjà"
+          }
+        }
+      }
+    },
     "Exercise Name" : {
       "localizations" : {
         "fr" : {

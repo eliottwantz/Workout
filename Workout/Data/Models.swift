@@ -12,14 +12,18 @@ import SwiftData
 
 @Model
 final class Workout {
-  var date: Date
+  var id = UUID()
+  var date: Date = Date()
   var name: String?
 
   // Using a dedicated WorkoutItem class to handle the mixed list of Exercises and Supersets
   // The order property on WorkoutItem will manage the display sequence.
   // When a Workout is deleted, all its WorkoutItems should be deleted
   @Relationship(deleteRule: .cascade, inverse: \WorkoutItem.workout)
-  var items: [WorkoutItem]? = []  // Use optional array initialization for SwiftData best practice
+  var items: [WorkoutItem]? = []
+  
+  @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
+  private var exercises: [Exercise]? = []
 
   init(date: Date = Date(), name: String? = nil) {
     self.date = date
@@ -100,7 +104,7 @@ final class WorkoutItem {
 
 @Model
 final class Exercise {
-  var restTime: Int  // Rest time in seconds for *this specific instance*
+  var restTime: Int = 120 // Rest time in seconds for *this specific instance*
   var orderWithinSuperset: Int = 0  // Order if part of a Superset (ignored otherwise)
   var notes: String?
 
@@ -118,8 +122,8 @@ final class Exercise {
   var workoutItem: WorkoutItem?  // If it's directly in a Workout
   var containingSuperset: Superset?  // If it's part of a Superset
   var workout: Workout?
-  var workoutID: PersistentIdentifier
-  var workoutDate: Date
+  var workoutID: UUID = UUID()
+  var workoutDate: Date = Date()
 
   // Computed property for sorted sets
   @Transient var sets: [SetEntry] {
@@ -139,7 +143,7 @@ final class Exercise {
     self.orderedSets = []
     self.notes = notes
     self.workoutDate = workout.date
-    self.workoutID = workout.persistentModelID
+    self.workoutID = workout.id
   }
 
   // Convenience method to add a set and maintain order
@@ -192,8 +196,8 @@ final class Superset {
 @Model
 final class SetEntry {
   var order: Int = 0  // Defines the sequence of sets within an Exercise instance
-  var reps: Int
-  var weight: Double  // Using Double for flexibility (e.g., 2.5 kg/lb plates)
+  var reps: Int = 10
+  var weight: Double = 20 // Using Double for flexibility (e.g., 2.5 kg/lb plates)
 
   var exercise: Exercise?
 
@@ -209,8 +213,7 @@ final class SetEntry {
 @Model
 final class ExerciseDefinition {
 
-  // Make the name unique to avoid duplicate exercise definitions
-  @Attribute(.unique) var name: String
+  var name: String = ""
 
   // Additional properties for better exercise management
   var muscleGroup: String = MuscleGroup.other.rawValue

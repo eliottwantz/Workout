@@ -92,7 +92,7 @@ final class WorkoutItem {
 
       // Update all exercises in a superset
       if let superset = self.superset {
-        for exercise in superset.exercises {
+        for exercise in superset.orderedExercises {
           exercise.workout = workout
         }
       }
@@ -117,7 +117,7 @@ final class Exercise {
 
   // The sets performed for this specific exercise instance
   @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
-  var orderedSets: [SetEntry]? = []  // Use optional array initialization
+  var sets: [SetEntry]? = []  // Use optional array initialization
 
   var workoutItem: WorkoutItem?  // If it's directly in a Workout
   var containingSuperset: Superset?  // If it's part of a Superset
@@ -126,8 +126,8 @@ final class Exercise {
   var workoutDate: Date = Date()
 
   // Computed property for sorted sets
-  @Transient var sets: [SetEntry] {
-    (orderedSets ?? []).sorted { $0.order < $1.order }
+  @Transient var orderedSets: [SetEntry] {
+    (sets ?? []).sorted { $0.order < $1.order }
   }
 
   // Requires the ExerciseDefinition to link to
@@ -140,7 +140,7 @@ final class Exercise {
     // Use definition's default rest time if no specific override provided
     self.restTime = restTime
     self.orderWithinSuperset = orderWithinSuperset
-    self.orderedSets = []
+    self.sets = []
     self.notes = notes
     self.workoutDate = workout.date
     self.workoutID = workout.id
@@ -148,8 +148,8 @@ final class Exercise {
 
   // Convenience method to add a set and maintain order
   func addSet(_ set: SetEntry) {
-    set.order = (orderedSets?.count ?? 0)  // Append to the end
-    orderedSets?.append(set)
+    set.order = (sets?.count ?? 0)  // Append to the end
+    sets?.append(set)
     set.exercise = self  // Set inverse relationship
   }
 }
@@ -160,18 +160,18 @@ final class Superset {
   var restTime: Int = 180
   // The exercises included in this specific superset instance, in order
   @Relationship(deleteRule: .cascade, inverse: \Exercise.containingSuperset)
-  var orderedExercises: [Exercise]? = []  // Use optional array initialization
+  var exercises: [Exercise]? = []  // Use optional array initialization
 
   // Inverse relationship: Which WorkoutItem represents this Superset in the Workout?
   var workoutItem: WorkoutItem?
 
   // Computed property for sorted exercises within the superset
-  @Transient var exercises: [Exercise] {
-    (orderedExercises ?? []).sorted { $0.orderWithinSuperset < $1.orderWithinSuperset }
+  @Transient var orderedExercises: [Exercise] {
+    (exercises ?? []).sorted { $0.orderWithinSuperset < $1.orderWithinSuperset }
   }
 
   init(notes: String? = nil, restTime: Int = 180) {
-    self.orderedExercises = []
+    self.exercises = []
     self.notes = notes
     self.restTime = restTime
   }
@@ -181,8 +181,8 @@ final class Superset {
     // Ensure the exercise isn't already linked elsewhere inappropriately
     exercise.workoutItem = nil
     exercise.containingSuperset = self  // Set inverse relationship
-    exercise.orderWithinSuperset = (orderedExercises?.count ?? 0)  // Append to end
-    orderedExercises?.append(exercise)
+    exercise.orderWithinSuperset = (exercises?.count ?? 0)  // Append to end
+    exercises?.append(exercise)
 
     // Set the workout relationship if the superset is already in a workout
     if let workoutItem = self.workoutItem, let workout = workoutItem.workout {

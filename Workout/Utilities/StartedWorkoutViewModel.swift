@@ -69,7 +69,7 @@ class StartedWorkoutViewModel {
 
     for (itemIndex, item) in workout.orderedItems.enumerated() {
       if let exercise = item.exercise {
-        for (setIndex, set) in exercise.sets.enumerated() {  // Use orderedSets
+        for (setIndex, set) in exercise.orderedSets.enumerated() {  // Use orderedSets
           sets.append(
             WorkoutSet(
               itemIndex: itemIndex,
@@ -83,11 +83,11 @@ class StartedWorkoutViewModel {
         }
       } else if let superset = item.superset {
         // Superset - add first set of each exercise in the superset, then second set, etc.
-        let maxNumberOfSets = (superset.exercises.map { $0.sets.count }.max()) ?? 0
+        let maxNumberOfSets = (superset.orderedExercises.map { $0.orderedSets.count }.max()) ?? 0
         for setIndex in 0..<maxNumberOfSets {
-          for exercise in superset.exercises {
-            guard setIndex < exercise.sets.count else { continue }
-            let set = exercise.sets[setIndex]
+          for exercise in superset.orderedExercises {
+            guard setIndex < exercise.orderedSets.count else { continue }
+            let set = exercise.orderedSets[setIndex]
             sets.append(
               WorkoutSet(
                 itemIndex: itemIndex,
@@ -280,7 +280,7 @@ struct WorkoutSet: Identifiable {
     // If part of a superset, rest only occurs *after* the last exercise *in that round* of the superset
     if isSuperset {
       guard let superset = exercise.containingSuperset else { return false }
-      let lastExerciseInSuperset = superset.exercises.last
+      let lastExerciseInSuperset = superset.orderedExercises.last
       return exercise == lastExerciseInSuperset && (superset.restTime > 0)
     } else {
       // For regular exercises, show rest if the exercise has rest time > 0

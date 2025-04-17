@@ -20,16 +20,16 @@ struct SupersetDetailView: View {
       Section("Rest Time") {
         RestTimePicker(superset: superset)
       }
-      if !superset.exercises.isEmpty {
+      if !superset.orderedExercises.isEmpty {
         Section("Exercises") {
-          ForEach(superset.exercises) { exercise in
+          ForEach(superset.orderedExercises) { exercise in
             if let definition = exercise.definition {
               NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
                 HStack {
                   Text(definition.name)
                     .font(.headline)
                   Spacer()
-                  Text("\(exercise.sets.count) sets")
+                  Text("\(exercise.orderedSets.count) sets")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 }
@@ -50,7 +50,7 @@ struct SupersetDetailView: View {
       }
     }
     .overlay {
-      if superset.exercises.isEmpty {
+      if superset.orderedExercises.isEmpty {
         ContentUnavailableView {
           Label("No exercises", systemImage: "figure.strengthtraining.traditional")
         } actions: {
@@ -81,19 +81,19 @@ struct SupersetDetailView: View {
 
   private func deleteExercises(at offsets: IndexSet) {
     for index in offsets {
-      if let exercises = superset.orderedExercises {
-        let exerciseToDelete = superset.exercises[index]
+      if let exercises = superset.exercises {
+        let exerciseToDelete = superset.orderedExercises[index]
         if let exerciseIndex = exercises.firstIndex(where: {
           $0.persistentModelID == exerciseToDelete.persistentModelID
         }) {
-          superset.orderedExercises?.remove(at: exerciseIndex)
+          superset.exercises?.remove(at: exerciseIndex)
           modelContext.delete(exerciseToDelete)
         }
       }
     }
 
     // Update order of remaining exercises
-    for (index, exercise) in superset.exercises.enumerated() {
+    for (index, exercise) in superset.orderedExercises.enumerated() {
       exercise.orderWithinSuperset = index
     }
 
@@ -101,7 +101,7 @@ struct SupersetDetailView: View {
   }
 
   private func moveExercises(from source: IndexSet, to destination: Int) {
-    var exercises = superset.exercises
+    var exercises = superset.orderedExercises
     exercises.move(fromOffsets: source, toOffset: destination)
 
     // Update the order property for all exercises

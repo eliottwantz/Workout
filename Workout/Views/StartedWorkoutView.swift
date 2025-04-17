@@ -106,7 +106,7 @@ struct StartedWorkoutView: View {
 
             Spacer()
 
-            Text("SET \(currentSet.setIndex + 1)/\(currentSet.exercise.sets.count)")
+            Text("SET \(currentSet.setIndex + 1)/\(currentSet.exercise.orderedSets.count)")
               .font(.headline)
               .foregroundColor(.secondary)
           }
@@ -189,7 +189,7 @@ struct StartedWorkoutView: View {
 
               Spacer()
 
-              Text("SET \(nextSet.setIndex + 1)/\(nextSet.exercise.sets.count)")
+              Text("SET \(nextSet.setIndex + 1)/\(nextSet.exercise.orderedSets.count)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             }

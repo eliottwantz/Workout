@@ -100,7 +100,7 @@ struct AnalyticsView: View {
       // Find the best set (max weight) among all sets for this date
       let bestSet =
         exercisesOnDate
-        .flatMap { $0.sets }
+        .flatMap { $0.orderedSets }
         .max(by: { $0.weight < $1.weight })
       if let bestSet {
         points.append(PerformancePoint(date: date, weight: bestSet.weight, reps: bestSet.reps))

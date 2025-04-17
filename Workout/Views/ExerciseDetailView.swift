@@ -39,7 +39,7 @@ struct ExerciseDetailView: View {
         }
       }
 
-      if let sets = exercise.orderedSets, !sets.isEmpty {
+      if let sets = exercise.sets, !sets.isEmpty {
         Section("Sets") {
           // Table header
           HStack {
@@ -62,7 +62,7 @@ struct ExerciseDetailView: View {
           }
           .padding(.leading, 6)
 
-          ForEach(exercise.sets) { set in
+          ForEach(exercise.orderedSets) { set in
             EditableSetRowView(set: set, displayWeightInLbs: displayWeightInLbs)
               .frame(minHeight: 50)
           }
@@ -79,7 +79,7 @@ struct ExerciseDetailView: View {
       }
     }
     .overlay {
-      if exercise.sets.isEmpty {
+      if exercise.orderedSets.isEmpty {
         ContentUnavailableView {
           Label("No sets", systemImage: "dumbbell.fill")
         } actions: {
@@ -118,7 +118,7 @@ struct ExerciseDetailView: View {
   }
 
   private func addSet() {
-    if let lastSet = exercise.sets.last {
+    if let lastSet = exercise.orderedSets.last {
       let set = SetEntry(reps: lastSet.reps, weight: lastSet.weight)
       exercise.addSet(set)
       try? modelContext.save()
@@ -131,17 +131,17 @@ struct ExerciseDetailView: View {
 
   private func deleteSets(at offsets: IndexSet) {
     for index in offsets {
-      if let sets = exercise.orderedSets {
-        let setToDelete = exercise.sets[index]
+      if let sets = exercise.sets {
+        let setToDelete = exercise.orderedSets[index]
         if let setIndex = sets.firstIndex(where: { $0.persistentModelID == setToDelete.persistentModelID }) {
-          exercise.orderedSets?.remove(at: setIndex)
+          exercise.sets?.remove(at: setIndex)
           modelContext.delete(setToDelete)
         }
       }
     }
 
     // Update order of remaining items
-    for (index, set) in exercise.sets.enumerated() {
+    for (index, set) in exercise.orderedSets.enumerated() {
       set.order = index
     }
 
@@ -149,7 +149,7 @@ struct ExerciseDetailView: View {
   }
 
   private func moveSets(from source: IndexSet, to destination: Int) {
-    var sets = exercise.sets
+    var sets = exercise.orderedSets
     sets.move(fromOffsets: source, toOffset: destination)
 
     // Update the order property for all sets

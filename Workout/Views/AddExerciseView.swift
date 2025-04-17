@@ -86,7 +86,7 @@ struct AddExerciseView: View {
             )
 
             // Copy all sets from the previous exercise
-            for setEntry in previousExercise.sets {
+            for setEntry in previousExercise.orderedSets {
               let newSet = SetEntry(
                 reps: setEntry.reps,
                 weight: setEntry.weight
@@ -128,7 +128,7 @@ struct AddExerciseView: View {
             )
 
             // Copy all sets from the previous exercise
-            for setEntry in previousExercise.sets {
+            for setEntry in previousExercise.orderedSets {
               let newSet = SetEntry(
                 reps: setEntry.reps,
                 weight: setEntry.weight

@@ -69,12 +69,12 @@ struct AddExerciseToSupersetView: View {
             definition: definition,
             workout: workout,
             restTime: previousExercise.restTime,
-            orderWithinSuperset: superset.exercises.count,
+            orderWithinSuperset: superset.orderedExercises.count,
             notes: previousExercise.notes
           )
 
           // Copy all sets from the previous exercise
-          for setEntry in previousExercise.sets {
+          for setEntry in previousExercise.orderedSets {
             let newSet = SetEntry(
               reps: setEntry.reps,
               weight: setEntry.weight
@@ -88,7 +88,7 @@ struct AddExerciseToSupersetView: View {
           let exercise = Exercise(
             definition: definition,
             workout: workout,
-            orderWithinSuperset: superset.exercises.count
+            orderWithinSuperset: superset.orderedExercises.count
           )
           superset.addExercise(exercise)
         }

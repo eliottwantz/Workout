@@ -241,7 +241,7 @@ private struct CollapsedWorkoutView: View {
             exerciseDefinition: nextDefinition,
             set: nextSet.set,
             setIndex: nextSet.setIndex,
-            totalSets: nextSet.exercise.sets.count,
+            totalSets: nextSet.exercise.orderedSets.count,
             isSuperset: nextSet.isSuperset,
             isPrefixedWithNext: true,
             ns: ns
@@ -252,7 +252,7 @@ private struct CollapsedWorkoutView: View {
             exerciseDefinition: exerciseDefinition,
             set: currentSet.set,
             setIndex: currentSet.setIndex,
-            totalSets: currentSet.exercise.sets.count,
+            totalSets: currentSet.exercise.orderedSets.count,
             isSuperset: currentSet.isSuperset,
             ns: ns
           )

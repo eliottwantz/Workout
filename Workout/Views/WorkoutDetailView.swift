@@ -71,10 +71,10 @@ struct WorkoutDetailView: View {
       if !workout.orderedItems.isEmpty &&
           !workout.orderedItems.flatMap({ item in
             if let exercise = item.exercise {
-              return exercise.sets
+              return exercise.orderedSets
             }
             if let superset = item.superset {
-              return superset.exercises.flatMap({$0.sets})
+              return superset.orderedExercises.flatMap({$0.orderedSets})
             }
             return []
           }).isEmpty &&
@@ -203,7 +203,7 @@ struct WorkoutDetailView: View {
         )
 
         // Copy all sets from the original exercise
-        for setEntry in exercise.sets {
+        for setEntry in exercise.orderedSets {
           newExercise.addSet(
             SetEntry(
               reps: setEntry.reps,
@@ -220,7 +220,7 @@ struct WorkoutDetailView: View {
         let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
 
         // Copy all exercises in the superset
-        for exercise in superset.exercises {
+        for exercise in superset.orderedExercises {
           let newExercise = Exercise(
             definition: exercise.definition!,
             workout: todayWorkout,
@@ -230,7 +230,7 @@ struct WorkoutDetailView: View {
           )
 
           // Copy all sets from the original exercise
-          for setEntry in exercise.sets {
+          for setEntry in exercise.orderedSets {
             newExercise.addSet(
               SetEntry(
                 reps: setEntry.reps,
@@ -275,7 +275,7 @@ struct WorkoutItemRowView: View {
           }
           Spacer()
 
-          Text("\(exercise.sets.count) sets")
+          Text("\(exercise.orderedSets.count) sets")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -288,7 +288,7 @@ struct WorkoutItemRowView: View {
             Text("Superset")
               .font(.headline)
             VStack(alignment: .leading) {
-              ForEach(superset.exercises) { exercise in
+              ForEach(superset.orderedExercises) { exercise in
                 if let definition = exercise.definition {
                   Text("  \(definition.name)")
                     .font(.subheadline)
@@ -304,7 +304,7 @@ struct WorkoutItemRowView: View {
           }
           Spacer()
 
-          Text("\(superset.exercises.flatMap {$0.sets}.count) sets")
+          Text("\(superset.orderedExercises.flatMap {$0.orderedSets}.count) sets")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }

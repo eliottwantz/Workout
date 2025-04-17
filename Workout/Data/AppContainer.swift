@@ -189,7 +189,7 @@ extension AppContainer {
 
       // Add relationship prefetching for performance
       descriptor.relationshipKeyPathsForPrefetching = [
-        \Exercise.workout, \Exercise.definition, \Exercise.orderedSets,
+        \Exercise.workout, \Exercise.definition, \Exercise.sets,
       ]
       descriptor.fetchLimit = 1
 

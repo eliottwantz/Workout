@@ -109,13 +109,14 @@ struct ExerciseDefinitionEditor: View {
 
   private func save() {
     if let exerciseDefinition {
-      exerciseDefinition.name = name.capitalized
+      exerciseDefinition.name = name.capitalized.trimmingCharacters(in: .whitespacesAndNewlines)
       exerciseDefinition.muscleGroup = muscleGroup.rawValue
       exerciseDefinition.notes = notes
       exerciseDefinition.favorite = favorite
     } else {
+      let capitalizedTrimmedName = name.capitalized.trimmingCharacters(in: .whitespacesAndNewlines)
       var descriptor = FetchDescriptor<ExerciseDefinition>(
-        predicate: #Predicate { $0.name == name.capitalized }
+        predicate: #Predicate { $0.name == capitalizedTrimmedName }
       )
       descriptor.fetchLimit = 1
       let matchingExerciseCount = try? modelContext.fetchCount(descriptor)
@@ -125,7 +126,7 @@ struct ExerciseDefinitionEditor: View {
       }
       
       let newExerciseDefinition = ExerciseDefinition(
-        name: name.capitalized,
+        name: capitalizedTrimmedName,
         muscleGroup: muscleGroup,
         notes: notes,
         favorite: favorite)

@@ -130,11 +130,11 @@ private struct StartedWorkoutBottomSheetView: View {
 
         // MARK: - Workout View
         if isCollapsed {
-          CollapsedWorkoutView(workout: workout, ns: ns)
+          CollapsedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
             .frame(maxHeight: collapsedHeight + abs(cappedDragOffsetY))
         } else {
-          StartedWorkoutView(workout: workout, ns: ns)
+          StartedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
         }
       }
@@ -206,6 +206,16 @@ private struct StartedWorkoutBottomSheetView: View {
 
   }
 
+
+  private func finishWorkout() {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+      viewModel.stop()
+    }
+    withAnimation(.snappy(duration: 0.5)) {
+      endOffsetY = 0 + collapsedHeight
+      print("baseOffsetY \(baseOffsetY)")
+    }
+  }
 }
 
 private struct CollapsedWorkoutView: View {
@@ -213,11 +223,16 @@ private struct CollapsedWorkoutView: View {
   @Environment(\.userAccentColor) private var userAccentColor
 
   var workout: Workout
-  var ns: Namespace.ID
+  let ns: Namespace.ID
+  let stopAction: () -> Void
 
   var body: some View {
     HStack(spacing: 16) {
-      if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+      if viewModel.isWorkoutComplete {
+        CollapsedCompletionView(
+          stopAction: stopAction
+        )
+      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
         // Left side: Show next set info if resting, otherwise current set info
         if viewModel.isResting, let nextSet = viewModel.nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition
         {
@@ -262,10 +277,6 @@ private struct CollapsedWorkoutView: View {
           )
           .matchedGeometryEffect(id: "done_set", in: ns)
         }
-      } else if viewModel.isWorkoutComplete {
-        CollapsedCompletionView(
-          stopAction: viewModel.stop
-        )
       }
     }
     .padding(.horizontal, 4)

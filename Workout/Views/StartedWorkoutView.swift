@@ -19,6 +19,7 @@ struct StartedWorkoutView: View {
   @State private var showingWorkoutEditor = false
 
   var ns: Namespace.ID
+  let stopAction: () -> Void
 
   var body: some View {
     VStack {
@@ -34,7 +35,7 @@ struct StartedWorkoutView: View {
           .fontWeight(.bold)
         Spacer()
         Button {
-          startedWorkoutViewModel.stop()  // Keep the stop action
+          stopAction()
         } label: {
           Text("Finish")
             .font(.headline)
@@ -254,6 +255,6 @@ struct StartedWorkoutView: View {
   let workouts = try! modelContext.fetch(workoutFetchDescriptor)
   let sampleWorkout = workouts.first ?? Workout(date: Date())
 
-  return StartedWorkoutView(workout: sampleWorkout, ns: ns)
+  return StartedWorkoutView(workout: sampleWorkout, ns: ns, stopAction: {})
     .modelContainer(container)
 }

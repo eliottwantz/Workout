@@ -22,14 +22,21 @@ extension View {
 private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.keyboardIsShown) private var keyboardIsShown
+  @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
+  @Environment(\.colorScheme) private var colorScheme
 
+  private let collapsedHeight: CGFloat = 120
+  
   func body(content: Content) -> some View {
     ZStack {
+      Rectangle()
+          .fill(colorScheme == .dark ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
+        .ignoresSafeArea()
       content
-        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? 100 : 0)
+        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? collapsedHeight-safeAreaInsets.bottom+10 : 0)
 
       if let workout = viewModel.workout {
-        StartedWorkoutBottomSheetView(workout: workout)
+        StartedWorkoutBottomSheetView(workout: workout, collapsedHeight: collapsedHeight)
       }
 
     }
@@ -47,7 +54,7 @@ private struct StartedWorkoutBottomSheetView: View {
   @Namespace private var ns
 
   var workout: Workout
-  private var collapsedHeight: CGFloat = 120
+  let collapsedHeight: CGFloat
 
   @State private var baseOffsetY: CGFloat = 0
   @State private var dragOffsetY: CGFloat = 0
@@ -73,8 +80,9 @@ private struct StartedWorkoutBottomSheetView: View {
     colorScheme == .dark
   }
 
-  init(workout: Workout) {
+  init(workout: Workout, collapsedHeight: CGFloat) {
     self.workout = workout
+    self.collapsedHeight = collapsedHeight
   }
 
   var body: some View {
@@ -173,6 +181,7 @@ private struct StartedWorkoutBottomSheetView: View {
       print("windowSize \(windowSize)")
       print("screenSize: \(screenHeight)")
       baseOffsetY = screenHeight - collapsedHeight
+      print("safe area bottom: \(safeAreaInsets.bottom)")
 
       withAnimation(.spring) {
         endOffsetY = -baseOffsetY

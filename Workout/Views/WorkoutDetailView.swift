@@ -90,8 +90,8 @@ struct WorkoutDetailView: View {
             .foregroundStyle(userAccentColor.contrastColor)
             .cornerRadius(10)
         }
-        .padding()
-        .background(Color(UIColor.systemBackground))
+        .padding(.horizontal)
+        .padding(.bottom, 5)
       }
     }
     .navigationTitle(String(localized: workout.smartFormattedDate))

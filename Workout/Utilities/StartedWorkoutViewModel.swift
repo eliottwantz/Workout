@@ -135,7 +135,7 @@ class StartedWorkoutViewModel {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
     stopLiveActivity()
     removeTimerIdFromUserDefaults()
-    
+
     if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
       // Mark workout as complete
       isWorkoutComplete = true
@@ -217,7 +217,8 @@ class StartedWorkoutViewModel {
     stopLiveActivity()
 
     if ActivityAuthorizationInfo().areActivitiesEnabled {
-    let userAccentColor = Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorStorageKey) ?? "#FFFFFF") ?? .blue
+      let userAccentColor =
+        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorStorageKey) ?? "#FFFFFF") ?? .blue
       let displayWeightInLbs: Bool = UserDefaults.standard.bool(forKey: DisplayWeightInLbsKey)
       if let nextWorkoutSet = nextWorkoutSet {
         let attributes = RestTimeCountdownAttributes(
@@ -241,7 +242,7 @@ class StartedWorkoutViewModel {
       }
     }
   }
-  
+
   private func removeTimerIdFromUserDefaults() {
     UserDefaults.standard.removeObject(forKey: "timer_\(currentTimerId)")
   }

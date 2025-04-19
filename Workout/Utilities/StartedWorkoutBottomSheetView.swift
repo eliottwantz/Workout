@@ -26,14 +26,15 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.colorScheme) private var colorScheme
 
   private let collapsedHeight: CGFloat = 120
-  
+
   func body(content: Content) -> some View {
     ZStack {
       Rectangle()
-          .fill(colorScheme == .dark ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
+        .fill(colorScheme == .dark ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
         .ignoresSafeArea()
       content
-        .padding(.bottom, viewModel.workout != nil && !keyboardIsShown ? collapsedHeight-safeAreaInsets.bottom+10 : 0)
+        .padding(
+          .bottom, viewModel.workout != nil && !keyboardIsShown ? collapsedHeight - safeAreaInsets.bottom + 10 : 0)
 
       if let workout = viewModel.workout {
         StartedWorkoutBottomSheetView(workout: workout, collapsedHeight: collapsedHeight)
@@ -205,7 +206,6 @@ private struct StartedWorkoutBottomSheetView: View {
     }
 
   }
-
 
   private func finishWorkout() {
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {

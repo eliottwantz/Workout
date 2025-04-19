@@ -120,7 +120,7 @@ struct PerformancePoint: Identifiable {
 struct ChartView: View {
   let data: [PerformancePoint]
   let period: AnalyticsView.Period
-  
+
   private var trendColor: Color {
     guard let first = data.first, let last = data.last else { return .gray }
     return last.weight >= first.weight ? .green : .red

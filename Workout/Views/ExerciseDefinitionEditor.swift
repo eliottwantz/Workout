@@ -42,7 +42,7 @@ struct ExerciseDefinitionEditor: View {
             HStack {
               Text("Name")
                 .foregroundStyle(.secondary)
-              
+
               TextField("Exercise Name", text: $name)
                 .autocapitalization(.words)
                 .disableAutocorrection(true)
@@ -124,7 +124,7 @@ struct ExerciseDefinitionEditor: View {
         exerciseExists = true
         return
       }
-      
+
       let newExerciseDefinition = ExerciseDefinition(
         name: capitalizedTrimmedName,
         muscleGroup: muscleGroup,
@@ -133,7 +133,7 @@ struct ExerciseDefinitionEditor: View {
       modelContext.insert(newExerciseDefinition)
       try? modelContext.save()
     }
-    
+
     dismiss()
   }
 

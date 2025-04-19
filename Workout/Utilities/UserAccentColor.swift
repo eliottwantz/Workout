@@ -65,32 +65,32 @@ extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodab
   }
 
   var foregroundColor: Color {
-  let uiColor = UIColor(self)
-  var red: CGFloat = 0
-  var green: CGFloat = 0
-  var blue: CGFloat = 0
-  var alpha: CGFloat = 0
-  uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-  if isDark {
-    // Lighten the color by blending with white
-    let lighten: CGFloat = 0.5
-    return Color(
-      red: min(red + (1 - red) * lighten, 1.0),
-      green: min(green + (1 - green) * lighten, 1.0),
-      blue: min(blue + (1 - blue) * lighten, 1.0),
-      opacity: Double(alpha)
-    )
-  } else {
-    // Darken the color by blending with black
-    let darken: CGFloat = 0.5
-    return Color(
-      red: max(red * (1 - darken), 0.0),
-      green: max(green * (1 - darken), 0.0),
-      blue: max(blue * (1 - darken), 0.0),
-      opacity: Double(alpha)
-    )
+    let uiColor = UIColor(self)
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    if isDark {
+      // Lighten the color by blending with white
+      let lighten: CGFloat = 0.5
+      return Color(
+        red: min(red + (1 - red) * lighten, 1.0),
+        green: min(green + (1 - green) * lighten, 1.0),
+        blue: min(blue + (1 - blue) * lighten, 1.0),
+        opacity: Double(alpha)
+      )
+    } else {
+      // Darken the color by blending with black
+      let darken: CGFloat = 0.5
+      return Color(
+        red: max(red * (1 - darken), 0.0),
+        green: max(green * (1 - darken), 0.0),
+        blue: max(blue * (1 - darken), 0.0),
+        opacity: Double(alpha)
+      )
+    }
   }
-}
 }
 
 // Custom environment key for user accent color

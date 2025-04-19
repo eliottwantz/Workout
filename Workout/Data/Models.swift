@@ -21,7 +21,7 @@ final class Workout {
   // When a Workout is deleted, all its WorkoutItems should be deleted
   @Relationship(deleteRule: .cascade, inverse: \WorkoutItem.workout)
   var items: [WorkoutItem]? = []
-  
+
   @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
   private var exercises: [Exercise]? = []
 
@@ -104,7 +104,7 @@ final class WorkoutItem {
 
 @Model
 final class Exercise {
-  var restTime: Int = 120 // Rest time in seconds for *this specific instance*
+  var restTime: Int = 120  // Rest time in seconds for *this specific instance*
   var orderWithinSuperset: Int = 0  // Order if part of a Superset (ignored otherwise)
   var notes: String?
 
@@ -197,7 +197,7 @@ final class Superset {
 final class SetEntry {
   var order: Int = 0  // Defines the sequence of sets within an Exercise instance
   var reps: Int = 10
-  var weight: Double = 20 // Using Double for flexibility (e.g., 2.5 kg/lb plates)
+  var weight: Double = 20  // Using Double for flexibility (e.g., 2.5 kg/lb plates)
 
   var exercise: Exercise?
 

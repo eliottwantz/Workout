@@ -59,6 +59,8 @@ class StartedWorkoutViewModel {
   // Call this to end the workout session
   func stop() {
     removeAllPendingNotifications()  // Clean up notifications
+    stopLiveActivity()
+    removeTimerIdFromUserDefaults()
     self.workout = nil
   }
 
@@ -132,6 +134,7 @@ class StartedWorkoutViewModel {
   private func moveToNextSet() {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
     stopLiveActivity()
+    removeTimerIdFromUserDefaults()
     
     if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
       // Mark workout as complete
@@ -199,12 +202,6 @@ class StartedWorkoutViewModel {
 
   private func removeAllPendingNotifications() {
     let center = UNUserNotificationCenter.current()
-    // Remove specific timer notification if ID is known, or all if needed broadly
-    if !currentTimerId.isEmpty {
-      center.removePendingNotificationRequests(withIdentifiers: [currentTimerId])
-      print("Removed pending notification with ID: \(currentTimerId)")
-    }
-    // Uncomment below to remove *all* app notifications if necessary
     center.removeAllPendingNotificationRequests()
     print("Removed all pending notifications")
   }
@@ -243,6 +240,10 @@ class StartedWorkoutViewModel {
         )
       }
     }
+  }
+  
+  private func removeTimerIdFromUserDefaults() {
+    UserDefaults.standard.removeObject(forKey: "timer_\(currentTimerId)")
   }
 
   func navigateToPreviousSet() {

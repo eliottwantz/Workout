@@ -1,3 +1,4 @@
+import ActivityKit
 import Combine
 import SwiftData
 import SwiftUI
@@ -19,6 +20,8 @@ extension EnvironmentValues {
 @Observable
 class StartedWorkoutViewModel {
   var workout: Workout? = nil  // Make workout optional
+  var liveActivity: Activity<RestTimeCountdownAttributes>?
+  var liveActivityState: RestTimeCountdownAttributes.ContentState?
 
   // Workout Progress State
   var currentSetIndex = 0
@@ -128,6 +131,8 @@ class StartedWorkoutViewModel {
 
   private func moveToNextSet() {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
+    stopLiveActivity()
+    
     if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
       // Mark workout as complete
       isWorkoutComplete = true
@@ -164,6 +169,8 @@ class StartedWorkoutViewModel {
     isResting = true
     currentTimerId = UUID().uuidString  // New ID for this specific timer instance
     scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
+
+    startLiveActivity()
   }
 
   private func scheduleRestFinishedNotification(timeInterval: TimeInterval) {
@@ -190,7 +197,7 @@ class StartedWorkoutViewModel {
     }
   }
 
-  func removeAllPendingNotifications() {
+  private func removeAllPendingNotifications() {
     let center = UNUserNotificationCenter.current()
     // Remove specific timer notification if ID is known, or all if needed broadly
     if !currentTimerId.isEmpty {
@@ -198,8 +205,44 @@ class StartedWorkoutViewModel {
       print("Removed pending notification with ID: \(currentTimerId)")
     }
     // Uncomment below to remove *all* app notifications if necessary
-    // center.removeAllPendingNotificationRequests()
-    // print("Removed all pending notifications")
+    center.removeAllPendingNotificationRequests()
+    print("Removed all pending notifications")
+  }
+
+  private func stopLiveActivity() {
+    guard let liveActivity = liveActivity else { return }
+    Task {
+      await liveActivity.end(nil, dismissalPolicy: .immediate)
+    }
+  }
+
+  private func startLiveActivity() {
+    stopLiveActivity()
+
+    if ActivityAuthorizationInfo().areActivitiesEnabled {
+      let userAccentColor = UserDefaults.standard.object(forKey: UserAccentColorStorageKey) as? Color ?? .pink
+      let displayWeightInLbs: Bool = UserDefaults.standard.object(forKey: DisplayWeightInLbsKey) as? Bool ?? false
+      if let nextWorkoutSet = nextWorkoutSet {
+        let attributes = RestTimeCountdownAttributes(
+          nextExercise: nextWorkoutSet.exerciseName,
+          nextSet: nextWorkoutSet.setIndex,
+          totalSets: nextWorkoutSet.exercise.orderedSets.count,
+          nextReps: nextWorkoutSet.set.reps,
+          nextWeight: nextWorkoutSet.set.weight,
+          timerId: self.currentTimerId,
+          restTime: nextWorkoutSet.restTime,
+          startTime: .now
+        )
+        let state = RestTimeCountdownAttributes.ContentState(
+          displayWeightInLbs: displayWeightInLbs, userAccentColor: userAccentColor)
+
+        liveActivity = try? Activity<RestTimeCountdownAttributes>.request(
+          attributes: attributes,
+          content: .init(state: state, staleDate: nil),
+          pushType: .none
+        )
+      }
+    }
   }
 
   func navigateToPreviousSet() {

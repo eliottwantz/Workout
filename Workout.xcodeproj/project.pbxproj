@@ -8,28 +8,92 @@
 
 /* Begin PBXBuildFile section */
 		553711412DA6BEB500226310 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 553711402DA6BEB500226310 /* Localizable.xcstrings */; };
+		553E73402DB3042000FB2422 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 553E733F2DB3042000FB2422 /* WidgetKit.framework */; };
+		553E73422DB3042000FB2422 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 553E73412DB3042000FB2422 /* SwiftUI.framework */; };
+		553E734F2DB3042100FB2422 /* RestTimeCountdownExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 553E733D2DB3042000FB2422 /* RestTimeCountdownExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		553E734D2DB3042100FB2422 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 55F9465F2D9EC3DB00CDC61E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 553E733C2DB3042000FB2422;
+			remoteInfo = RestTimeCountdownExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		553E73542DB3042100FB2422 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				553E734F2DB3042100FB2422 /* RestTimeCountdownExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		553711402DA6BEB500226310 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		553E733D2DB3042000FB2422 /* RestTimeCountdownExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestTimeCountdownExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		553E733F2DB3042000FB2422 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		553E73412DB3042000FB2422 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		55F946672D9EC3DB00CDC61E /* Workout.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Workout.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		55777E352DA2D2A700F9129A /* Exceptions for "Workout" folder in "Workout" target */ = {
+		553E73382DB3031500FB2422 /* Exceptions for "Workout" folder in "Workout" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 55F946662D9EC3DB00CDC61E /* Workout */;
 		};
+		553E73532DB3042100FB2422 /* Exceptions for "RestTimeCountdown" folder in "RestTimeCountdownExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 553E733C2DB3042000FB2422 /* RestTimeCountdownExtension */;
+		};
+		553E735A2DB3048300FB2422 /* Exceptions for "RestTimeCountdown" folder in "Workout" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				RestTimeCountdownBundle.swift,
+			);
+			target = 55F946662D9EC3DB00CDC61E /* Workout */;
+		};
+		553E735E2DB30E0400FB2422 /* Exceptions for "Workout" folder in "RestTimeCountdownExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Data/RestTimeCountdownAttributes.swift,
+				Utilities/DoubleExtensions.swift,
+				Utilities/UserAccentColor.swift,
+			);
+			target = 553E733C2DB3042000FB2422 /* RestTimeCountdownExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		553E73432DB3042000FB2422 /* RestTimeCountdown */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				553E735A2DB3048300FB2422 /* Exceptions for "RestTimeCountdown" folder in "Workout" target */,
+				553E73532DB3042100FB2422 /* Exceptions for "RestTimeCountdown" folder in "RestTimeCountdownExtension" target */,
+			);
+			path = RestTimeCountdown;
+			sourceTree = "<group>";
+		};
 		55F946692D9EC3DB00CDC61E /* Workout */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				55777E352DA2D2A700F9129A /* Exceptions for "Workout" folder in "Workout" target */,
+				553E73382DB3031500FB2422 /* Exceptions for "Workout" folder in "Workout" target */,
+				553E735E2DB30E0400FB2422 /* Exceptions for "Workout" folder in "RestTimeCountdownExtension" target */,
 			);
 			path = Workout;
 			sourceTree = "<group>";
@@ -37,6 +101,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		553E733A2DB3042000FB2422 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				553E73422DB3042000FB2422 /* SwiftUI.framework in Frameworks */,
+				553E73402DB3042000FB2422 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		55F946642D9EC3DB00CDC61E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -47,11 +120,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		553E733E2DB3042000FB2422 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				553E733F2DB3042000FB2422 /* WidgetKit.framework */,
+				553E73412DB3042000FB2422 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		55F9465E2D9EC3DB00CDC61E = {
 			isa = PBXGroup;
 			children = (
 				553711402DA6BEB500226310 /* Localizable.xcstrings */,
 				55F946692D9EC3DB00CDC61E /* Workout */,
+				553E73432DB3042000FB2422 /* RestTimeCountdown */,
+				553E733E2DB3042000FB2422 /* Frameworks */,
 				55F946682D9EC3DB00CDC61E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				55F946672D9EC3DB00CDC61E /* Workout.app */,
+				553E733D2DB3042000FB2422 /* RestTimeCountdownExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -67,6 +152,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		553E733C2DB3042000FB2422 /* RestTimeCountdownExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 553E73502DB3042100FB2422 /* Build configuration list for PBXNativeTarget "RestTimeCountdownExtension" */;
+			buildPhases = (
+				553E73392DB3042000FB2422 /* Sources */,
+				553E733A2DB3042000FB2422 /* Frameworks */,
+				553E733B2DB3042000FB2422 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				553E73432DB3042000FB2422 /* RestTimeCountdown */,
+			);
+			name = RestTimeCountdownExtension;
+			packageProductDependencies = (
+			);
+			productName = RestTimeCountdownExtension;
+			productReference = 553E733D2DB3042000FB2422 /* RestTimeCountdownExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		55F946662D9EC3DB00CDC61E /* Workout */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 55F946742D9EC3DD00CDC61E /* Build configuration list for PBXNativeTarget "Workout" */;
@@ -74,12 +181,15 @@
 				55F946632D9EC3DB00CDC61E /* Sources */,
 				55F946642D9EC3DB00CDC61E /* Frameworks */,
 				55F946652D9EC3DB00CDC61E /* Resources */,
+				553E73542DB3042100FB2422 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				553E734E2DB3042100FB2422 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				553E73432DB3042000FB2422 /* RestTimeCountdown */,
 				55F946692D9EC3DB00CDC61E /* Workout */,
 			);
 			name = Workout;
@@ -99,6 +209,9 @@
 				LastSwiftUpdateCheck = 1630;
 				LastUpgradeCheck = 1630;
 				TargetAttributes = {
+					553E733C2DB3042000FB2422 = {
+						CreatedOnToolsVersion = 16.3;
+					};
 					55F946662D9EC3DB00CDC61E = {
 						CreatedOnToolsVersion = 16.3;
 					};
@@ -120,11 +233,19 @@
 			projectRoot = "";
 			targets = (
 				55F946662D9EC3DB00CDC61E /* Workout */,
+				553E733C2DB3042000FB2422 /* RestTimeCountdownExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		553E733B2DB3042000FB2422 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		55F946652D9EC3DB00CDC61E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -136,6 +257,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		553E73392DB3042000FB2422 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		55F946632D9EC3DB00CDC61E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -145,7 +273,71 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		553E734E2DB3042100FB2422 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 553E733C2DB3042000FB2422 /* RestTimeCountdownExtension */;
+			targetProxy = 553E734D2DB3042100FB2422 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		553E73512DB3042100FB2422 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TU3N92HFXF;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RestTimeCountdown/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RestTimeCountdown;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.develiott.Workout.RestTimeCountdown;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		553E73522DB3042100FB2422 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TU3N92HFXF;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RestTimeCountdown/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RestTimeCountdown;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.develiott.Workout.RestTimeCountdown;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		55F946722D9EC3DD00CDC61E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -284,6 +476,7 @@
 				INFOPLIST_FILE = Workout/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Workout;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -323,6 +516,7 @@
 				INFOPLIST_FILE = Workout/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Workout;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -350,6 +544,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		553E73502DB3042100FB2422 /* Build configuration list for PBXNativeTarget "RestTimeCountdownExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				553E73512DB3042100FB2422 /* Debug */,
+				553E73522DB3042100FB2422 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		55F946622D9EC3DB00CDC61E /* Build configuration list for PBXProject "Workout" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

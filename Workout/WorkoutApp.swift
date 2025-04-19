@@ -15,7 +15,7 @@ struct WorkoutApp: App {
   @State private var keyboardHideMonitor: AnyCancellable? = nil
   @State private var keyboardShownMonitor: AnyCancellable? = nil
   @State var startedWorkoutViewModel = StartedWorkoutViewModel()
-  @AppStorage("userAccentColor") private var userAccentColor: Color = .yellow
+  @AppStorage(UserAccentColorStorageKey) private var userAccentColor: Color = .pink
 
   init() {
     // Print the Application Support directory path on startup

@@ -380,6 +380,9 @@
         }
       }
     },
+    "Bottom" : {
+
+    },
     "Can't add another workout for today" : {
       "localizations" : {
         "fr" : {
@@ -533,6 +536,9 @@
         }
       }
     },
+    "Emoji:" : {
+
+    },
     "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day." : {
       "localizations" : {
         "fr" : {
@@ -633,6 +639,15 @@
         }
       }
     },
+    "L" : {
+
+    },
+    "Leading" : {
+
+    },
+    "M" : {
+
+    },
     "Muscle Group" : {
       "localizations" : {
         "fr" : {
@@ -642,6 +657,9 @@
           }
         }
       }
+    },
+    "My Widget" : {
+
     },
     "Name" : {
       "localizations" : {
@@ -921,6 +939,12 @@
         }
       }
     },
+    "T" : {
+
+    },
+    "This is an example widget." : {
+
+    },
     "This will stop the workout. Are you sure you want to stop?" : {
       "localizations" : {
         "fr" : {
@@ -930,6 +954,9 @@
           }
         }
       }
+    },
+    "Time:" : {
+
     },
     "Today" : {
       "localizations" : {
@@ -950,6 +977,9 @@
           }
         }
       }
+    },
+    "Trailing" : {
+
     },
     "Weight" : {
       "localizations" : {

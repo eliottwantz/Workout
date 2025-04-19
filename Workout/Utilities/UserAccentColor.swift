@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 
-extension Color: @retroactive RawRepresentable {
+extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodable {
 
   public init?(rawValue: String) {
 
@@ -68,7 +68,7 @@ extension Color: @retroactive RawRepresentable {
 
 // Custom environment key for user accent color
 private struct UserAccentColorKey: EnvironmentKey {
-  static let defaultValue: Color = .yellow
+  static let defaultValue: Color = .pink
 }
 
 // Extend EnvironmentValues to include userColor

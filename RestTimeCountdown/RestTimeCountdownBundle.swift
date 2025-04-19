@@ -11,7 +11,6 @@ import WidgetKit
 @main
 struct RestTimeCountdownBundle: WidgetBundle {
   var body: some Widget {
-    RestTimeCountdown()
     RestTimeCountdownLiveActivity()
   }
 }

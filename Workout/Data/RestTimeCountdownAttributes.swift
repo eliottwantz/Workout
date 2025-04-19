@@ -6,6 +6,7 @@
 //
 
 import ActivityKit
+import WidgetKit
 import SwiftUI
 
 struct RestTimeCountdownAttributes: ActivityAttributes {

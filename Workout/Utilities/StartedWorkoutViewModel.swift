@@ -220,8 +220,8 @@ class StartedWorkoutViewModel {
     stopLiveActivity()
 
     if ActivityAuthorizationInfo().areActivitiesEnabled {
-      let userAccentColor = UserDefaults.standard.object(forKey: UserAccentColorStorageKey) as? Color ?? .pink
-      let displayWeightInLbs: Bool = UserDefaults.standard.object(forKey: DisplayWeightInLbsKey) as? Bool ?? false
+    let userAccentColor = Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorStorageKey) ?? "#FFFFFF") ?? .blue
+      let displayWeightInLbs: Bool = UserDefaults.standard.bool(forKey: DisplayWeightInLbsKey)
       if let nextWorkoutSet = nextWorkoutSet {
         let attributes = RestTimeCountdownAttributes(
           nextExercise: nextWorkoutSet.exerciseName,
@@ -239,7 +239,7 @@ class StartedWorkoutViewModel {
         liveActivity = try? Activity<RestTimeCountdownAttributes>.request(
           attributes: attributes,
           content: .init(state: state, staleDate: nil),
-          pushType: .none
+          pushType: nil
         )
       }
     }

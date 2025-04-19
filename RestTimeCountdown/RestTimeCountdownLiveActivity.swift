@@ -80,18 +80,19 @@ private struct LockeScreenView: View {
           .font(.system(size: 30, weight: .bold, design: .rounded))
           .monospacedDigit()
           .contentTransition(.numericText())
-          .foregroundColor(state.userAccentColor)
+          .foregroundColor(state.userAccentColor.foregroundColor)
 
         ProgressView(timerInterval: timerInterval) {
         } currentValueLabel: {
         }
         .progressViewStyle(.linear)
-        .tint(state.userAccentColor)
+        .tint(state.userAccentColor.foregroundColor)
         .scaleEffect(x: 1, y: 1.5, anchor: .center)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
     }
+    .foregroundStyle(state.userAccentColor.contrastColor)
     .padding(.vertical, 20)
     .padding(.horizontal, 20)
   }

@@ -6,8 +6,8 @@
 //
 
 import ActivityKit
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
 struct RestTimeCountdownAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {

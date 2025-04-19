@@ -33,7 +33,10 @@ struct WorkoutApp: App {
         .environment(\.userAccentColor, userAccentColor)
         .environment(\.keyboardIsShown, keyboardIsShown)
         .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
-        .onAppear { setupKeyboardMonitors() }
+        .onAppear {
+          setupKeyboardMonitors()
+          ensureUserDefaultsAreSetUp()
+        }
         .onDisappear { dismantleKeyboarMonitors() }
         .tint(userAccentColor)
         .withGeometryEnvironment()
@@ -41,7 +44,7 @@ struct WorkoutApp: App {
     .modelContainer(AppContainer.shared.modelContainer)
   }
 
-  func setupKeyboardMonitors() {
+  private func setupKeyboardMonitors() {
     keyboardShownMonitor = NotificationCenter.default
       .publisher(for: UIWindow.keyboardWillShowNotification)
       .sink { _ in if !keyboardIsShown { keyboardIsShown = true } }
@@ -51,8 +54,20 @@ struct WorkoutApp: App {
       .sink { _ in if keyboardIsShown { keyboardIsShown = false } }
   }
 
-  func dismantleKeyboarMonitors() {
+  private func dismantleKeyboarMonitors() {
     keyboardHideMonitor?.cancel()
     keyboardShownMonitor?.cancel()
+  }
+
+  private func ensureUserDefaultsAreSetUp() {
+    ensureUserDefaults(forKey: UserAccentColorStorageKey, Color.pink.rawValue)
+    ensureUserDefaults(forKey: DisplayWeightInLbsKey, false)
+    ensureUserDefaults(forKey: AllowMultipleWorkoutsPerDayKey, false)
+  }
+
+  private func ensureUserDefaults(forKey: String, _ value: Any?) {
+    if UserDefaults.standard.string(forKey: forKey) == nil {
+      UserDefaults.standard.set(value, forKey: forKey)
+    }
   }
 }

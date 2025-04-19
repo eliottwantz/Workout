@@ -286,7 +286,7 @@ private struct CollapsedWorkoutView: View {
 /// A reusable view that displays exercise information in the collapsed workout view
 private struct CollapsedExerciseInfoView: View {
   @Environment(\.userAccentColor) private var userAccentColor
-  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = true
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false
 
   let exerciseDefinition: ExerciseDefinition
   let set: SetEntry

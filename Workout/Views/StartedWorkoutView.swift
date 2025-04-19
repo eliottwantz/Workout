@@ -11,7 +11,7 @@ import SwiftUI
 import UserNotifications
 
 struct StartedWorkoutView: View {
-  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = true
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel

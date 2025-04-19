@@ -144,6 +144,23 @@
       },
       "shouldTranslate" : false
     },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "•" : {
       "shouldTranslate" : false
     },
@@ -379,9 +396,6 @@
           }
         }
       }
-    },
-    "Bottom" : {
-
     },
     "Can't add another workout for today" : {
       "localizations" : {
@@ -635,15 +649,6 @@
           }
         }
       }
-    },
-    "L" : {
-
-    },
-    "Leading" : {
-
-    },
-    "M" : {
-
     },
     "Muscle Group" : {
       "localizations" : {
@@ -933,9 +938,6 @@
         }
       }
     },
-    "T" : {
-
-    },
     "This will stop the workout. Are you sure you want to stop?" : {
       "localizations" : {
         "fr" : {
@@ -965,9 +967,6 @@
           }
         }
       }
-    },
-    "Trailing" : {
-
     },
     "Weight" : {
       "localizations" : {

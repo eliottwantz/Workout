@@ -211,7 +211,7 @@ class StartedWorkoutViewModel {
 
     if ActivityAuthorizationInfo().areActivitiesEnabled {
       let userAccentColor =
-        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorStorageKey) ?? "#FFFFFF") ?? .blue
+        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
       let displayWeightInLbs: Bool = UserDefaults.standard.bool(forKey: DisplayWeightInLbsKey)
       if let nextWorkoutSet = nextWorkoutSet {
         let attributes = RestTimeCountdownAttributes(

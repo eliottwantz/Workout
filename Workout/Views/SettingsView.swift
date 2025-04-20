@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-  @AppStorage(UserAccentColorStorageKey) private var storedColor: Color = .pink
+  @AppStorage(UserAccentColorKey) private var storedColor: Color = .pink
   @AppStorage(AllowMultipleWorkoutsPerDayKey) private var allowMultipleWorkoutsPerDay: Bool = false
   @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false
 

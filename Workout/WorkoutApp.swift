@@ -15,7 +15,7 @@ struct WorkoutApp: App {
   @State private var keyboardHideMonitor: AnyCancellable? = nil
   @State private var keyboardShownMonitor: AnyCancellable? = nil
   @State var startedWorkoutViewModel = StartedWorkoutViewModel()
-  @AppStorage(UserAccentColorStorageKey) private var userAccentColor: Color = .pink
+  @AppStorage(UserAccentColorKey) private var userAccentColor: Color = .pink
 
   init() {
     // Print the Application Support directory path on startup
@@ -60,7 +60,7 @@ struct WorkoutApp: App {
   }
 
   private func ensureUserDefaultsAreSetUp() {
-    ensureUserDefaults(forKey: UserAccentColorStorageKey, Color.pink.rawValue)
+    ensureUserDefaults(forKey: UserAccentColorKey, Color.pink.rawValue)
     ensureUserDefaults(forKey: DisplayWeightInLbsKey, false)
     ensureUserDefaults(forKey: AllowMultipleWorkoutsPerDayKey, false)
   }

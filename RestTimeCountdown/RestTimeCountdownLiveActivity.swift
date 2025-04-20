@@ -9,19 +9,33 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
+struct RestTimeCountdownAttributes: ActivityAttributes {
+  public struct ContentState: Codable, Hashable {
+    // Dynamic stateful properties about your activity go here!
+    var displayWeightInLbs: Bool
+    var userAccentColor: Color
+    var timerInterval: ClosedRange<Date>
+  }
+
+  // Fixed non-changing properties about your activity go here!
+  let nextExercise: String
+  let nextSet: Int
+  let totalSets: Int
+  let nextReps: Int
+  let nextWeight: Double
+  let timerId: String
+}
+
+
 struct RestTimeCountdownLiveActivity: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RestTimeCountdownAttributes.self) { context in
       // Lock screen/banner UI goes here
-      let timerInterval =
-        context.attributes.startTime...Date().addingTimeInterval(TimeInterval(context.attributes.restTime))
-      LockeScreenView(attributes: context.attributes, state: context.state, timerInterval: timerInterval)
+      LockeScreenView(attributes: context.attributes, state: context.state, timerInterval: context.state.timerInterval)
         .activityBackgroundTint(context.state.userAccentColor.opacity(0.8))
         .activitySystemActionForegroundColor(context.state.userAccentColor.contrastColor)
 
     } dynamicIsland: { context in
-      let timerInterval =
-        context.attributes.startTime...Date().addingTimeInterval(TimeInterval(context.attributes.restTime))
       return DynamicIsland {
         // Expanded UI goes here.  Compose the expanded UI through
         // various regions, like leading/trailing/center/bottom
@@ -44,7 +58,7 @@ struct RestTimeCountdownLiveActivity: Widget {
         }
         DynamicIslandExpandedRegion(.trailing) {
           HStack {
-            Text(timerInterval: timerInterval)
+            Text(timerInterval: context.state.timerInterval)
               .font(.system(size: 30, weight: .bold, design: .rounded))
               .monospacedDigit()
               .contentTransition(.numericText())
@@ -64,7 +78,7 @@ struct RestTimeCountdownLiveActivity: Widget {
                 .multilineTextAlignment(.center)
             }
 
-            ProgressView(timerInterval: timerInterval) {
+            ProgressView(timerInterval: context.state.timerInterval) {
             } currentValueLabel: {
             }
             .progressViewStyle(.linear)
@@ -76,13 +90,13 @@ struct RestTimeCountdownLiveActivity: Widget {
         Text("\(context.attributes.nextSet)/\(context.attributes.totalSets)")
         .foregroundStyle(context.state.userAccentColor.foregroundColor)
       } compactTrailing: {
-        ProgressView(timerInterval: timerInterval) {
+        ProgressView(timerInterval: context.state.timerInterval) {
         } currentValueLabel: {
         }
         .progressViewStyle(.circular)
         .tint(context.state.userAccentColor.foregroundColor)
       } minimal: {
-        ProgressView(timerInterval: timerInterval) {
+        ProgressView(timerInterval: context.state.timerInterval) {
         } currentValueLabel: {
         }
         .progressViewStyle(.circular)
@@ -154,14 +168,13 @@ private struct LockeScreenView: View {
 extension RestTimeCountdownAttributes {
   fileprivate static var preview: RestTimeCountdownAttributes {
     RestTimeCountdownAttributes(
-      nextExercise: "Squat", nextSet: 2, totalSets: 3, nextReps: 10, nextWeight: 30.0, timerId: "abcde",
-      restTime: 60, startTime: .now)
+      nextExercise: "Squat", nextSet: 2, totalSets: 3, nextReps: 10, nextWeight: 30.0, timerId: "abcde")
   }
 }
 
 extension RestTimeCountdownAttributes.ContentState {
   fileprivate static var sample: RestTimeCountdownAttributes.ContentState {
-    RestTimeCountdownAttributes.ContentState(displayWeightInLbs: true, userAccentColor: .blue)
+    RestTimeCountdownAttributes.ContentState(displayWeightInLbs: true, userAccentColor: .blue, timerInterval: .now...Date().addingTimeInterval(60))
   }
 }
 

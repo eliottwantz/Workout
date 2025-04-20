@@ -72,7 +72,6 @@
 		553E735E2DB30E0400FB2422 /* Exceptions for "Workout" folder in "RestTimeCountdownExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Data/RestTimeCountdownAttributes.swift,
 				Utilities/DoubleExtensions.swift,
 				Utilities/UserAccentColor.swift,
 			);

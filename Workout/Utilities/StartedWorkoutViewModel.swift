@@ -4,7 +4,6 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
-
 // Extend EnvironmentValues to include the ViewModel
 extension EnvironmentValues {
   @Entry var startedWorkoutViewModel = StartedWorkoutViewModel()
@@ -221,11 +220,10 @@ class StartedWorkoutViewModel {
           nextReps: nextWorkoutSet.set.reps,
           nextWeight: nextWorkoutSet.set.weight,
           timerId: self.currentTimerId,
-          restTime: nextWorkoutSet.restTime,
-          startTime: .now
         )
         let state = RestTimeCountdownAttributes.ContentState(
-          displayWeightInLbs: displayWeightInLbs, userAccentColor: userAccentColor)
+          displayWeightInLbs: displayWeightInLbs, userAccentColor: userAccentColor,
+          timerInterval: .now...Date().addingTimeInterval(TimeInterval(currentWorkoutSet?.restTime ?? 0)))
 
         liveActivity = try? Activity<RestTimeCountdownAttributes>.request(
           attributes: attributes,

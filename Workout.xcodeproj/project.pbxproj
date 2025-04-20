@@ -11,6 +11,7 @@
 		553E73402DB3042000FB2422 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 553E733F2DB3042000FB2422 /* WidgetKit.framework */; };
 		553E73422DB3042000FB2422 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 553E73412DB3042000FB2422 /* SwiftUI.framework */; };
 		553E734F2DB3042100FB2422 /* RestTimeCountdownExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 553E733D2DB3042000FB2422 /* RestTimeCountdownExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5588585F2DB51CC700CCC08C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 553711402DA6BEB500226310 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -243,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5588585F2DB51CC700CCC08C /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -437,6 +437,16 @@
         }
       }
     },
+    "coming up next" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "qui s’en vient"
+          }
+        }
+      }
+    },
     "Copy" : {
       "localizations" : {
         "fr" : {

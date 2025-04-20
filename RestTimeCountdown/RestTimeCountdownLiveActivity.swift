@@ -108,6 +108,10 @@ private struct LockeScreenView: View {
             .fontWeight(.bold)
             .lineLimit(1)
             .multilineTextAlignment(.center)
+          Text("coming up next")
+            .font(.caption)
+            .lineLimit(1)
+            .multilineTextAlignment(.center)
         }
 
         HStack(spacing: 4) {

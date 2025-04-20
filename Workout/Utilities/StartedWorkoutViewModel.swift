@@ -223,7 +223,7 @@ class StartedWorkoutViewModel {
       if let nextWorkoutSet = nextWorkoutSet {
         let attributes = RestTimeCountdownAttributes(
           nextExercise: nextWorkoutSet.exerciseName,
-          nextSet: nextWorkoutSet.setIndex,
+          nextSet: nextWorkoutSet.setIndex + 1,
           totalSets: nextWorkoutSet.exercise.orderedSets.count,
           nextReps: nextWorkoutSet.set.reps,
           nextWeight: nextWorkoutSet.set.weight,

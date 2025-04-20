@@ -7,15 +7,9 @@
 
 import SwiftUI
 
-private struct KeyboardIsShownEVK: EnvironmentKey {
-  static let defaultValue: Bool = false
-}
 
 extension EnvironmentValues {
-  var keyboardIsShown: Bool {
-    get { return self[KeyboardIsShownEVK.self] }
-    set { self[KeyboardIsShownEVK.self] = newValue }
-  }
+  @Entry var keyboardIsShown = false
 }
 
 struct HideKeyboardGestureModifier: ViewModifier {

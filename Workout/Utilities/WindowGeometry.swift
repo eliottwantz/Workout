@@ -7,24 +7,10 @@
 
 import SwiftUI
 
-private struct MainWindowSizeKey: EnvironmentKey {
-  static let defaultValue: CGSize = .zero
-}
-
-private struct MainWindowSafeAreaInsetsKey: EnvironmentKey {
-  static let defaultValue: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0)
-}
 
 extension EnvironmentValues {
-  var mainWindowSize: CGSize {
-    get { self[MainWindowSizeKey.self] }
-    set { self[MainWindowSizeKey.self] = newValue }
-  }
-
-  var mainWindowSafeAreaInsets: EdgeInsets {
-    get { self[MainWindowSafeAreaInsetsKey.self] }
-    set { self[MainWindowSafeAreaInsetsKey.self] = newValue }
-  }
+  @Entry var mainWindowSize: CGSize = .zero
+  @Entry var mainWindowSafeAreaInsets: EdgeInsets = .init()
 }
 
 private struct GeometryEnvironmentModifier: ViewModifier {

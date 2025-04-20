@@ -93,15 +93,8 @@ extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodab
   }
 }
 
-// Custom environment key for user accent color
-private struct UserAccentColorKey: EnvironmentKey {
-  static let defaultValue: Color = .pink
-}
 
 // Extend EnvironmentValues to include userColor
 extension EnvironmentValues {
-  var userAccentColor: Color {
-    get { self[UserAccentColorKey.self] }
-    set { self[UserAccentColorKey.self] = newValue }
-  }
+  @Entry var userAccentColor = Color.pink
 }

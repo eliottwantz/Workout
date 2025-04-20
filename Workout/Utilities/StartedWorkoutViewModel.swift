@@ -4,17 +4,10 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
-// Define the EnvironmentKey for the ViewModel
-private struct StartedWorkoutViewModelKey: EnvironmentKey {
-  static let defaultValue = StartedWorkoutViewModel()
-}
 
 // Extend EnvironmentValues to include the ViewModel
 extension EnvironmentValues {
-  var startedWorkoutViewModel: StartedWorkoutViewModel {
-    get { self[StartedWorkoutViewModelKey.self] }
-    set { self[StartedWorkoutViewModelKey.self] = newValue }
-  }
+  @Entry var startedWorkoutViewModel = StartedWorkoutViewModel()
 }
 
 @Observable

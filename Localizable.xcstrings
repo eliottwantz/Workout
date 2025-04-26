@@ -167,6 +167,9 @@
     "🏆🏆🏆" : {
       "shouldTranslate" : false
     },
+    "00:00" : {
+      "shouldTranslate" : false
+    },
     "Add %lld Exercises" : {
       "localizations" : {
         "en" : {
@@ -433,16 +436,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thème"
-          }
-        }
-      }
-    },
-    "coming up next" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "qui s’en vient"
           }
         }
       }

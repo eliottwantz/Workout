@@ -878,6 +878,16 @@
         }
       }
     },
+    "Show rest time for last set of exercise/superset" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le temps de repos pour le dernier set d’un exercice/superset"
+          }
+        }
+      }
+    },
     "Skip Rest" : {
       "localizations" : {
         "fr" : {

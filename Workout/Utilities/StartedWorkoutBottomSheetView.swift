@@ -60,6 +60,7 @@ private struct StartedWorkoutBottomSheetView: View {
   @State private var baseOffsetY: CGFloat = 0
   @State private var dragOffsetY: CGFloat = 0
   @State private var endOffsetY: CGFloat = 0
+  @State private var collapsedDragAmount: CGFloat = 0
 
   @State private var showStopAlert: Bool = false
 
@@ -147,19 +148,27 @@ private struct StartedWorkoutBottomSheetView: View {
       .offset(y: cappedDragOffsetY)
       .offset(y: endOffsetY)
       .ignoresSafeArea()
+//      .onTapGesture {
+//        guard isCollapsed else { return }
+//        withAnimation(.spring) {
+//          endOffsetY = -baseOffsetY
+//          dragOffsetY = 0
+//        }
+//      }
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
             withAnimation(.linear(duration: 0.2)) {
-              dragOffsetY = value.translation.height
+              if isCollapsed {
+                collapsedDragAmount = value.translation.height
+              } else {
+                dragOffsetY = value.translation.height
+              }
             }
 
             withAnimation(.spring) {
-              if dragOffsetY <= -150 {
+              if isCollapsed && abs(collapsedDragAmount) >= 2 {
                 endOffsetY = -baseOffsetY
-                dragOffsetY = 0
-              } else if endOffsetY != 0 && dragOffsetY > 150 {
-                endOffsetY = 0
                 dragOffsetY = 0
               }
             }
@@ -170,7 +179,9 @@ private struct StartedWorkoutBottomSheetView: View {
             withAnimation(.spring) {
               if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
                 endOffsetY = -baseOffsetY
-              } else if endOffsetY != 0 && (dragOffsetY > 80 || (dragOffsetY > 50 && dragOffsetY + predictedY > 200)) {
+              } else if !isCollapsed
+                && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
+              {
                 endOffsetY = 0
               }
               dragOffsetY = 0

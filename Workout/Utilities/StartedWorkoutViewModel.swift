@@ -317,19 +317,33 @@ struct WorkoutSet: Identifiable {
 
   // Determines if rest should be shown *after* this specific set
   var shouldShowRest: Bool {
-    // No rest after the absolute last set of the entire workout
-    if isLastSetInWorkout {
-      return false
+    // Rule 1: Never show rest after the very last set of the entire workout.
+    if isLastSetInWorkout { return false }
+
+    // Rule 2: Never show rest if the applicable rest time (exercise or superset) is zero.
+    //         (The `restTime` computed property correctly determines this value)
+    if restTime <= 0 { return false }
+
+    // Rule 3: For supersets, rest *only* occurs after completing a set of the *last* exercise in the cycle.
+    if isSuperset {
+        guard let superset = exercise.containingSuperset else { return false } // Safety check
+        let isLastExerciseInCycle = exercise == superset.orderedExercises.last
+        if !isLastExerciseInCycle {
+            return false // No rest between different exercises within the same superset cycle.
+        }
+        // If it *is* the last exercise in the cycle, proceed to the common logic below.
     }
 
-    // If part of a superset, rest only occurs *after* the last exercise *in that round* of the superset
-    if isSuperset {
-      guard let superset = exercise.containingSuperset else { return false }
-      let lastExerciseInSuperset = superset.orderedExercises.last
-      return exercise == lastExerciseInSuperset && (superset.restTime > 0)
+    // Common Logic (Applies to regular exercises and the last exercise of a superset cycle):
+    let isLastSetOfThisExercise = setIndex == exercise.orderedSets.count - 1
+
+    if isLastSetOfThisExercise {
+        // Rule 4: If it's the last set of this exercise (or last exercise in superset cycle),
+        //         respect the user's preference setting.
+        return UserDefaults.standard.bool(forKey: ShowLastSetRestTimeKey)
     } else {
-      // For regular exercises, show rest if the exercise has rest time > 0
-      return exercise.restTime > 0
+        // Rule 5: If it's *not* the last set (and restTime > 0), always show rest.
+        return true
     }
   }
 }

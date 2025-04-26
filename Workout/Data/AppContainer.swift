@@ -206,3 +206,4 @@ extension AppContainer {
 let UserAccentColorKey: String = "userAccentColor"
 let AllowMultipleWorkoutsPerDayKey: String = "allowMultipleWorkoutsPerDay"
 let DisplayWeightInLbsKey: String = "displayWeightInLbs"
+let ShowLastSetRestTimeKey = "showLastSetRestTime"

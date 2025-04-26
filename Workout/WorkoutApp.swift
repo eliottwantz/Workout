@@ -63,6 +63,7 @@ struct WorkoutApp: App {
     ensureUserDefaults(forKey: UserAccentColorKey, Color.pink.rawValue)
     ensureUserDefaults(forKey: DisplayWeightInLbsKey, false)
     ensureUserDefaults(forKey: AllowMultipleWorkoutsPerDayKey, false)
+    ensureUserDefaults(forKey: ShowLastSetRestTimeKey, false)
   }
 
   private func ensureUserDefaults(forKey: String, _ value: Any?) {

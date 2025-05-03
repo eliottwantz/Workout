@@ -13,13 +13,11 @@ struct AnalyticsView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \ExerciseDefinition.name) private var exerciseDefinitions: [ExerciseDefinition]
   @State private var selectedExercise: ExerciseDefinition?
-  @State private var selectedPeriod: Period = .threeMonths
+  @State private var selectedPeriod: Period = .month
 
   enum Period: String, CaseIterable, Identifiable {
-    case week = "Week"
     case month = "Month"
     case threeMonths = "3 Months"
-    case sixMonths = "6 Months"
     case year = "Year"
     case all = "All Time"
     var id: String { rawValue }
@@ -27,14 +25,10 @@ struct AnalyticsView: View {
       let now = Date()
       let calendar = Calendar.current
       switch self {
-      case .week:
-        return DateInterval(start: calendar.date(byAdding: .weekOfYear, value: -1, to: now)!, end: now)
       case .month:
         return DateInterval(start: calendar.date(byAdding: .month, value: -1, to: now)!, end: now)
       case .threeMonths:
         return DateInterval(start: calendar.date(byAdding: .month, value: -3, to: now)!, end: now)
-      case .sixMonths:
-        return DateInterval(start: calendar.date(byAdding: .month, value: -6, to: now)!, end: now)
       case .year:
         return DateInterval(start: calendar.date(byAdding: .year, value: -1, to: now)!, end: now)
       case .all:
@@ -47,6 +41,12 @@ struct AnalyticsView: View {
   var exerciseToShow: ExerciseDefinition?
   init(exerciseToShow: ExerciseDefinition? = nil) {
     self._selectedExercise = State(initialValue: exerciseToShow)
+  }
+
+  // Computed property to update data when either selectedExercise or selectedPeriod changes
+  private var currentData: [PerformancePoint]? {
+    guard let selectedExercise else { return nil }
+    return analyticsData(for: selectedExercise, period: selectedPeriod)
   }
 
   var body: some View {
@@ -69,15 +69,17 @@ struct AnalyticsView: View {
       .pickerStyle(.segmented)
       .padding()
 
-      if let selectedExercise {
-        let data = analyticsData(for: selectedExercise, period: selectedPeriod)
+      if let data = currentData {
         if data.isEmpty {
           ContentUnavailableView {
             Label("No data", systemImage: "chart.xyaxis.line")
           } actions: {
           }
         } else {
-          ChartView(data: data, period: selectedPeriod)
+          VStack {
+            ChartView(data: data, period: selectedPeriod)
+          }
+          .frame(maxHeight: .infinity)
         }
       } else {
         ContentUnavailableView {
@@ -127,6 +129,15 @@ struct ChartView: View {
   }
 
   var body: some View {
+    // Compute x-axis start date according to requirements
+    let xStart: Date = {
+      if let firstDate = data.first?.date {
+        return max(firstDate, period.dateInterval.start)
+      } else {
+        return period.dateInterval.start
+      }
+    }()
+
     VStack(spacing: 12) {
       Chart(data) {
         LineMark(
@@ -141,8 +152,7 @@ struct ChartView: View {
         )
         .foregroundStyle(trendColor)
       }
-      .frame(height: 260)
-      .padding(.horizontal)
+      .chartXScale(domain: xStart...period.dateInterval.end)
 
       if let first = data.first, let last = data.last, first.weight != 0 {
         let percent = ((last.weight - first.weight) / first.weight) * 100
@@ -157,10 +167,13 @@ struct ChartView: View {
         .font(.headline)
       }
     }
+    .padding()
   }
 }
 
 #Preview {
-  AnalyticsView()
-    .modelContainer(AppContainer.preview.modelContainer)
+  NavigationStack {
+    AnalyticsView()
+      .modelContainer(AppContainer.preview.modelContainer)
+  }
 }

@@ -123,6 +123,10 @@ struct ChartView: View {
   let data: [PerformancePoint]
   let period: AnalyticsView.Period
 
+  @State private var selectedElement: PerformancePoint?
+  @State private var dragLocation: CGPoint = .zero
+  @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false // Access the setting
+
   private var trendColor: Color {
     guard let first = data.first, let last = data.last else { return .gray }
     return last.weight >= first.weight ? .green : .red
@@ -138,21 +142,127 @@ struct ChartView: View {
       }
     }()
 
+    // Compute y-axis domain based on the selected unit
+    let yDomain: ClosedRange<Double> = {
+        let conversionFactor = displayWeightInLbs ? 2.20462 : 1.0
+        let weights = data.map { $0.weight * conversionFactor } // Convert weights first
+        let minWeight = weights.min() ?? 0
+        let maxWeight = weights.max() ?? (displayWeightInLbs ? 2.2 : 1.0) // Use 1kg or ~2.2lbs if no data
+        // Add some padding based on the converted scale
+      let padding = (maxWeight - minWeight) * 0.75 // 75% padding
+        // Ensure padding doesn't make minWeight negative if minWeight is close to 0
+        let finalMin = max(0, minWeight - padding) 
+        return finalMin...(maxWeight + padding)
+    }()
+
     VStack(spacing: 12) {
-      Chart(data) {
-        LineMark(
-          x: .value("Date", $0.date),
-          y: .value("Weight", $0.weight)
-        )
-        .interpolationMethod(.catmullRom)
-        .foregroundStyle(trendColor)
-        PointMark(
-          x: .value("Date", $0.date),
-          y: .value("Weight", $0.weight)
-        )
-        .foregroundStyle(trendColor)
-      }
+      Chart { // Use the Chart content builder
+        // Existing LineMark and PointMark
+        ForEach(data) { point in
+          // Convert weight for plotting if displaying in lbs
+          let plotWeight = displayWeightInLbs ? point.weight * 2.20462 : point.weight
+          LineMark(
+            x: .value("Date", point.date),
+            y: .value("Weight", plotWeight) // Use converted weight for plotting
+          )
+          .interpolationMethod(.catmullRom)
+          .foregroundStyle(trendColor)
+          PointMark(
+            x: .value("Date", point.date),
+            y: .value("Weight", plotWeight) // Use converted weight for plotting
+          )
+          .foregroundStyle(trendColor)
+        }
+
+        // Add the vertical rule mark conditionally here
+        if let selected = selectedElement {
+           // Convert selected weight for RuleMark positioning if displaying in lbs
+           let selectedPlotWeight = displayWeightInLbs ? selected.weight * 2.20462 : selected.weight
+          RuleMark(x: .value("Date", selected.date))
+            .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 4])) // Dotted line style
+            .foregroundStyle(.gray.opacity(0.5)) // Subtle gray color
+            .annotation(position: .top, alignment: .leading) { 
+                 // Annotation content can go here if desired (empty for now)
+            }
+            // Position the RuleMark based on the potentially converted weight
+            .foregroundStyle(.clear) // Make the rule mark itself invisible if only used for annotation line
+            .zIndex(-1) // Ensure it's behind other marks if needed
+            // We position the annotation line using the selectedPlotWeight implicitly via the RuleMark's y position
+        }
+      } // End Chart content builder
       .chartXScale(domain: xStart...period.dateInterval.end)
+      .chartYScale(domain: yDomain) // Apply the calculated Y-axis domain
+      .chartYAxis { // Customize Y-axis labels
+          AxisMarks(values: .automatic) { value in
+              AxisGridLine()
+              AxisTick()
+              AxisValueLabel {
+                  if let numericValue = value.as(Double.self) {
+                      let unit = displayWeightInLbs ? "lbs" : "kg"
+                      Text(String(format: "%.0f %@", numericValue, unit)) // Format with unit
+                  }
+              }
+          }
+      }
+      .chartOverlay { proxy in
+        GeometryReader { geometry in
+          let plotAreaOrigin = geometry[proxy.plotAreaFrame].origin // Calculate origin once
+
+          ZStack(alignment: .topLeading) { // Use ZStack to layer gesture area and tooltip
+              Rectangle() // Gesture area
+                  .fill(Color.clear).contentShape(Rectangle())
+                  .gesture(
+                    DragGesture(minimumDistance: 0)
+                      .onChanged { value in
+                        dragLocation = value.location // Keep dragLocation if needed elsewhere
+                        let xPosition = value.location.x - plotAreaOrigin.x // Use calculated origin
+                        let plotWidth = proxy.plotAreaSize.width
+                        guard plotWidth > 0, !data.isEmpty else { selectedElement = nil; return }
+                        let percent = min(max(xPosition / plotWidth, 0), 1)
+                        let start = xStart.timeIntervalSinceReferenceDate
+                        let end = period.dateInterval.end.timeIntervalSinceReferenceDate
+                        let time = start + percent * (end - start)
+                        let date = Date(timeIntervalSinceReferenceDate: time)
+                        // Find the closest data point
+                        if let nearest = data.min(by: { abs($0.date.timeIntervalSince1970 - date.timeIntervalSince1970) < abs($1.date.timeIntervalSince1970 - date.timeIntervalSince1970) }) {
+                          selectedElement = nearest
+                        }
+                      }
+                      .onEnded { _ in
+                        selectedElement = nil
+                      }
+                  )
+
+              // Tooltip rendering
+              if let selected = selectedElement {
+                 // Convert selected weight for positioning if displaying in lbs
+                 let selectedPlotWeight = displayWeightInLbs ? selected.weight * 2.20462 : selected.weight
+                 // Use the potentially converted weight to find the position
+                 if let positionInPlot = proxy.position(for: (selected.date, selectedPlotWeight)) {
+                    let finalX = plotAreaOrigin.x + positionInPlot.x
+                    let finalY = plotAreaOrigin.y + positionInPlot.y
+
+                    VStack(alignment: .leading, spacing: 4) {
+                      Text(selected.date, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                      // Display weight in tooltip using original value + conversion
+                      Text(displayWeightInLbs ? String(format: "%.1f lbs", selected.weight * 2.20462) : String(format: "%.1f kg", selected.weight))
+                        .font(.headline)
+                        .foregroundColor(trendColor)
+                    }
+                    .padding(8)
+                    .background(.regularMaterial) // Changed from .thinMaterial to .regularMaterial
+                    .cornerRadius(8)
+                    .shadow(radius: 4)
+                    // Offset the tooltip from the top-left corner of the ZStack (GeometryReader)
+                    // ... existing code ...
+                    .offset(x: finalX + 12, y: finalY - 40) // Adjust offset as needed
+                }
+              }
+          } // End ZStack
+        } // End GeometryReader
+      } // End chartOverlay
 
       if let first = data.first, let last = data.last, first.weight != 0 {
         let percent = ((last.weight - first.weight) / first.weight) * 100

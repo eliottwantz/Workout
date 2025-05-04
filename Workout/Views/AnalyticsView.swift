@@ -176,8 +176,6 @@ struct ChartView: View {
 
         // Add the vertical rule mark conditionally here
         if let selected = selectedElement {
-           // Convert selected weight for RuleMark positioning if displaying in lbs
-           let selectedPlotWeight = displayWeightInLbs ? selected.weight * 2.20462 : selected.weight
           RuleMark(x: .value("Date", selected.date))
             .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 4])) // Dotted line style
             .foregroundStyle(.gray.opacity(0.5)) // Subtle gray color
@@ -216,7 +214,7 @@ struct ChartView: View {
                       .onChanged { value in
                         dragLocation = value.location // Keep dragLocation if needed elsewhere
                         let xPosition = value.location.x - plotAreaOrigin.x // Use calculated origin
-                        let plotWidth = proxy.plotAreaSize.width
+                        let plotWidth = proxy.plotSize.width
                         guard plotWidth > 0, !data.isEmpty else { selectedElement = nil; return }
                         let percent = min(max(xPosition / plotWidth, 0), 1)
                         let start = xStart.timeIntervalSinceReferenceDate

@@ -243,6 +243,32 @@ class StartedWorkoutViewModel {
     }
   }
 
+  func updateLiveActivityColor(color: Color) {
+    Task {
+      if let activity = liveActivity {
+        await activity.update(
+          .init(
+            state: .init(displayWeightInLbs: activity.content.state.displayWeightInLbs, userAccentColor: color),
+            staleDate: nil
+          )
+        )
+      }
+    }
+  }
+  
+  func updateLiveActivityWeightDisplay(displayWeightInLbs: Bool) {
+    Task {
+      if let activity = liveActivity {
+        await activity.update(
+          .init(
+            state: .init(displayWeightInLbs: displayWeightInLbs, userAccentColor: activity.content.state.userAccentColor),
+            staleDate: nil
+          )
+        )
+      }
+    }
+  }
+
   private func removeTimerIdFromUserDefaults() {
     UserDefaults.standard.removeObject(forKey: "timer_\(currentTimerId)")
   }
@@ -326,24 +352,24 @@ struct WorkoutSet: Identifiable {
 
     // Rule 3: For supersets, rest *only* occurs after completing a set of the *last* exercise in the cycle.
     if isSuperset {
-        guard let superset = exercise.containingSuperset else { return false } // Safety check
-        let isLastExerciseInCycle = exercise == superset.orderedExercises.last
-        if !isLastExerciseInCycle {
-            return false // No rest between different exercises within the same superset cycle.
-        }
-        // If it *is* the last exercise in the cycle, proceed to the common logic below.
+      guard let superset = exercise.containingSuperset else { return false }  // Safety check
+      let isLastExerciseInCycle = exercise == superset.orderedExercises.last
+      if !isLastExerciseInCycle {
+        return false  // No rest between different exercises within the same superset cycle.
+      }
+      // If it *is* the last exercise in the cycle, proceed to the common logic below.
     }
 
     // Common Logic (Applies to regular exercises and the last exercise of a superset cycle):
     let isLastSetOfThisExercise = setIndex == exercise.orderedSets.count - 1
 
     if isLastSetOfThisExercise {
-        // Rule 4: If it's the last set of this exercise (or last exercise in superset cycle),
-        //         respect the user's preference setting.
-        return UserDefaults.standard.bool(forKey: ShowLastSetRestTimeKey)
+      // Rule 4: If it's the last set of this exercise (or last exercise in superset cycle),
+      //         respect the user's preference setting.
+      return UserDefaults.standard.bool(forKey: ShowLastSetRestTimeKey)
     } else {
-        // Rule 5: If it's *not* the last set (and restTime > 0), always show rest.
-        return true
+      // Rule 5: If it's *not* the last set (and restTime > 0), always show rest.
+      return true
     }
   }
 }

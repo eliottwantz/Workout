@@ -165,7 +165,7 @@ struct ChartView: View {
             x: .value("Date", point.date),
             y: .value("Weight", plotWeight) // Use converted weight for plotting
           )
-          .interpolationMethod(.catmullRom)
+          .interpolationMethod(.linear) // Changed from .catmullRom to .linear for straight lines
           .foregroundStyle(trendColor)
           PointMark(
             x: .value("Date", point.date),
@@ -204,7 +204,15 @@ struct ChartView: View {
       }
       .chartOverlay { proxy in
         GeometryReader { geometry in
-          let plotAreaOrigin = geometry[proxy.plotAreaFrame].origin // Calculate origin once
+          
+          let plotAreaOrigin = {
+            let plotFrame = proxy.plotFrame
+            if plotFrame != nil {
+              return geometry[plotFrame!].origin
+            } else {
+              return .zero
+            }
+          }()
 
           ZStack(alignment: .topLeading) { // Use ZStack to layer gesture area and tooltip
               Rectangle() // Gesture area

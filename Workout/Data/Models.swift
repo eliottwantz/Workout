@@ -157,7 +157,7 @@ final class Exercise {
 @Model
 final class Superset {
   var notes: String?
-  var restTime: Int = 180
+  var restTime: Int = 150
   // The exercises included in this specific superset instance, in order
   @Relationship(deleteRule: .cascade, inverse: \Exercise.containingSuperset)
   var exercises: [Exercise]? = []  // Use optional array initialization
@@ -170,7 +170,7 @@ final class Superset {
     (exercises ?? []).sorted { $0.orderWithinSuperset < $1.orderWithinSuperset }
   }
 
-  init(notes: String? = nil, restTime: Int = 180) {
+  init(notes: String? = nil, restTime: Int = 150) {
     self.exercises = []
     self.notes = notes
     self.restTime = restTime

@@ -231,6 +231,11 @@ class StartedWorkoutViewModel {
             restTime: restTime,
             isResting: isResting,
             timerInterval: timerInterval,
+            nextExercise: nextWorkoutSet?.exerciseName,
+            nextReps: nextWorkoutSet?.set.reps,
+            nextWeight: nextWorkoutSet?.set.weight,
+            setForNextExercise: nextWorkoutSet != nil ? nextWorkoutSet!.setIndex + 1 : nil,
+            setsForNextExercise: nextWorkoutSet?.exercise.orderedSets.count
           ),
           staleDate: nil
         )
@@ -263,7 +268,12 @@ class StartedWorkoutViewModel {
       endTime: endTime,
       restTime: restTime,
       isResting: isResting,
-      timerInterval: timerInterval
+      timerInterval: timerInterval,
+      nextExercise: nextWorkoutSet?.exerciseName,
+      nextReps: nextWorkoutSet?.set.reps,
+      nextWeight: nextWorkoutSet?.set.weight,
+      setForNextExercise: nextWorkoutSet != nil ? nextWorkoutSet!.setIndex + 1 : nil,
+      setsForNextExercise: nextWorkoutSet?.exercise.orderedSets.count
     )
 
     let attributes = RestTimeCountdownAttributes(

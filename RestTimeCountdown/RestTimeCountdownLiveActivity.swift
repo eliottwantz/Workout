@@ -24,6 +24,13 @@ struct RestTimeCountdownAttributes: ActivityAttributes {
     var restTime: Int
     var isResting: Bool
     var timerInterval: ClosedRange<Date>
+
+    // Next set details
+    var nextExercise: String?
+    var nextReps: Int?
+    var nextWeight: Double?
+    var setForNextExercise: Int?
+    var setsForNextExercise: Int?
   }
 
   let timerId: String
@@ -38,50 +45,114 @@ struct RestTimeCountdownLiveActivity: Widget {
       DynamicIsland {
         DynamicIslandExpandedRegion(.bottom) {
           HStack {
-            VStack(alignment: .leading, spacing: 8) {
-              Text(context.state.exercise)
-                .font(.title)
-                .fontWeight(.bold)
-                .lineLimit(1)
-                .multilineTextAlignment(.center)
+            if !context.state.isResting {
 
-              CurrentSetIndicators(
-                color: context.state.userAccentColor,
-                totalSets: context.state.setsForCurrentExercise,
-                currentSet: context.state.setForCurrentExercise
-              )
-            }
-            .padding(.leading)
+              VStack(alignment: .leading, spacing: 8) {
+                Text(context.state.exercise)
+                  .font(.title)
+                  .fontWeight(.bold)
+                  .lineLimit(1)
+                  .multilineTextAlignment(.center)
 
-            Spacer()
-
-            VStack(alignment: .trailing) {
-              if context.state.isResting {
-                LiveActivityCountdownTimer(
-                  timerInterval: context.state.timerInterval,
+                CurrentSetIndicators(
                   color: context.state.userAccentColor,
-                  lineWidth: 8,
-                  size: 100
+                  totalSets: context.state.setsForCurrentExercise,
+                  currentSet: context.state.setForCurrentExercise
                 )
-              } else {
-                VStack(alignment: .trailing) {
-                  VStack(alignment: .trailing, spacing: 4) {
-                    Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
-                      .font(.title2)
-                      .bold()
-                      .foregroundStyle(context.state.userAccentColor)
-                    Text("\(context.state.reps) reps")
-                      .font(.title3)
-                      .bold()
-                      .foregroundStyle(.secondary)
+                .padding(.leading)
+              }
+
+              Spacer()
+
+              VStack(alignment: .trailing) {
+                if context.state.isResting {
+                  LiveActivityCountdownTimer(
+                    timerInterval: context.state.timerInterval,
+                    color: context.state.userAccentColor,
+                    lineWidth: 8,
+                    size: 100
+                  )
+                } else {
+                  VStack(alignment: .trailing) {
+                    VStack(alignment: .trailing, spacing: 4) {
+                      Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
+                        .font(.title2)
+                        .bold()
+                        .foregroundStyle(context.state.userAccentColor)
+                      Text("\(context.state.reps) reps")
+                        .font(.title3)
+                        .bold()
+                        .foregroundStyle(.secondary)
+                    }
                   }
                 }
+              }
+
+            } else {
+              Group {
+                HStack(spacing: 12) {
+                  LiveActivityCountdownTimer(
+                    timerInterval: context.state.timerInterval,
+                    color: context.state.userAccentColor
+                  )
+
+                  Image(systemName: "arrowshape.forward.fill")
+                    .foregroundStyle(context.state.userAccentColor)
+                    .font(.title)
+
+                }
+
+                Group {
+                  if let nextExercise = context.state.nextExercise, let nextReps = context.state.nextReps,
+                    let nextWeight = context.state.nextWeight,
+                    let setForNextExercise = context.state.setForNextExercise,
+                    let setsForNextExercise = context.state.setsForNextExercise
+                  {
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                      Text(nextExercise)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .lineLimit(1)
+
+                      HStack(spacing: 8) {
+                        Text("\(nextReps) reps")
+                          .font(.subheadline)
+                          .bold()
+                          .foregroundStyle(context.state.userAccentColor)
+                        Text("at")
+                          .font(.subheadline)
+                        Text(nextWeight.formattedWeight(inLbs: context.state.displayWeightInLbs))
+                          .font(.subheadline)
+                          .bold()
+                          .foregroundStyle(context.state.userAccentColor)
+                      }
+
+                      Text("Set \(context.state.set+1) out of \(context.state.totalSets)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                      Spacer()
+
+                      CurrentSetIndicators(
+                        color: context.state.userAccentColor,
+                        totalSets: setsForNextExercise,
+                        currentSet: setForNextExercise
+                      )
+                      .padding(.trailing)
+                    }
+                  } else {
+                    Text("Workout Completed! 🏆")
+                      .font(.title2)
+                      .foregroundStyle(context.state.userAccentColor)
+                  }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
               }
             }
           }
           .frame(maxWidth: .infinity)
         }
-
       } compactLeading: {
         Text("\(context.state.setForCurrentExercise)/\(context.state.setsForCurrentExercise)")
           .foregroundStyle(context.state.userAccentColor)
@@ -131,26 +202,22 @@ private struct LockeScreenView: View {
     ZStack {
       VStack(alignment: .leading, spacing: 8) {
         HStack(alignment: .center) {
-          VStack(alignment: .leading, spacing: 8) {
-            Text(state.exercise)
-              .font(.title)
-              .fontWeight(.bold)
-              .lineLimit(2)
 
-            CurrentSetIndicators(
-              color: state.userAccentColor,
-              totalSets: state.setsForCurrentExercise,
-              currentSet: state.setForCurrentExercise
-            )
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
+          if !state.isResting {
+            VStack(alignment: .leading, spacing: 8) {
+              Text(state.exercise)
+                .font(.title)
+                .fontWeight(.bold)
+                .lineLimit(2)
 
-          if state.isResting {
-            LiveActivityCountdownTimer(
-              timerInterval: state.timerInterval,
-              color: state.userAccentColor
-            )
-          } else {
+              CurrentSetIndicators(
+                color: state.userAccentColor,
+                totalSets: state.setsForCurrentExercise,
+                currentSet: state.setForCurrentExercise
+              )
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             VStack(alignment: .trailing, spacing: 4) {
               Text(state.weight.formattedWeight(inLbs: state.displayWeightInLbs))
                 .font(.title2)
@@ -165,6 +232,65 @@ private struct LockeScreenView: View {
               Text("\(state.set)/\(state.totalSets) sets")
                 .font(.headline)
                 .foregroundStyle(.secondary)
+            }
+          } else {
+            Group {
+              HStack(spacing: 12) {
+                LiveActivityCountdownTimer(
+                  timerInterval: state.timerInterval,
+                  color: state.userAccentColor
+                )
+
+                Image(systemName: "arrowshape.forward.fill")
+                  .foregroundStyle(state.userAccentColor)
+                  .font(.title)
+
+              }
+
+              Group {
+                if let nextExercise = state.nextExercise, let nextReps = state.nextReps,
+                  let nextWeight = state.nextWeight, let setForNextExercise = state.setForNextExercise,
+                  let setsForNextExercise = state.setsForNextExercise
+                {
+
+                  VStack(alignment: .trailing, spacing: 8) {
+                    Text(nextExercise)
+                      .font(.title)
+                      .fontWeight(.bold)
+                      .lineLimit(2)
+
+                    HStack(spacing: 8) {
+                      Text("\(nextReps) reps")
+                        .font(.headline)
+                        .bold()
+                        .foregroundStyle(state.userAccentColor)
+                      Text("at")
+                        .font(.subheadline)
+                      Text(nextWeight.formattedWeight(inLbs: state.displayWeightInLbs))
+                        .font(.headline)
+                        .bold()
+                        .foregroundStyle(state.userAccentColor)
+                    }
+
+                    Text("Set \(state.set+1) out of \(state.totalSets)")
+                      .font(.subheadline)
+                      .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    CurrentSetIndicators(
+                      color: state.userAccentColor,
+                      totalSets: setsForNextExercise,
+                      currentSet: setForNextExercise
+                    )
+                  }
+                } else {
+                  Text("Workout Completed! 🏆")
+                    .font(.title2)
+                    .foregroundStyle(state.userAccentColor)
+                }
+              }
+              .frame(maxWidth: .infinity, alignment: .trailing)
             }
           }
         }

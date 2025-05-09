@@ -407,6 +407,16 @@
         }
       }
     },
+    "at" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "à"
+          }
+        }
+      }
+    },
     "Basic Information" : {
       "localizations" : {
         "fr" : {
@@ -856,6 +866,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sélectionnez les exercises à inclure au superset"
+          }
+        }
+      }
+    },
+    "Set %lld out of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Set %1$lld out of %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set %1$lld de %2$lld"
           }
         }
       }

@@ -161,6 +161,23 @@
       },
       "shouldTranslate" : false
     },
+    "%lld/%lld sets" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld sets"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld sets"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "•" : {
       "shouldTranslate" : false
     },

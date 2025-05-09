@@ -135,8 +135,7 @@ private struct LockeScreenView: View {
             Text(state.exercise)
               .font(.title)
               .fontWeight(.bold)
-              .lineLimit(1)
-              .multilineTextAlignment(.center)
+              .lineLimit(2)
 
             CurrentSetIndicators(
               color: state.userAccentColor,
@@ -160,6 +159,12 @@ private struct LockeScreenView: View {
               Text("\(state.reps) reps")
                 .font(.headline)
                 .foregroundStyle(.primary)
+
+              Spacer()
+
+              Text("\(state.set)/\(state.totalSets) sets")
+                .font(.headline)
+                .foregroundStyle(.secondary)
             }
           }
         }

@@ -302,6 +302,7 @@ class StartedWorkoutViewModel {
         removeAllPendingNotifications()  // Cancel rest timer
       }
       currentSetIndex -= 1
+      updateLiveActivity()  // Update live activity when going back to a previous set
     }
   }
 
@@ -310,12 +311,12 @@ class StartedWorkoutViewModel {
     if isResting {
       isResting = false
       removeAllPendingNotifications()  // Cancel rest timer
-      startLiveActivity()  // Restart live activity with new set info
     }
     // Advance index only if not already at/past the end
     if currentSetIndex < workoutSets.count {
       moveToNextSet()  // Use moveToNextSet to handle logic consistently
     }
+    updateLiveActivity()  // Update live activity when going to the next set
   }
 
   // Explicit action to skip the current rest timer

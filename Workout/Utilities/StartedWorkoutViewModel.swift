@@ -13,7 +13,6 @@ extension EnvironmentValues {
 class StartedWorkoutViewModel {
   var workout: Workout? = nil  // Make workout optional
   var liveActivity: Activity<RestTimeCountdownAttributes>?
-  var liveActivityState: RestTimeCountdownAttributes.ContentState?
 
   // Workout Progress State
   var currentSetIndex = 0
@@ -45,6 +44,7 @@ class StartedWorkoutViewModel {
       self.isResting = false
       self.currentTimerId = UUID().uuidString  // Reset timer ID
       requestNotificationPermissions()  // Ensure permissions are requested
+      startLiveActivity()  // Start live activity when workout begins
     }
   }
 
@@ -54,6 +54,7 @@ class StartedWorkoutViewModel {
     stopLiveActivity()
     removeTimerIdFromUserDefaults()
     self.workout = nil
+    liveActivity = nil
   }
 
   // --- Workout Progression Methods ---
@@ -128,17 +129,14 @@ class StartedWorkoutViewModel {
       moveToNextSet()  // Should not happen if shouldShowRest was true, but safeguard
       return
     }
-
     isResting = true
     currentTimerId = UUID().uuidString  // New ID for this specific timer instance
     scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
-
-    startLiveActivity()
+    updateLiveActivity()  // Update live activity when starting rest timer
   }
 
   private func moveToNextSet() {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
-    stopLiveActivity()
     removeTimerIdFromUserDefaults()
 
     if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
@@ -148,6 +146,7 @@ class StartedWorkoutViewModel {
     }
     currentSetIndex += 1
     isResting = false  // Ensure resting state is reset when moving
+    updateLiveActivity()
   }
 
   func handleDoneSet() {
@@ -205,67 +204,76 @@ class StartedWorkoutViewModel {
     }
   }
 
+  func updateLiveActivity() {
+    guard let liveActivity = liveActivity, let currentSet = currentWorkoutSet else { return }
+
+    Task {
+      let userAccentColor =
+        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
+      let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
+      let restTime = currentSet.restTime
+      let endTime = Date().addingTimeInterval(TimeInterval(restTime))
+      let timerInterval = Date.now...endTime
+
+      await liveActivity.update(
+        .init(
+          state: .init(
+            displayWeightInLbs: displayWeightInLbs,
+            userAccentColor: userAccentColor,
+            exercise: currentSet.exerciseName,
+            set: currentSetIndex + 1,
+            totalSets: workoutSets.count,
+            reps: currentSet.set.reps,
+            weight: currentSet.set.weight,
+            endTime: endTime,
+            restTime: restTime,
+            isResting: isResting,
+            timerInterval: timerInterval,
+          ),
+          staleDate: nil
+        )
+      )
+    }
+  }
+
   private func startLiveActivity() {
     stopLiveActivity()
 
-    if ActivityAuthorizationInfo().areActivitiesEnabled {
-      let userAccentColor =
-        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
-      let displayWeightInLbs: Bool = UserDefaults.standard.bool(forKey: DisplayWeightInLbsKey)
-      if let currentWorkoutSet {
-        let startTime = Date()
-        let attributes = RestTimeCountdownAttributes(
-          exercise: currentWorkoutSet.exerciseName,
-          set: currentWorkoutSet.setIndex + 1,
-          totalSets: currentWorkoutSet.exercise.orderedSets.count,
-          reps: currentWorkoutSet.set.reps,
-          weight: currentWorkoutSet.set.weight,
-          timerId: self.currentTimerId,
-          endTime: startTime.addingTimeInterval(TimeInterval(currentWorkoutSet.restTime)),
-          restTime: currentWorkoutSet.restTime,
-          timerInterval: startTime...Date().addingTimeInterval(TimeInterval(currentWorkoutSet.restTime)),
-        )
-        let state = RestTimeCountdownAttributes.ContentState(
-          displayWeightInLbs: displayWeightInLbs,
-          userAccentColor: userAccentColor
-        )
+    guard let currentSet = currentWorkoutSet else { return }
 
-        do {
-          liveActivity = try Activity<RestTimeCountdownAttributes>.request(
-            attributes: attributes,
-            content: .init(state: state, staleDate: nil),
-            pushType: nil
-          )
-        } catch {
-          print("Error with Live Activity: \(error.localizedDescription)")
-        }
-      }
-    }
-  }
+    let userAccentColor =
+      Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
+    let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
+    let restTime = currentSet.restTime
+    let endTime = Date().addingTimeInterval(TimeInterval(restTime))
+    let timerInterval = Date.now...endTime
 
-  func updateLiveActivityColor(color: Color) {
-    Task {
-      if let activity = liveActivity {
-        await activity.update(
-          .init(
-            state: .init(displayWeightInLbs: activity.content.state.displayWeightInLbs, userAccentColor: color),
-            staleDate: nil
-          )
-        )
-      }
-    }
-  }
-  
-  func updateLiveActivityWeightDisplay(displayWeightInLbs: Bool) {
-    Task {
-      if let activity = liveActivity {
-        await activity.update(
-          .init(
-            state: .init(displayWeightInLbs: displayWeightInLbs, userAccentColor: activity.content.state.userAccentColor),
-            staleDate: nil
-          )
-        )
-      }
+    let state = RestTimeCountdownAttributes.ContentState(
+      displayWeightInLbs: displayWeightInLbs,
+      userAccentColor: userAccentColor,
+      exercise: currentSet.exerciseName,
+      set: currentSetIndex + 1,
+      totalSets: workoutSets.count,
+      reps: currentSet.set.reps,
+      weight: currentSet.set.weight,
+      endTime: endTime,
+      restTime: restTime,
+      isResting: isResting,
+      timerInterval: timerInterval
+    )
+
+    let attributes = RestTimeCountdownAttributes(
+      timerId: currentTimerId
+    )
+
+    do {
+      liveActivity = try Activity<RestTimeCountdownAttributes>.request(
+        attributes: attributes,
+        content: .init(state: state, staleDate: nil),
+        pushType: nil
+      )
+    } catch {
+      print("Error starting live activity: \(error)")
     }
   }
 
@@ -288,6 +296,7 @@ class StartedWorkoutViewModel {
     if isResting {
       isResting = false
       removeAllPendingNotifications()  // Cancel rest timer
+      startLiveActivity()  // Restart live activity with new set info
     }
     // Advance index only if not already at/past the end
     if currentSetIndex < workoutSets.count {

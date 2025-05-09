@@ -21,7 +21,7 @@ struct SettingsView: View {
           .onChange(of: storedColor) { oldValue, newValue in
             print("storedColor changed: \(oldValue) -> \(newValue)")
             guard oldValue != newValue else { return }
-            startedWorkoutViewModel.updateLiveActivityColor(color: newValue)
+            startedWorkoutViewModel.updateLiveActivity()
           }
       }
 
@@ -34,7 +34,7 @@ struct SettingsView: View {
           .onChange(of: displayWeightInLbs) { oldValue, newValue in
             print("displayWeightInLbs changed: \(oldValue) -> \(newValue)")
             guard oldValue != newValue else { return }
-            startedWorkoutViewModel.updateLiveActivityWeightDisplay(displayWeightInLbs: newValue)
+            startedWorkoutViewModel.updateLiveActivity()
           }
       }
 

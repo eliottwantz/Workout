@@ -13,17 +13,18 @@ struct RestTimeCountdownAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
     var displayWeightInLbs: Bool
     var userAccentColor: Color
+    var exercise: String
+    var set: Int
+    var totalSets: Int
+    var reps: Int
+    var weight: Double
+    var endTime: Date
+    var restTime: Int
+    var isResting: Bool
+    var timerInterval: ClosedRange<Date>
   }
 
-  let exercise: String
-  let set: Int
-  let totalSets: Int
-  let reps: Int
-  let weight: Double
   let timerId: String
-  let endTime: Date
-  let restTime: Int
-  let timerInterval: ClosedRange<Date>
 }
 
 struct RestTimeCountdownLiveActivity: Widget {
@@ -35,25 +36,31 @@ struct RestTimeCountdownLiveActivity: Widget {
       DynamicIsland {
         DynamicIslandExpandedRegion(.bottom) {
           HStack {
-            VStack(alignment: .leading, spacing: 8) {
-              Text(context.attributes.exercise)
-                .font(.title)
-                .fontWeight(.bold)
-                .lineLimit(1)
-                .multilineTextAlignment(.center)
-
-              CurrentSetIndicators(
-                color: context.state.userAccentColor,
-                totalSets: context.attributes.totalSets,
-                currentSet: context.attributes.set
-              )
+            VStack(alignment: .trailing) {
+              if context.state.isResting {
+                LiveActivityCountdownTimer(
+                  timerInterval: context.state.timerInterval,
+                  color: context.state.userAccentColor,
+                  lineWidth: 8,
+                  size: 100
+                )
+              } else {
+                VStack(alignment: .trailing, spacing: 4) {
+                  Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
+                    .font(.headline)
+                    .foregroundStyle(context.state.userAccentColor)
+                  Text("\(context.state.reps) reps")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+              }
             }
 
             Spacer()
 
             VStack(alignment: .trailing) {
               LiveActivityCountdownTimer(
-                timerInterval: context.attributes.timerInterval,
+                timerInterval: context.state.timerInterval,
                 color: context.state.userAccentColor,
                 lineWidth: 8,
                 size: 100
@@ -64,20 +71,20 @@ struct RestTimeCountdownLiveActivity: Widget {
         }
 
       } compactLeading: {
-        Text("\(context.attributes.set)/\(context.attributes.totalSets)")
+        Text("\(context.state.set)/\(context.state.totalSets)")
           .foregroundStyle(context.state.userAccentColor)
       } compactTrailing: {
         Text("00:00")
           .hidden()
           .overlay(alignment: .leading) {
-            Text(timerInterval: context.attributes.timerInterval, countsDown: true)
+            Text(timerInterval: context.state.timerInterval, countsDown: true)
               .font(.caption)
               .monospacedDigit()
               .foregroundStyle(context.state.userAccentColor)
               .multilineTextAlignment(.center)
           }
       } minimal: {
-        ProgressView(timerInterval: context.attributes.timerInterval) {
+        ProgressView(timerInterval: context.state.timerInterval) {
         } currentValueLabel: {
         }
         .progressViewStyle(.circular)
@@ -102,7 +109,7 @@ private struct LockeScreenView: View {
       VStack(alignment: .leading, spacing: 8) {
         HStack(alignment: .center) {
           VStack(alignment: .leading, spacing: 8) {
-            Text(attributes.exercise)
+            Text(state.exercise)
               .font(.title)
               .fontWeight(.bold)
               .lineLimit(1)
@@ -110,16 +117,28 @@ private struct LockeScreenView: View {
 
             CurrentSetIndicators(
               color: state.userAccentColor,
-              totalSets: attributes.totalSets,
-              currentSet: attributes.set
+              totalSets: state.totalSets,
+              currentSet: state.set
             )
           }
           .frame(maxWidth: .infinity, alignment: .leading)
 
-          LiveActivityCountdownTimer(
-            timerInterval: attributes.timerInterval,
-            color: state.userAccentColor
-          )
+          if state.isResting {
+            LiveActivityCountdownTimer(
+              timerInterval: state.timerInterval,
+              color: state.userAccentColor
+            )
+          } else {
+            VStack(alignment: .trailing, spacing: 4) {
+              Text(state.weight.formattedWeight(inLbs: state.displayWeightInLbs))
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(state.userAccentColor)
+              Text("\(state.reps) reps")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            }
+          }
         }
       }
       .padding()
@@ -170,24 +189,25 @@ struct CurrentSetIndicators: View {
 
 extension RestTimeCountdownAttributes {
   fileprivate static var preview: RestTimeCountdownAttributes {
-    RestTimeCountdownAttributes(
-      exercise: "Bench Press",
-      set: 1,
-      totalSets: 10,
-      reps: 10,
-      weight: 30.0,
-      timerId: "abcde",
-      endTime: .now.addingTimeInterval(TimeInterval(60)),
-      restTime: 120,
-      timerInterval: .now...Date().addingTimeInterval(60)
-    )
+    RestTimeCountdownAttributes(timerId: "abcde")
   }
 }
 
 extension RestTimeCountdownAttributes.ContentState {
   fileprivate static var sample: RestTimeCountdownAttributes.ContentState {
     RestTimeCountdownAttributes.ContentState(
-      displayWeightInLbs: true, userAccentColor: .yellow)
+      displayWeightInLbs: true,
+      userAccentColor: .yellow,
+      exercise: "Bench Press",
+      set: 1,
+      totalSets: 10,
+      reps: 10,
+      weight: 30.0,
+      endTime: .now.addingTimeInterval(TimeInterval(60)),
+      restTime: 120,
+      isResting: true,
+      timerInterval: .now...Date().addingTimeInterval(60)
+    )
   }
 }
 

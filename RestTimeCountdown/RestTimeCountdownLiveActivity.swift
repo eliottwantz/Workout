@@ -38,6 +38,22 @@ struct RestTimeCountdownLiveActivity: Widget {
       DynamicIsland {
         DynamicIslandExpandedRegion(.bottom) {
           HStack {
+            VStack(alignment: .leading, spacing: 8) {
+              Text(context.state.exercise)
+                .font(.title)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .multilineTextAlignment(.center)
+
+              CurrentSetIndicators(
+                color: context.state.userAccentColor,
+                totalSets: context.state.setsForCurrentExercise,
+                currentSet: context.state.setForCurrentExercise
+              )
+            }
+
+            Spacer()
+
             VStack(alignment: .trailing) {
               if context.state.isResting {
                 LiveActivityCountdownTimer(
@@ -47,26 +63,17 @@ struct RestTimeCountdownLiveActivity: Widget {
                   size: 100
                 )
               } else {
-                VStack(alignment: .trailing, spacing: 4) {
-                  Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
-                    .font(.headline)
-                    .foregroundStyle(context.state.userAccentColor)
-                  Text("\(context.state.reps) reps")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .trailing) {
+                  VStack(alignment: .trailing, spacing: 4) {
+                    Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
+                      .font(.headline)
+                      .foregroundStyle(context.state.userAccentColor)
+                    Text("\(context.state.reps) reps")
+                      .font(.subheadline)
+                      .foregroundStyle(.secondary)
+                  }
                 }
               }
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing) {
-              LiveActivityCountdownTimer(
-                timerInterval: context.state.timerInterval,
-                color: context.state.userAccentColor,
-                lineWidth: 8,
-                size: 100
-              )
             }
           }
           .frame(maxWidth: .infinity)
@@ -76,21 +83,32 @@ struct RestTimeCountdownLiveActivity: Widget {
         Text("\(context.state.setForCurrentExercise)/\(context.state.setsForCurrentExercise)")
           .foregroundStyle(context.state.userAccentColor)
       } compactTrailing: {
-        Text("00:00")
-          .hidden()
-          .overlay(alignment: .leading) {
-            Text(timerInterval: context.state.timerInterval, countsDown: true)
-              .font(.caption)
-              .monospacedDigit()
-              .foregroundStyle(context.state.userAccentColor)
-              .multilineTextAlignment(.center)
-          }
-      } minimal: {
-        ProgressView(timerInterval: context.state.timerInterval) {
-        } currentValueLabel: {
+        if context.state.isResting {
+          Text("00:00")
+            .hidden()
+            .overlay(alignment: .leading) {
+              Text(timerInterval: context.state.timerInterval, countsDown: true)
+                .font(.caption)
+                .monospacedDigit()
+                .foregroundStyle(context.state.userAccentColor)
+                .multilineTextAlignment(.center)
+              }
+        } else {
+          Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
+            .font(.subheadline)
+            .foregroundStyle(context.state.userAccentColor)
         }
-        .progressViewStyle(.circular)
-        .tint(context.state.userAccentColor)
+      } minimal: {
+        if context.state.isResting {
+          ProgressView(timerInterval: context.state.timerInterval) {
+          } currentValueLabel: {
+          }
+          .progressViewStyle(.circular)
+          .tint(context.state.userAccentColor)
+        } else {
+          Text("\(context.state.setForCurrentExercise)/\(context.state.setsForCurrentExercise)")
+            .foregroundStyle(context.state.userAccentColor)
+        }
       }
       .keylineTint(context.state.userAccentColor)
     }
@@ -204,7 +222,7 @@ extension RestTimeCountdownAttributes.ContentState {
       set: 1,
       totalSets: 10,
       setForCurrentExercise: 1,
-      setsForCurrentExercise: 4, // Example: Bench Press has 4 sets
+      setsForCurrentExercise: 4,  // Example: Bench Press has 4 sets
       reps: 10,
       weight: 30.0,
       endTime: .now.addingTimeInterval(TimeInterval(60)),

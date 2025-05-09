@@ -223,8 +223,8 @@ class StartedWorkoutViewModel {
             exercise: currentSet.exerciseName,
             set: currentSetIndex + 1,
             totalSets: workoutSets.count,
-            setForCurrentExercise: currentSet.setIndex + 1, // Set number for the current exercise
-            setsForCurrentExercise: currentSet.exercise.orderedSets.count, // Sets for current exercise
+            setForCurrentExercise: currentSet.setIndex + 1,  // Set number for the current exercise
+            setsForCurrentExercise: currentSet.exercise.orderedSets.count,  // Sets for current exercise
             reps: currentSet.set.reps,
             weight: currentSet.set.weight,
             endTime: endTime,
@@ -256,8 +256,8 @@ class StartedWorkoutViewModel {
       exercise: currentSet.exerciseName,
       set: currentSetIndex + 1,
       totalSets: workoutSets.count,
-      setForCurrentExercise: currentSet.setIndex + 1, // Set number for the current exercise
-      setsForCurrentExercise: currentSet.exercise.orderedSets.count, // Sets for current exercise
+      setForCurrentExercise: currentSet.setIndex + 1,  // Set number for the current exercise
+      setsForCurrentExercise: currentSet.exercise.orderedSets.count,  // Sets for current exercise
       reps: currentSet.set.reps,
       weight: currentSet.set.weight,
       endTime: endTime,

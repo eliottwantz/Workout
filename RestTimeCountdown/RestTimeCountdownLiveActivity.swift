@@ -51,6 +51,7 @@ struct RestTimeCountdownLiveActivity: Widget {
                 currentSet: context.state.setForCurrentExercise
               )
             }
+            .padding(.leading)
 
             Spacer()
 
@@ -66,10 +67,12 @@ struct RestTimeCountdownLiveActivity: Widget {
                 VStack(alignment: .trailing) {
                   VStack(alignment: .trailing, spacing: 4) {
                     Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
-                      .font(.headline)
+                      .font(.title2)
+                      .bold()
                       .foregroundStyle(context.state.userAccentColor)
                     Text("\(context.state.reps) reps")
-                      .font(.subheadline)
+                      .font(.title3)
+                      .bold()
                       .foregroundStyle(.secondary)
                   }
                 }
@@ -92,7 +95,7 @@ struct RestTimeCountdownLiveActivity: Widget {
                 .monospacedDigit()
                 .foregroundStyle(context.state.userAccentColor)
                 .multilineTextAlignment(.center)
-              }
+            }
         } else {
           Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
             .font(.subheadline)

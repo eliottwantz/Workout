@@ -16,6 +16,8 @@ struct RestTimeCountdownAttributes: ActivityAttributes {
     var exercise: String
     var set: Int
     var totalSets: Int
+    var setForCurrentExercise: Int
+    var setsForCurrentExercise: Int
     var reps: Int
     var weight: Double
     var endTime: Date
@@ -71,7 +73,7 @@ struct RestTimeCountdownLiveActivity: Widget {
         }
 
       } compactLeading: {
-        Text("\(context.state.set)/\(context.state.totalSets)")
+        Text("\(context.state.setForCurrentExercise)/\(context.state.setsForCurrentExercise)")
           .foregroundStyle(context.state.userAccentColor)
       } compactTrailing: {
         Text("00:00")
@@ -117,8 +119,8 @@ private struct LockeScreenView: View {
 
             CurrentSetIndicators(
               color: state.userAccentColor,
-              totalSets: state.totalSets,
-              currentSet: state.set
+              totalSets: state.setsForCurrentExercise,
+              currentSet: state.setForCurrentExercise
             )
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -156,7 +158,7 @@ struct CurrentSetIndicators: View {
     HStack(spacing: 8) {
       let total = totalSets
       let current = currentSet
-      let maxVisible = 4
+      let maxVisible = 5
       let (start, end): (Int, Int) = {
         if total <= maxVisible {
           return (1, total)
@@ -201,6 +203,8 @@ extension RestTimeCountdownAttributes.ContentState {
       exercise: "Bench Press",
       set: 1,
       totalSets: 10,
+      setForCurrentExercise: 1,
+      setsForCurrentExercise: 4, // Example: Bench Press has 4 sets
       reps: 10,
       weight: 30.0,
       endTime: .now.addingTimeInterval(TimeInterval(60)),

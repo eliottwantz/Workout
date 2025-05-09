@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 extension EnvironmentValues {
   @Entry var keyboardIsShown = false
 }

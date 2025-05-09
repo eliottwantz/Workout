@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 extension EnvironmentValues {
   @Entry var mainWindowSize: CGSize = .zero
   @Entry var mainWindowSafeAreaInsets: EdgeInsets = .init()

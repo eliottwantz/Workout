@@ -93,7 +93,6 @@ extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodab
   }
 }
 
-
 // Extend EnvironmentValues to include userColor
 extension EnvironmentValues {
   @Entry var userAccentColor = Color.pink

@@ -148,13 +148,6 @@ private struct StartedWorkoutBottomSheetView: View {
       .offset(y: cappedDragOffsetY)
       .offset(y: endOffsetY)
       .ignoresSafeArea()
-//      .onTapGesture {
-//        guard isCollapsed else { return }
-//        withAnimation(.spring) {
-//          endOffsetY = -baseOffsetY
-//          dragOffsetY = 0
-//        }
-//      }
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in

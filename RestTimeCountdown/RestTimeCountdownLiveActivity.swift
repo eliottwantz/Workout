@@ -200,65 +200,59 @@ private struct LockeScreenView: View {
 
   var body: some View {
     ZStack {
-      VStack(alignment: .leading, spacing: 8) {
-        HStack(alignment: .center) {
+      HStack(alignment: .center) {
+        if !state.isResting {
+          VStack(alignment: .leading, spacing: 8) {
+            Text(state.exercise)
+              .font(.title)
+              .fontWeight(.bold)
+              .lineLimit(2)
 
-          if !state.isResting {
-            VStack(alignment: .leading, spacing: 8) {
-              Text(state.exercise)
+            CurrentSetIndicators(
+              color: state.userAccentColor,
+              totalSets: state.setsForCurrentExercise,
+              currentSet: state.setForCurrentExercise
+            )
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+          VStack(alignment: .trailing, spacing: 4) {
+            Text(state.weight.formattedWeight(inLbs: state.displayWeightInLbs))
+              .font(.title2)
+              .fontWeight(.bold)
+              .foregroundStyle(state.userAccentColor)
+            Text("\(state.reps) reps")
+              .font(.headline)
+              .foregroundStyle(.primary)
+
+            Spacer()
+
+            Text("\(state.set)/\(state.totalSets) sets")
+              .font(.headline)
+              .foregroundStyle(.secondary)
+          }
+        } else {
+          VStack(spacing: 4) {
+            if let nextExercise = state.nextExercise {
+              Text(nextExercise)
                 .font(.title)
                 .fontWeight(.bold)
                 .lineLimit(2)
+            }
 
-              CurrentSetIndicators(
-                color: state.userAccentColor,
-                totalSets: state.setsForCurrentExercise,
-                currentSet: state.setForCurrentExercise
+            HStack(spacing: 8) {
+              LiveActivityCountdownTimer(
+                timerInterval: state.timerInterval,
+                color: state.userAccentColor
               )
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(alignment: .trailing, spacing: 4) {
-              Text(state.weight.formattedWeight(inLbs: state.displayWeightInLbs))
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundStyle(state.userAccentColor)
-              Text("\(state.reps) reps")
-                .font(.headline)
-                .foregroundStyle(.primary)
-
-              Spacer()
-
-              Text("\(state.set)/\(state.totalSets) sets")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            }
-          } else {
-            Group {
-              HStack(spacing: 12) {
-                LiveActivityCountdownTimer(
-                  timerInterval: state.timerInterval,
-                  color: state.userAccentColor
-                )
-
-                Image(systemName: "arrowshape.forward.fill")
-                  .foregroundStyle(state.userAccentColor)
-                  .font(.title)
-
-              }
 
               Group {
-                if let nextExercise = state.nextExercise, let nextReps = state.nextReps,
+                if let nextReps = state.nextReps,
                   let nextWeight = state.nextWeight, let setForNextExercise = state.setForNextExercise,
                   let setsForNextExercise = state.setsForNextExercise
                 {
 
                   VStack(alignment: .trailing, spacing: 8) {
-                    Text(nextExercise)
-                      .font(.title)
-                      .fontWeight(.bold)
-                      .lineLimit(2)
-
                     HStack(spacing: 8) {
                       Text("\(nextReps) reps")
                         .font(.headline)
@@ -276,13 +270,18 @@ private struct LockeScreenView: View {
                       .font(.subheadline)
                       .foregroundStyle(.secondary)
 
-                    Spacer()
+                    HStack(spacing: 8) {
+                      Image(systemName: "arrowshape.forward.fill")
+                        .foregroundStyle(state.userAccentColor)
+                        .font(.title)
+                      
+                      CurrentSetIndicators(
+                        color: state.userAccentColor,
+                        totalSets: setsForNextExercise,
+                        currentSet: setForNextExercise
+                      )
+                    }
 
-                    CurrentSetIndicators(
-                      color: state.userAccentColor,
-                      totalSets: setsForNextExercise,
-                      currentSet: setForNextExercise
-                    )
                   }
                 } else {
                   Text("Workout Completed! 🏆")
@@ -292,12 +291,14 @@ private struct LockeScreenView: View {
               }
               .frame(maxWidth: .infinity, alignment: .trailing)
             }
+
           }
         }
       }
-      .padding()
-      .background(state.userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    .padding()
+    .background(state.userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
   }
 }
 

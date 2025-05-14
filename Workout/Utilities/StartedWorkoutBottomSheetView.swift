@@ -135,6 +135,23 @@ private struct StartedWorkoutBottomSheetView: View {
           CollapsedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
             .frame(maxHeight: collapsedHeight + abs(cappedDragOffsetY))
+            .gesture(
+              DragGesture()
+                .onEnded { value in
+                  guard !viewModel.isWorkoutComplete else { return }
+                  if value.translation.width > 0 {
+                    // Swipe right
+                    guard viewModel.currentSetIndex > 0 else { return }
+                    print("Swipe right")
+                    viewModel.navigateToPreviousSet()
+                  } else {
+                    // Swipe left
+                    guard viewModel.currentSetIndex < viewModel.workoutSets.count - 1 else { return }
+                    print("Swipe left")
+                    viewModel.navigateToNextSet()
+                  }
+                }
+            )
         } else {
           StartedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
@@ -151,19 +168,9 @@ private struct StartedWorkoutBottomSheetView: View {
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
+            print("Drag changed: \(value.translation.height)")
             withAnimation(.linear(duration: 0.2)) {
-              if isCollapsed {
-                collapsedDragAmount = value.translation.height
-              } else {
-                dragOffsetY = value.translation.height
-              }
-            }
-
-            withAnimation(.spring) {
-              if isCollapsed && abs(collapsedDragAmount) >= 2 {
-                endOffsetY = -baseOffsetY
-                dragOffsetY = 0
-              }
+              dragOffsetY = value.translation.height
             }
           }
           .onEnded { value in

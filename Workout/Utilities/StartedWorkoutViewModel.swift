@@ -13,6 +13,7 @@ extension EnvironmentValues {
 class StartedWorkoutViewModel {
   var workout: Workout? = nil  // Make workout optional
   var liveActivity: Activity<RestTimeCountdownAttributes>?
+  var restTimeStartDate: Date?
 
   // Workout Progress State
   var currentSetIndex = 0
@@ -129,6 +130,7 @@ class StartedWorkoutViewModel {
       moveToNextSet()  // Should not happen if shouldShowRest was true, but safeguard
       return
     }
+    restTimeStartDate = .now
     isResting = true
     currentTimerId = UUID().uuidString  // New ID for this specific timer instance
     scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
@@ -212,8 +214,8 @@ class StartedWorkoutViewModel {
         Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
       let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
       let restTime = currentSet.restTime
-      let endTime = Date().addingTimeInterval(TimeInterval(restTime))
-      let timerInterval = Date.now...endTime
+      let endTime = (restTimeStartDate ?? Date()).addingTimeInterval(TimeInterval(restTime))
+      let timerInterval = (restTimeStartDate ?? Date.now)...endTime
 
       await liveActivity.update(
         .init(

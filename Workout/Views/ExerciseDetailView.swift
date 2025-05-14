@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ExerciseDetailView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var exercise: Exercise
 
   @State private var restTime: Int
@@ -199,6 +200,8 @@ struct ExerciseDetailView: View {
       exercise.addSet(set)
       try? modelContext.save()
     }
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func deleteSets(at offsets: IndexSet) {
@@ -218,6 +221,8 @@ struct ExerciseDetailView: View {
     }
 
     try? modelContext.save()
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func moveSets(from source: IndexSet, to destination: Int) {
@@ -230,20 +235,21 @@ struct ExerciseDetailView: View {
     }
 
     try? modelContext.save()
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 }
 
 private struct EditableSetRowView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var set: SetEntry
 
-  @State private var reps: Int
   @State private var weight: Double
   var displayWeightInLbs: Bool = false
 
   init(set: SetEntry, displayWeightInLbs: Bool) {
     self.set = set
-    self._reps = State(initialValue: set.reps)
     self._weight = State(initialValue: displayWeightInLbs ? set.weight * 2.20462 : set.weight)
     self.displayWeightInLbs = displayWeightInLbs
   }
@@ -262,11 +268,15 @@ private struct EditableSetRowView: View {
 
       // Reps column - editable
       RepsInputField(reps: $set.reps)
+        .onChange(of: set.reps) { oldValue, newValue in
+          startedWorkoutViewModel.updateLiveActivity()
+        }
 
       // Weight column - editable
       WeightInputField(weight: $weight)
         .onChange(of: weight) { _, newValue in
           set.weight = displayWeightInLbs ? newValue / 2.20462 : newValue
+          startedWorkoutViewModel.updateLiveActivity()
         }
     }
     .padding(.vertical, 4)

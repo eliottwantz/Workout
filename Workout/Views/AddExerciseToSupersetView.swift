@@ -10,6 +10,7 @@ import SwiftUI
 
 struct AddExerciseToSupersetView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Environment(\.dismiss) private var dismiss
 
   @Bindable var superset: Superset
@@ -50,6 +51,8 @@ struct AddExerciseToSupersetView: View {
     }
 
     try? modelContext.save()
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func addExerciseToSuperset(definitionID: PersistentIdentifier) {

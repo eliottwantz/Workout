@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SupersetDetailView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var superset: Superset
 
   @State private var editMode = EditMode.inactive
@@ -98,6 +99,8 @@ struct SupersetDetailView: View {
     }
 
     try? modelContext.save()
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func moveExercises(from source: IndexSet, to destination: Int) {
@@ -110,6 +113,8 @@ struct SupersetDetailView: View {
     }
 
     try? modelContext.save()
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
 }

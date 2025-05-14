@@ -150,6 +150,8 @@ struct WorkoutDetailView: View {
 
       try? modelContext.save()
     }
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func deleteItems(offsets: IndexSet) {
@@ -165,6 +167,8 @@ struct WorkoutDetailView: View {
 
       try? modelContext.save()
     }
+    
+    startedWorkoutViewModel.updateLiveActivity()
   }
 
   private func copyWorkoutToToday() {

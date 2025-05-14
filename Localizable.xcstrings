@@ -457,6 +457,16 @@
         }
       }
     },
+    "Clear all" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout effacer"
+          }
+        }
+      }
+    },
     "Color theme" : {
       "localizations" : {
         "fr" : {
@@ -576,6 +586,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modifier l’exercice"
+          }
+        }
+      }
+    },
+    "Edit Notes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les notes"
           }
         }
       }

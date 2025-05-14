@@ -12,10 +12,12 @@ struct ExerciseDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @Bindable var exercise: Exercise
 
-  @State private var isEditingMode = false
   @State private var restTime: Int
   @State private var editMode = EditMode.inactive
   @AppStorage(DisplayWeightInLbsKey) private var displayWeightInLbs: Bool = false
+
+  @State private var isEditingNotes = false
+  @State private var editedNotes: String = ""
 
   init(exercise: Exercise) {
     self.exercise = exercise
@@ -100,10 +102,80 @@ struct ExerciseDetailView: View {
         } label: {
           Label("Add Set", systemImage: "plus")
         }
+        Button {
+          editedNotes = exercise.notes ?? ""
+          isEditingNotes = true
+        } label: {
+          Label("Edit Notes", systemImage: "pencil")
+        }
       }
+    }
+    .sheet(isPresented: $isEditingNotes) {
+      EditExerciseNotesSheet(
+        notes: $editedNotes,
+        onSave: {
+          exercise.notes = editedNotes
+          try? modelContext.save()
+          isEditingNotes = false
+        },
+        onCancel: {
+          isEditingNotes = false
+        }
+      )
     }
     .environment(\.editMode, $editMode)
     .scrollDismissesKeyboard(.immediately)
+
+  }
+
+  private struct EditExerciseNotesSheet: View {
+    @Binding var notes: String
+    var onSave: () -> Void
+    var onCancel: () -> Void
+
+    var body: some View {
+      NavigationStack {
+        VStack(alignment: .leading, spacing: 0) {
+          ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .fill(Color(.secondarySystemBackground))
+              .frame(minHeight: 150)
+            TextEditor(text: $notes)
+              .frame(minHeight: 150)
+              .scrollContentBackground(.hidden)
+              .background(Color(.secondarySystemBackground))
+              .padding(8)
+              .cornerRadius(12)
+              .padding(.horizontal, 2)
+          }
+          .padding()
+        }
+        .navigationTitle("Edit Notes")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", role: .cancel) {
+              onCancel()
+            }
+          }
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Save") {
+              onSave()
+            }
+          }
+        }
+
+        // Full-width destructive button at the bottom
+        Button(role: .destructive) {
+          notes = ""
+        } label: {
+          Text("Clear all")
+            .frame(maxWidth: .infinity)
+        }
+        .padding([.horizontal, .bottom])
+        .disabled(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      }
+    }
   }
 
   private func formatRestTime(_ seconds: Int) -> String {

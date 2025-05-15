@@ -82,6 +82,11 @@ private struct StartedWorkoutBottomSheetView: View {
     colorScheme == .dark
   }
 
+  private var totalOffsetY: CGFloat {
+    // chain base + drag + end into one single animatable offset
+    baseOffsetY + cappedDragOffsetY + endOffsetY
+  }
+
   init(workout: Workout, collapsedHeight: CGFloat) {
     self.workout = workout
     self.collapsedHeight = collapsedHeight
@@ -93,9 +98,10 @@ private struct StartedWorkoutBottomSheetView: View {
 
       Color(.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 30))
-        .offset(y: baseOffsetY)
-        .offset(y: cappedDragOffsetY)
-        .offset(y: endOffsetY)
+        // .offset(y: baseOffsetY)
+        // .offset(y: cappedDragOffsetY)
+        // .offset(y: endOffsetY)
+        .offset(y: totalOffsetY)
         .ignoresSafeArea()
 
       VStack(spacing: 0) {
@@ -153,7 +159,7 @@ private struct StartedWorkoutBottomSheetView: View {
                 }
             )
         } else {
-          StartedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
+          StartedWorkoutView(workout: workout, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
         }
       }
@@ -161,17 +167,18 @@ private struct StartedWorkoutBottomSheetView: View {
       .background(userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
       .clipShape(RoundedRectangle(cornerRadius: 30))
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .offset(y: baseOffsetY)
-      .offset(y: cappedDragOffsetY)
-      .offset(y: endOffsetY)
+      // .offset(y: baseOffsetY)
+      // .offset(y: cappedDragOffsetY)
+      // .offset(y: endOffsetY)
+      .offset(y: totalOffsetY)
       .ignoresSafeArea()
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
             print("Drag changed: \(value.translation.height)")
-            withAnimation(.linear(duration: 0.2)) {
+            // withAnimation(.linear(duration: 0.2)) {
               dragOffsetY = value.translation.height
-            }
+            // }
           }
           .onEnded { value in
             let predictedY = value.predictedEndTranslation.height

@@ -29,9 +29,19 @@ class StartedWorkoutViewModel {
     return workoutSets[currentSetIndex]
   }
 
+  var previousWorkoutSet: WorkoutSet? {
+    guard workout != nil, !workoutSets.isEmpty, currentSetIndex > 0 else { return nil }
+    return workoutSets[currentSetIndex - 1]
+  }
+  
   var nextWorkoutSet: WorkoutSet? {
     guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else { return nil }
     return workoutSets[currentSetIndex + 1]
+  }
+
+  var nextOfNextWorkoutSet: WorkoutSet? {
+    guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 2 < workoutSets.count else { return nil }
+    return workoutSets[currentSetIndex + 2]
   }
 
   // --- Lifecycle Methods ---

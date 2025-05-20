@@ -78,8 +78,7 @@ struct StartedWorkoutView: View {
                 .offset(x: width + dragOffset)
               }
               // dragging right => show PREVIOUS
-              else if dragOffset > 0, startedWorkoutViewModel.currentSetIndex > 0 {
-                let prev = startedWorkoutViewModel.workoutSets[startedWorkoutViewModel.currentSetIndex - 1]
+              else if dragOffset > 0, let prev = startedWorkoutViewModel.previousWorkoutSet {
                 SetCardView(
                   currentSet: prev,
                   nextSet: currentSet,
@@ -136,10 +135,12 @@ struct StartedWorkoutView: View {
                 }
                 // Otherwise cancel
                 else {
-                  withAnimation(.spring()) {
+                  withAnimation(.spring(duration: 0.3)) {
                     dragOffset = 0
                   }
-                  isDragging = false
+                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isDragging = false
+                  }
                 }
               }
           )
@@ -354,9 +355,9 @@ struct SetCardView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     // .background(Color(UIColor.secondarySystemBackground))
-//    .background(Color.red.opacity(0.8))
+    //    .background(Color.red.opacity(0.8))
     .cornerRadius(15)
-//    .padding(.horizontal)
+    //    .padding(.horizontal)
   }
 }
 

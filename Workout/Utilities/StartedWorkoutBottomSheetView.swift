@@ -98,9 +98,6 @@ private struct StartedWorkoutBottomSheetView: View {
 
       Color(.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 30))
-        // .offset(y: baseOffsetY)
-        // .offset(y: cappedDragOffsetY)
-        // .offset(y: endOffsetY)
         .offset(y: totalOffsetY)
         .ignoresSafeArea()
 
@@ -134,43 +131,23 @@ private struct StartedWorkoutBottomSheetView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, isCollapsed ? 6 : safeAreaInsets.top)
-        .padding(.bottom, isCollapsed ? 2 : 10)
+        .padding(.bottom, isCollapsed ? 16 : 0)
 
         // MARK: - Workout View
+        Group {
         if isCollapsed {
-          CollapsedWorkoutView(workout: workout, ns: ns, stopAction: finishWorkout)
+          CollapsedWorkoutView(workout: workout, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
             .frame(maxHeight: collapsedHeight + abs(cappedDragOffsetY))
-            .gesture(
-              DragGesture()
-                .onEnded { value in
-                  guard !viewModel.isWorkoutComplete else { return }
-                  guard value.translation.width > 200 else { return }
-                  if value.translation.width > 0 {
-                    // Swipe right
-                    guard viewModel.currentSetIndex > 0 else { return }
-                    print("Swipe right")
-                    viewModel.navigateToPreviousSet()
-                  } else {
-                    // Swipe left
-                    guard viewModel.currentSetIndex < viewModel.workoutSets.count - 1 else { return }
-                    print("Swipe left")
-                    viewModel.navigateToNextSet()
-                  }
-                }
-            )
         } else {
           StartedWorkoutView(workout: workout, stopAction: finishWorkout)
             .padding(.bottom, safeAreaInsets.bottom)
         }
+        }
       }
-      .frame(maxWidth: .infinity)
-      .background(userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
-      .clipShape(RoundedRectangle(cornerRadius: 30))
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      // .offset(y: baseOffsetY)
-      // .offset(y: cappedDragOffsetY)
-      // .offset(y: endOffsetY)
+      .background(userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
+      .clipShape(RoundedRectangle(cornerRadius: 20))
       .offset(y: totalOffsetY)
       .ignoresSafeArea()
       .gesture(
@@ -178,7 +155,7 @@ private struct StartedWorkoutBottomSheetView: View {
           .onChanged { value in
             print("Drag changed: \(value.translation.height)")
             // withAnimation(.linear(duration: 0.2)) {
-              dragOffsetY = value.translation.height
+            dragOffsetY = value.translation.height
             // }
           }
           .onEnded { value in
@@ -242,63 +219,130 @@ private struct CollapsedWorkoutView: View {
   @Environment(\.userAccentColor) private var userAccentColor
 
   var workout: Workout
-  let ns: Namespace.ID
   let stopAction: () -> Void
 
+  @State private var dragOffset: CGFloat = 0
+  @State private var isDragging = false
+
   var body: some View {
-    HStack(spacing: 16) {
-      if viewModel.isWorkoutComplete {
-        CollapsedCompletionView(
-          stopAction: stopAction
-        )
-      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
-        // Left side: Show next set info if resting, otherwise current set info
-        if viewModel.isResting, let nextSet = viewModel.nextWorkoutSet, let nextDefinition = nextSet.exerciseDefinition
-        {
-          // When resting, show the next set information on the left
-          CollapsedExerciseInfoView(
-            exerciseDefinition: nextDefinition,
-            set: nextSet.set,
-            setIndex: nextSet.setIndex,
-            totalSets: nextSet.exercise.orderedSets.count,
-            isSuperset: nextSet.isSuperset,
-            isPrefixedWithNext: true,
-            ns: ns
-          )
-        } else {
-          // When not resting, show current set info
-          CollapsedExerciseInfoView(
-            exerciseDefinition: exerciseDefinition,
-            set: currentSet.set,
-            setIndex: currentSet.setIndex,
-            totalSets: currentSet.exercise.orderedSets.count,
-            isSuperset: currentSet.isSuperset,
-            ns: ns
-          )
-        }
+    GeometryReader { geo in
+      ZStack {
+        if viewModel.isWorkoutComplete {
+          CollapsedCompletionView(stopAction: stopAction)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+          // Current card
+          HStack(spacing: 16) {
+            CollapsedExerciseInfoView(
+              exerciseDefinition: exerciseDefinition,
+              set: currentSet.set,
+              setIndex: currentSet.setIndex,
+              totalSets: currentSet.exercise.orderedSets.count,
+              isSuperset: currentSet.isSuperset,
+            )
+            Spacer()
+            if viewModel.isResting {
+              CollapsedTimerView(
+                time: currentSet.restTime,
+                timerId: viewModel.currentTimerId,
+                onComplete: viewModel.timerDidComplete,
+                isActive: !isDragging
+              )
+            } else {
+              CollapsedActionButtonView(
+                title: "Done Set",
+                action: viewModel.handleDoneSet
+              )
+            }
+          }
+          .padding(.horizontal, 4)
+          .offset(x: dragOffset)
 
-        Spacer()
+          // Next card (dragging left)
+          if isDragging, dragOffset < 0, let next = viewModel.nextWorkoutSet, let nextDef = next.exerciseDefinition {
+            HStack(spacing: 16) {
+              CollapsedExerciseInfoView(
+                exerciseDefinition: nextDef,
+                set: next.set,
+                setIndex: next.setIndex,
+                totalSets: next.exercise.orderedSets.count,
+                isSuperset: next.isSuperset,
+              )
+              Spacer()
+              CollapsedActionButtonView(
+                title: "Done Set",
+                action: viewModel.handleDoneSet
+              )
+            }
+            .padding(.horizontal, 4)
+            .offset(x: geo.size.width + dragOffset)
+          }
 
-        // Right side: Action button or rest timer
-        if viewModel.isResting {
-          // Show compact timer when resting
-          CollapsedTimerView(
-            time: currentSet.restTime,
-            timerId: viewModel.currentTimerId,
-            onComplete: viewModel.timerDidComplete
-          )
-          .matchedGeometryEffect(id: "timer", in: ns)
-        } else {
-          // Show Done Set button when not resting
-          CollapsedActionButtonView(
-            title: "Done Set",
-            action: viewModel.handleDoneSet
-          )
-          .matchedGeometryEffect(id: "done_set", in: ns)
+          // Previous card (dragging right)
+          if isDragging, dragOffset > 0, let prev = viewModel.previousWorkoutSet, let prevDef = prev.exerciseDefinition
+          {
+            HStack(spacing: 16) {
+              CollapsedExerciseInfoView(
+                exerciseDefinition: prevDef,
+                set: prev.set,
+                setIndex: prev.setIndex,
+                totalSets: prev.exercise.orderedSets.count,
+                isSuperset: prev.isSuperset,
+              )
+              Spacer()
+              CollapsedActionButtonView(
+                title: "Done Set",
+                action: viewModel.handleDoneSet
+              )
+            }
+            .padding(.horizontal, 4)
+            .offset(x: -geo.size.width + dragOffset)
+          }
         }
       }
+      .background(Color.clear)
+      .contentShape(Rectangle())
+      .highPriorityGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            guard !viewModel.isWorkoutComplete else { return }
+            isDragging = true
+            let toRight = value.translation.width > 0
+            if toRight && viewModel.currentSetIndex == 0 { return }
+            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
+            dragOffset = value.translation.width
+          }
+          .onEnded { value in
+            let toRight = value.translation.width > 0
+            if toRight && viewModel.currentSetIndex == 0 { return }
+            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
+
+            let width = geo.size.width
+            let threshold = width * 0.2
+            if abs(value.translation.width) > threshold || abs(value.predictedEndTranslation.width) > threshold {
+              withAnimation(.spring(duration: 0.3)) {
+                dragOffset = toRight ? width : -width
+              }
+              DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                if toRight {
+                  viewModel.navigateToPreviousSet()
+                } else {
+                  viewModel.navigateToNextSet()
+                }
+                dragOffset = 0
+                isDragging = false
+              }
+            } else {
+              withAnimation(.spring(duration: 0.3)) {
+                dragOffset = 0
+              }
+              DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isDragging = false
+              }
+            }
+          }
+      )
     }
-    .padding(.horizontal, 4)
   }
 }
 
@@ -313,7 +357,6 @@ private struct CollapsedExerciseInfoView: View {
   let totalSets: Int
   let isSuperset: Bool
   let isPrefixedWithNext: Bool
-  let ns: Namespace.ID
 
   init(
     exerciseDefinition: ExerciseDefinition,
@@ -322,7 +365,6 @@ private struct CollapsedExerciseInfoView: View {
     totalSets: Int,
     isSuperset: Bool,
     isPrefixedWithNext: Bool = false,
-    ns: Namespace.ID
   ) {
     self.exerciseDefinition = exerciseDefinition
     self.set = set
@@ -330,7 +372,6 @@ private struct CollapsedExerciseInfoView: View {
     self.totalSets = totalSets
     self.isSuperset = isSuperset
     self.isPrefixedWithNext = isPrefixedWithNext
-    self.ns = ns
   }
 
   var body: some View {
@@ -358,7 +399,6 @@ private struct CollapsedExerciseInfoView: View {
             .fontWeight(.bold)
             .lineLimit(1)
             .multilineTextAlignment(.center)
-            .matchedGeometryEffect(id: "exercise", in: ns)
         }
       }
 
@@ -368,7 +408,6 @@ private struct CollapsedExerciseInfoView: View {
         reps: set.reps,
         weight: set.weight,
         displayWeightInLbs: displayWeightInLbs,
-        ns: ns
       )
     }
     .padding(.leading, 16)
@@ -382,7 +421,6 @@ private struct CollapsedSetDetailsView: View {
   let reps: Int
   let weight: Double
   let displayWeightInLbs: Bool
-  let ns: Namespace.ID
 
   var body: some View {
     HStack(spacing: 8) {
@@ -414,13 +452,15 @@ private struct CollapsedTimerView: View {
   let time: Int
   let timerId: String
   let onComplete: () -> Void
+  let isActive: Bool
 
   var body: some View {
     CountdownTimer(
       time: time,
       id: timerId,
       onComplete: onComplete,
-      compact: true
+      compact: true,
+      isActive: isActive
     )
     .padding(.trailing, 16)
   }

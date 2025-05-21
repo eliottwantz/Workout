@@ -145,6 +145,7 @@ private struct StartedWorkoutBottomSheetView: View {
               DragGesture()
                 .onEnded { value in
                   guard !viewModel.isWorkoutComplete else { return }
+                  guard value.translation.width > 200 else { return }
                   if value.translation.width > 0 {
                     // Swipe right
                     guard viewModel.currentSetIndex > 0 else { return }

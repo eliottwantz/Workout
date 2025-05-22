@@ -28,29 +28,35 @@ struct StartedWorkoutView: View {
       VStack {
         // MARK: - Workout completed view
         if startedWorkoutViewModel.isWorkoutComplete {
-          Text("Workout Completed!")
-            .font(.largeTitle)
-            .fontWeight(.bold)
-          Spacer()
-          Text("🏆🏆🏆")
-            .font(.largeTitle)
-            .fontWeight(.bold)
-          Spacer()
-          Button {
-            stopAction()
-          } label: {
-            Text("Finish")
-              .font(.headline)
-              .frame(width: 200, height: 60)
-              .background(userAccentColor)
-              .foregroundStyle(userAccentColor.contrastColor)
-              .cornerRadius(15)
+          VStack {
+            Text("Workout Completed!")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .multilineTextAlignment(.center)
+            Spacer()
+            Text("🏆🏆🏆")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .multilineTextAlignment(.center)
+            Button {
+              stopAction()
+            } label: {
+              Text("Finish")
+                .font(.headline)
+                .frame(width: 200, height: 60)
+                .background(userAccentColor)
+                .foregroundStyle(userAccentColor.contrastColor)
+                .cornerRadius(15)
+            }
+            Spacer()
           }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let currentSet = startedWorkoutViewModel.currentWorkoutSet {
           ZStack {
             // ➋ Current card
             SetCardView(
               currentSet: currentSet,
+              currentSetIndex: startedWorkoutViewModel.currentSetIndex,
               nextSet: startedWorkoutViewModel.nextWorkoutSet,
               isResting: startedWorkoutViewModel.isResting,
               displayWeightInLbs: displayWeightInLbs,
@@ -68,6 +74,7 @@ struct StartedWorkoutView: View {
               if dragOffset < 0, let next = startedWorkoutViewModel.nextWorkoutSet {
                 SetCardView(
                   currentSet: next,
+                  currentSetIndex: startedWorkoutViewModel.currentSetIndex,
                   nextSet: startedWorkoutViewModel.nextOfNextWorkoutSet,
                   isResting: false,
                   displayWeightInLbs: displayWeightInLbs,
@@ -81,6 +88,7 @@ struct StartedWorkoutView: View {
               else if dragOffset > 0, let prev = startedWorkoutViewModel.previousWorkoutSet {
                 SetCardView(
                   currentSet: prev,
+                  currentSetIndex: startedWorkoutViewModel.currentSetIndex,
                   nextSet: currentSet,
                   isResting: false,
                   displayWeightInLbs: displayWeightInLbs,
@@ -156,6 +164,7 @@ struct StartedWorkoutView: View {
 struct SetCardView: View {
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   let currentSet: WorkoutSet
+  let currentSetIndex: Int
   let nextSet: WorkoutSet?
   let isResting: Bool
   let displayWeightInLbs: Bool
@@ -179,7 +188,7 @@ struct SetCardView: View {
 
         Spacer()
 
-        Text("\(currentSet.setIndex + 1) of \(startedWorkoutViewModel.workoutSets.count) sets")
+        Text("\(currentSetIndex + 1) of \(startedWorkoutViewModel.workoutSets.count) sets")
           .font(.subheadline)
           .foregroundColor(.secondary)
 

@@ -18,141 +18,57 @@ struct StartedWorkoutView: View {
   @Bindable var workout: Workout
   @State private var showingWorkoutEditor = false
 
-  @State private var dragOffset: CGFloat = 0
-  @State private var isDragging = false
-
   let stopAction: () -> Void
 
   var body: some View {
-    GeometryReader { geo in
-      VStack {
-        // MARK: - Workout completed view
-        if startedWorkoutViewModel.isWorkoutComplete {
-          VStack {
-            Text("Workout Completed!")
-              .font(.largeTitle)
-              .fontWeight(.bold)
-              .multilineTextAlignment(.center)
-            Spacer()
-            Text("🏆🏆🏆")
-              .font(.largeTitle)
-              .fontWeight(.bold)
-              .multilineTextAlignment(.center)
-            Button {
-              stopAction()
-            } label: {
-              Text("Finish")
-                .font(.headline)
-                .frame(width: 200, height: 60)
-                .background(userAccentColor)
-                .foregroundStyle(userAccentColor.contrastColor)
-                .cornerRadius(15)
-            }
-            Spacer()
+    @Bindable var startedWorkoutViewModel = startedWorkoutViewModel
+    VStack {
+      // MARK: - Workout completed view
+      if startedWorkoutViewModel.isWorkoutComplete {
+        VStack {
+          Text("Workout Completed!")
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .multilineTextAlignment(.center)
+          Spacer()
+          Text("🏆🏆🏆")
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .multilineTextAlignment(.center)
+          Button {
+            stopAction()
+          } label: {
+            Text("Finish")
+              .font(.headline)
+              .frame(width: 200, height: 60)
+              .background(userAccentColor)
+              .foregroundStyle(userAccentColor.contrastColor)
+              .cornerRadius(15)
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let currentSet = startedWorkoutViewModel.currentWorkoutSet {
-          ZStack {
-            // ➋ Current card
-            SetCardView(
-              currentSet: currentSet,
-              currentSetIndex: startedWorkoutViewModel.currentSetIndex,
-              nextSet: startedWorkoutViewModel.nextWorkoutSet,
-              isResting: startedWorkoutViewModel.isResting,
-              displayWeightInLbs: displayWeightInLbs,
-              userAccentColor: userAccentColor,
-            ) {
-              startedWorkoutViewModel.handleDoneSet()
-            }
-            .offset(x: dragOffset)
-
-            // ➌ Next or Previous card while dragging
-            if isDragging {
-
-              let width = geo.size.width
-              // dragging left => show NEXT
-              if dragOffset < 0, let next = startedWorkoutViewModel.nextWorkoutSet {
-                SetCardView(
-                  currentSet: next,
-                  currentSetIndex: startedWorkoutViewModel.currentSetIndex,
-                  nextSet: startedWorkoutViewModel.nextOfNextWorkoutSet,
-                  isResting: false,
-                  displayWeightInLbs: displayWeightInLbs,
-                  userAccentColor: userAccentColor,
-                ) {
-                  startedWorkoutViewModel.navigateToNextSet()
-                }
-                .offset(x: width + dragOffset)
-              }
-              // dragging right => show PREVIOUS
-              else if dragOffset > 0, let prev = startedWorkoutViewModel.previousWorkoutSet {
-                SetCardView(
-                  currentSet: prev,
-                  currentSetIndex: startedWorkoutViewModel.currentSetIndex,
-                  nextSet: currentSet,
-                  isResting: false,
-                  displayWeightInLbs: displayWeightInLbs,
-                  userAccentColor: userAccentColor,
-                ) {
-                  startedWorkoutViewModel.navigateToPreviousSet()
-                }
-                .offset(x: -width + dragOffset)
-              }
-
-            }
-          }
-          .contentShape(Rectangle())
-          .gesture(
-            DragGesture()
-              .onChanged { value in
-                guard !startedWorkoutViewModel.isWorkoutComplete else { return }
-                let toRight = value.translation.width > 0
-                if toRight && startedWorkoutViewModel.currentSetIndex == 0 { return }
-                if !toRight && startedWorkoutViewModel.currentSetIndex == startedWorkoutViewModel.workoutSets.count - 1
-                {
-                  return
-                }
-                dragOffset = value.translation.width
-                isDragging = true
-              }
-              .onEnded { value in
-                let toRight = value.translation.width > 0
-                if toRight && startedWorkoutViewModel.currentSetIndex == 0 { return }
-                if !toRight && startedWorkoutViewModel.currentSetIndex == startedWorkoutViewModel.workoutSets.count - 1
-                {
-                  return
-                }
-
-                let width = geo.size.width
-                let threshold = width * 0.5
-                // If passed half-screen, complete transition
-                if abs(value.translation.width) > threshold || abs(value.predictedEndTranslation.width) > threshold {
-                  withAnimation(.spring(duration: 0.3)) {
-                    dragOffset = toRight ? width : -width
-                  }
-                  // After the animation, update the model and reset
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    if toRight {
-                      startedWorkoutViewModel.navigateToPreviousSet()
-                    } else {
-                      startedWorkoutViewModel.navigateToNextSet()
-                    }
-                    dragOffset = 0
-                    isDragging = false
-                  }
-                }
-                // Otherwise cancel
-                else {
-                  withAnimation(.spring(duration: 0.3)) {
-                    dragOffset = 0
-                  }
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    isDragging = false
-                  }
-                }
-              }
-          )
+          Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        // Carousel TabView for workout sets
+        TabView(selection: $startedWorkoutViewModel.currentSetIndex) {
+          ForEach(Array(startedWorkoutViewModel.workoutSets.enumerated()), id: \.element.id) { (idx, set) in
+            SetCardView(
+              currentSet: set,
+              currentSetIndex: idx,
+              nextSet: idx < startedWorkoutViewModel.workoutSets.count - 1
+                ? startedWorkoutViewModel.workoutSets[idx + 1] : nil,
+              isResting: startedWorkoutViewModel.isResting && idx == startedWorkoutViewModel.currentSetIndex,
+              displayWeightInLbs: displayWeightInLbs,
+              userAccentColor: userAccentColor
+            )
+            .padding(.vertical, 10)
+            .padding(.horizontal, 8)
+            .tag(idx) // Ensure tag is correctly set for selection binding
+          }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .animation(.easeInOut, value: startedWorkoutViewModel.currentSetIndex) // Add animation for smooth transitions
       }
     }
     .onAppear {
@@ -169,7 +85,6 @@ struct SetCardView: View {
   let isResting: Bool
   let displayWeightInLbs: Bool
   let userAccentColor: Color
-  let onDone: () -> Void
 
   var body: some View {
     VStack {
@@ -177,7 +92,9 @@ struct SetCardView: View {
       // Set navigation controls
       HStack {
         Button {
-          startedWorkoutViewModel.navigateToPreviousSet()
+          withAnimation(.easeInOut(duration: 0.3)) {
+            startedWorkoutViewModel.navigateToPreviousSet()
+          }
         } label: {
           Image(systemName: "chevron.left")
             .font(.title2)
@@ -195,7 +112,9 @@ struct SetCardView: View {
         Spacer()
 
         Button {
-          startedWorkoutViewModel.navigateToNextSet()
+          withAnimation(.easeInOut(duration: 0.3)) {
+            startedWorkoutViewModel.navigateToNextSet()
+          }
         } label: {
           Image(systemName: "chevron.right")
             .font(.title2)
@@ -363,10 +282,7 @@ struct SetCardView: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    // .background(Color(UIColor.secondarySystemBackground))
-    //    .background(Color.red.opacity(0.8))
     .cornerRadius(15)
-    //    .padding(.horizontal)
   }
 }
 

@@ -132,6 +132,32 @@ private struct StartedWorkoutBottomSheetView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, isCollapsed ? 6 : safeAreaInsets.top)
         .padding(.bottom, isCollapsed ? 16 : 0)
+        // Add gesture modifier to only the header
+        .gesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { value in
+              // Only allow drag if not in the bottom safe area
+              if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
+                dragOffsetY = value.translation.height
+              }
+            }
+            .onEnded { value in
+              if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
+                let predictedY = value.predictedEndTranslation.height
+
+                withAnimation(.spring) {
+                  if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
+                    endOffsetY = -baseOffsetY
+                  } else if !isCollapsed
+                    && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
+                  {
+                    endOffsetY = 0
+                  }
+                  dragOffsetY = 0
+                }
+              }
+            }
+        )
 
         // MARK: - Workout View
         Group {
@@ -150,43 +176,6 @@ private struct StartedWorkoutBottomSheetView: View {
       .clipShape(RoundedRectangle(cornerRadius: 20))
       .offset(y: totalOffsetY)
       .ignoresSafeArea()
-      // Prevent drag gesture in the bottom safe area (home indicator area)
-      .overlay(
-        Rectangle()
-          .frame(height: safeAreaInsets.bottom)
-          .foregroundColor(.clear)
-          .allowsHitTesting(false)
-          .frame(maxHeight: .infinity, alignment: .bottom)
-      )
-      .contentShape(
-        Rectangle()
-          .inset(by: safeAreaInsets.bottom)
-      )
-      .gesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { value in
-            // Only allow drag if not in the bottom safe area
-            if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
-              dragOffsetY = value.translation.height
-            }
-          }
-          .onEnded { value in
-            if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
-              let predictedY = value.predictedEndTranslation.height
-
-              withAnimation(.spring) {
-                if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
-                  endOffsetY = -baseOffsetY
-                } else if !isCollapsed
-                  && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
-                {
-                  endOffsetY = 0
-                }
-                dragOffsetY = 0
-              }
-            }
-          }
-      )
     }
     .onAppear {
       print("windowSize \(windowSize)")
@@ -237,6 +226,7 @@ private struct CollapsedWorkoutView: View {
 
   @State private var dragOffset: CGFloat = 0
   @State private var isDragging = false
+  @State private var dragDirection: CGFloat = 0 // Store direction of swipe
 
   var body: some View {
     GeometryReader { geo in
@@ -317,23 +307,49 @@ private struct CollapsedWorkoutView: View {
       .background(Color.clear)
       .contentShape(Rectangle())
       .highPriorityGesture(
-        DragGesture(minimumDistance: 0)
+        DragGesture(minimumDistance: 20) // Increase minimum distance to prevent accidental triggers
           .onChanged { value in
             guard !viewModel.isWorkoutComplete else { return }
             isDragging = true
             let toRight = value.translation.width > 0
-            if toRight && viewModel.currentSetIndex == 0 { return }
-            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
-            dragOffset = value.translation.width
+            
+            // Set drag direction when drag starts
+            if dragDirection == 0 {
+              dragDirection = toRight ? 1 : -1
+            }
+            
+            // Only allow dragging in the initially detected direction to prevent erratic behavior
+            if (dragDirection > 0 && toRight) || (dragDirection < 0 && !toRight) {
+              if toRight && viewModel.currentSetIndex == 0 { return }
+              if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
+              dragOffset = value.translation.width
+            }
           }
           .onEnded { value in
-            let toRight = value.translation.width > 0
-            if toRight && viewModel.currentSetIndex == 0 { return }
-            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
+            let toRight = dragDirection > 0 // Use stored direction for consistency
+            
+            // Reset drag direction
+            dragDirection = 0
+            
+            if toRight && viewModel.currentSetIndex == 0 { 
+              withAnimation(.spring(duration: 0.3)) {
+                dragOffset = 0
+              }
+              isDragging = false
+              return 
+            }
+            
+            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { 
+              withAnimation(.spring(duration: 0.3)) {
+                dragOffset = 0
+              }
+              isDragging = false
+              return 
+            }
 
             let width = geo.size.width
             let threshold = width * 0.2
-            if abs(value.translation.width) > threshold || abs(value.predictedEndTranslation.width) > threshold {
+            if abs(dragOffset) > threshold {
               withAnimation(.spring(duration: 0.3)) {
                 dragOffset = toRight ? width : -width
               }

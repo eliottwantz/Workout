@@ -314,6 +314,10 @@ class StartedWorkoutViewModel {
         removeAllPendingNotifications()  // Cancel rest timer
       }
       currentSetIndex -= 1
+      
+      // Ensure currentSetIndex is properly clamped
+      currentSetIndex = max(0, min(currentSetIndex, workoutSets.count - 1))
+      
       updateLiveActivity()  // Update live activity when going back to a previous set
     }
   }

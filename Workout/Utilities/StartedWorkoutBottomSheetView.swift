@@ -150,26 +150,40 @@ private struct StartedWorkoutBottomSheetView: View {
       .clipShape(RoundedRectangle(cornerRadius: 20))
       .offset(y: totalOffsetY)
       .ignoresSafeArea()
+      // Prevent drag gesture in the bottom safe area (home indicator area)
+      .overlay(
+        Rectangle()
+          .frame(height: safeAreaInsets.bottom)
+          .foregroundColor(.clear)
+          .allowsHitTesting(false)
+          .frame(maxHeight: .infinity, alignment: .bottom)
+      )
+      .contentShape(
+        Rectangle()
+          .inset(by: safeAreaInsets.bottom)
+      )
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
-            print("Drag changed: \(value.translation.height)")
-            // withAnimation(.linear(duration: 0.2)) {
-            dragOffsetY = value.translation.height
-            // }
+            // Only allow drag if not in the bottom safe area
+            if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
+              dragOffsetY = value.translation.height
+            }
           }
           .onEnded { value in
-            let predictedY = value.predictedEndTranslation.height
+            if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
+              let predictedY = value.predictedEndTranslation.height
 
-            withAnimation(.spring) {
-              if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
-                endOffsetY = -baseOffsetY
-              } else if !isCollapsed
-                && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
-              {
-                endOffsetY = 0
+              withAnimation(.spring) {
+                if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
+                  endOffsetY = -baseOffsetY
+                } else if !isCollapsed
+                  && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
+                {
+                  endOffsetY = 0
+                }
+                dragOffsetY = 0
               }
-              dragOffsetY = 0
             }
           }
       )

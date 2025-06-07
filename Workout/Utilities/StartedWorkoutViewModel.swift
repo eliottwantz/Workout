@@ -11,6 +11,8 @@ extension EnvironmentValues {
 
 @Observable
 class StartedWorkoutViewModel {
+  var isCollapsed: Bool = false
+  var isPresented: Bool = false
   var workout: Workout? = nil  // Make workout optional
   var liveActivity: Activity<RestTimeCountdownAttributes>?
   var restTimeStartDate: Date?
@@ -33,7 +35,7 @@ class StartedWorkoutViewModel {
     guard workout != nil, !workoutSets.isEmpty, currentSetIndex > 0 else { return nil }
     return workoutSets[currentSetIndex - 1]
   }
-  
+
   var nextWorkoutSet: WorkoutSet? {
     guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else { return nil }
     return workoutSets[currentSetIndex + 1]
@@ -56,6 +58,7 @@ class StartedWorkoutViewModel {
       self.currentTimerId = UUID().uuidString  // Reset timer ID
       requestNotificationPermissions()  // Ensure permissions are requested
       startLiveActivity()  // Start live activity when workout begins
+      expand()
     }
   }
 
@@ -66,8 +69,20 @@ class StartedWorkoutViewModel {
     removeTimerIdFromUserDefaults()
     self.workout = nil
     liveActivity = nil
+    isPresented = false
+    isCollapsed = false
   }
 
+  func expand() {
+    isCollapsed = false
+    isPresented = true
+  }
+
+  func collapse() {
+    isCollapsed = true
+    isPresented = false
+  }
+  
   // --- Workout Progression Methods ---
 
   func buildWorkoutSetsList() -> [WorkoutSet] {
@@ -314,10 +329,10 @@ class StartedWorkoutViewModel {
         removeAllPendingNotifications()  // Cancel rest timer
       }
       currentSetIndex -= 1
-      
+
       // Ensure currentSetIndex is properly clamped
       currentSetIndex = max(0, min(currentSetIndex, workoutSets.count - 1))
-      
+
       updateLiveActivity()  // Update live activity when going back to a previous set
     }
   }

@@ -98,7 +98,6 @@ class CountdownTimerModel {
   }
 }
 
-
 struct CountdownTimer: View {
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.userAccentColor) private var userAccentColor
@@ -108,14 +107,15 @@ struct CountdownTimer: View {
   // Optional completion handler
   var onComplete: (() -> Void)?
   var compact: Bool = false
-  var isActive: Bool = true
 
-  init(time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil, compact: Bool = false, isActive: Bool = true) {
+  init(
+    time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil, compact: Bool = false,
+    isActive: Bool = true
+  ) {
     self.time = time
     self._timerModel = State(initialValue: CountdownTimerModel(seconds: time, id: id, onComplete: onComplete))
     self.onComplete = onComplete
     self.compact = compact
-    self.isActive = isActive
   }
 
   var body: some View {
@@ -155,16 +155,7 @@ struct CountdownTimer: View {
         }
       }
       .onAppear {
-        if isActive {
-          timerModel.start()
-        }
-      }
-      .onChange(of: isActive) { _, newValue in
-        if newValue {
-          timerModel.start()
-        } else {
-          timerModel.stop()
-        }
+        timerModel.start()
       }
       .sensoryFeedback(
         trigger: timerModel.secondsRemaining
@@ -213,16 +204,7 @@ struct CountdownTimer: View {
         }
       }
       .onAppear {
-        if isActive {
-          timerModel.start()
-        }
-      }
-      .onChange(of: isActive) { _, newValue in
-        if newValue {
-          timerModel.start()
-        } else {
-          timerModel.stop()
-        }
+        timerModel.start()
       }
       .sensoryFeedback(
         trigger: timerModel.secondsRemaining

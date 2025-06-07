@@ -13,10 +13,6 @@ extension View {
   func startedWorkoutBottomSheet() -> some View {
     modifier(StartedWorkoutBottomSheetViewModifier())
   }
-
-  func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-    clipShape(RoundedRectangle(cornerRadius: radius))
-  }
 }
 
 private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
@@ -25,196 +21,101 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
   @Environment(\.colorScheme) private var colorScheme
 
+  @State private var dragOffset: CGFloat = 0
+  @State private var isDragging: Bool = false
+  @State private var dragStartLocation: CGPoint = .zero
+  @State private var isVerticalDrag: Bool? = nil
+
   private let collapsedHeight: CGFloat = 120
+  private let screenHeight: CGFloat = UIApplication.height
+  private let dragThreshold: CGFloat = 10
 
   func body(content: Content) -> some View {
+    @Bindable var viewModel = viewModel
     ZStack {
-      Rectangle()
-        .fill(colorScheme == .dark ? Color(UIColor.systemBackground) : Color(UIColor.secondarySystemBackground))
-        .ignoresSafeArea()
       content
-        .padding(
-          .bottom, viewModel.workout != nil && !keyboardIsShown ? collapsedHeight - safeAreaInsets.bottom + 10 : 0)
 
+      if let workout = viewModel.workout, viewModel.isCollapsed {
+        ZStack(alignment: .bottom) {
+          CollapsedWorkoutView(
+            workout: workout,
+            stopAction: {
+              viewModel.stop()
+            }
+          )
+          .padding(.horizontal, 10)
+          .padding(.bottom, 55)  // Tab bar height
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+      }
+    }
+    .fullScreenCover(isPresented: $viewModel.isPresented) {
       if let workout = viewModel.workout {
-        StartedWorkoutBottomSheetView(workout: workout, collapsedHeight: collapsedHeight)
-      }
-
-    }
-  }
-
-}
-
-private struct StartedWorkoutBottomSheetView: View {
-  @Environment(\.startedWorkoutViewModel) private var viewModel
-  @Environment(\.userAccentColor) private var userAccentColor
-  @Environment(\.colorScheme) private var colorScheme
-  @Environment(\.mainWindowSize) var windowSize
-  @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
-
-  @Namespace private var ns
-
-  var workout: Workout
-  let collapsedHeight: CGFloat
-
-  @State private var baseOffsetY: CGFloat = 0
-  @State private var dragOffsetY: CGFloat = 0
-  @State private var endOffsetY: CGFloat = 0
-  @State private var collapsedDragAmount: CGFloat = 0
-
-  @State private var showStopAlert: Bool = false
-
-  private var screenHeight: CGFloat {
-    windowSize.height + safeAreaInsets.top + safeAreaInsets.bottom
-  }
-
-  private var cappedDragOffsetY: CGFloat {
-    endOffsetY == 0
-      ? min(dragOffsetY, 0)
-      : max(dragOffsetY, 0)
-  }
-
-  private var isCollapsed: Bool {
-    endOffsetY == 0
-  }
-
-  private var isDarkTheme: Bool {
-    colorScheme == .dark
-  }
-
-  private var totalOffsetY: CGFloat {
-    // chain base + drag + end into one single animatable offset
-    baseOffsetY + cappedDragOffsetY + endOffsetY
-  }
-
-  init(workout: Workout, collapsedHeight: CGFloat) {
-    self.workout = workout
-    self.collapsedHeight = collapsedHeight
-  }
-
-  var body: some View {
-
-    ZStack {
-
-      Color(.systemBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 30))
-        .offset(y: totalOffsetY)
-        .ignoresSafeArea()
-
-      VStack(spacing: 0) {
-        // MARK: - Header
-        HStack {
-          if !isCollapsed {
-            Button {
-              showStopAlert = true
-            } label: {
-              Image(systemName: "xmark")
-                .font(.title2)
-                .foregroundColor(isCollapsed ? .clear : .gray)
-                .padding()
+        NavigationView {
+          StartedWorkoutView(
+            workout: workout,
+            stopAction: {
+              viewModel.stop()
             }
-          }
-
-          Spacer()
-          Capsule()
-            .frame(width: 40, height: 5)
-            .foregroundStyle(.gray)
-          Spacer()
-
-          // For symmetry
-          if !isCollapsed {
-            Image(systemName: "xmark")
-              .font(.title2)
-              .foregroundColor(.clear)
-              .padding()
-          }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, isCollapsed ? 6 : safeAreaInsets.top)
-        .padding(.bottom, isCollapsed ? 16 : 0)
-        // Add gesture modifier to only the header
-        .gesture(
-          DragGesture(minimumDistance: 0)
-            .onChanged { value in
-              // Only allow drag if not in the bottom safe area
-              if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
-                dragOffsetY = value.translation.height
+          )
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+              Button("Stop") {
+                viewModel.stop()
               }
             }
-            .onEnded { value in
-              if value.startLocation.y < windowSize.height - safeAreaInsets.bottom {
-                let predictedY = value.predictedEndTranslation.height
 
-                withAnimation(.spring) {
-                  if dragOffsetY <= -80 || (dragOffsetY <= -50 && predictedY + dragOffsetY <= -200) {
-                    endOffsetY = -baseOffsetY
-                  } else if !isCollapsed
-                    && (dragOffsetY > screenHeight / 2 || (dragOffsetY > 50 && dragOffsetY + predictedY > screenHeight / 2))
-                  {
-                    endOffsetY = 0
-                  }
-                  dragOffsetY = 0
-                }
+            ToolbarItem(placement: .topBarTrailing) {
+              Button("Collapse", systemImage: "chevron.down") {
+                viewModel.collapse()
               }
             }
-        )
 
-        // MARK: - Workout View
-        Group {
-        if isCollapsed {
-          CollapsedWorkoutView(workout: workout, stopAction: finishWorkout)
-            .padding(.bottom, safeAreaInsets.bottom)
-            .frame(maxHeight: collapsedHeight + abs(cappedDragOffsetY))
-        } else {
-          StartedWorkoutView(workout: workout, stopAction: finishWorkout)
-            .padding(.bottom, safeAreaInsets.bottom)
-        }
+          }
+          //        .offset(y: dragOffset)
+          //        .background {
+          //          Color(.yellow)
+          //            .ignoresSafeArea()
+          //            .offset(y: dragOffset)
+          //        }
+          //        .gesture(
+          //          DragGesture(coordinateSpace: .global)
+          //            .onChanged { value in
+          //              handleDragChanged(value: value)
+          //            }
+          //            .onEnded { value in
+          //              handleDragEnded(value: value)
+          //            }
+          //        )
+          //        .animation(.interactiveSpring, value: dragOffset)
+          //        .presentationBackground(.clear)
         }
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .background(userAccentColor.opacity(isDarkTheme ? 0.35 : 0.2))
-      .clipShape(RoundedRectangle(cornerRadius: 20))
-      .offset(y: totalOffsetY)
-      .ignoresSafeArea()
     }
-    .onAppear {
-      print("windowSize \(windowSize)")
-      print("screenSize: \(screenHeight)")
-      baseOffsetY = screenHeight - collapsedHeight
-      print("safe area bottom: \(safeAreaInsets.bottom)")
-
-      withAnimation(.spring) {
-        endOffsetY = -baseOffsetY
-        print("baseOffsetY \(baseOffsetY)")
-      }
-    }
-    .navigationBarBackButtonHidden(!isCollapsed)
-    .alert("Stop Workout", isPresented: $showStopAlert) {
-      Button("Stop", role: .none) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
-          viewModel.stop()
-        }
-        withAnimation(.snappy(duration: 0.5)) {
-          endOffsetY = 0 + collapsedHeight
-          print("baseOffsetY \(baseOffsetY)")
-        }
-      }
-      Button("Cancel", role: .cancel) {}
-    } message: {
-      Text("This will stop the workout. Are you sure you want to stop?")
-    }
-
   }
 
-  private func finishWorkout() {
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
-      viewModel.stop()
-    }
-    withAnimation(.snappy(duration: 0.5)) {
-      endOffsetY = 0 + collapsedHeight
-      print("baseOffsetY \(baseOffsetY)")
-    }
+  private func handleDragChanged(value: DragGesture.Value) {
+    guard value.translation.height > 0 else { return }
+
+    let translation = value.translation.height
+    dragOffset = translation
   }
+
+  private func handleDragEnded(value: DragGesture.Value) {
+    guard value.translation.height > 0 else {
+      dragOffset = 0
+      return
+    }
+
+    let velocity = value.predictedEndLocation.y - value.location.y
+    if velocity > 300 || abs(value.translation.height) > screenHeight * 0.35 {
+      viewModel.collapse()
+    }
+
+    dragOffset = 0
+  }
+
 }
 
 private struct CollapsedWorkoutView: View {
@@ -224,154 +125,43 @@ private struct CollapsedWorkoutView: View {
   var workout: Workout
   let stopAction: () -> Void
 
-  @State private var dragOffset: CGFloat = 0
-  @State private var isDragging = false
-  @State private var dragDirection: CGFloat = 0 // Store direction of swipe
-
   var body: some View {
-    GeometryReader { geo in
-      ZStack {
-        if viewModel.isWorkoutComplete {
-          CollapsedCompletionView(stopAction: stopAction)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
-          // Current card
-          HStack(spacing: 16) {
-            CollapsedExerciseInfoView(
-              exerciseDefinition: exerciseDefinition,
-              set: currentSet.set,
-              setIndex: currentSet.setIndex,
-              totalSets: currentSet.exercise.orderedSets.count,
-              isSuperset: currentSet.isSuperset,
+    HStack {
+      if viewModel.isWorkoutComplete {
+        CollapsedCompletionView(stopAction: stopAction)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+        HStack(spacing: 16) {
+          CollapsedExerciseInfoView(
+            exerciseDefinition: exerciseDefinition,
+            set: currentSet.set,
+            setIndex: currentSet.setIndex,
+            totalSets: currentSet.exercise.orderedSets.count,
+            isSuperset: currentSet.isSuperset,
+          )
+          Spacer()
+          if viewModel.isResting {
+            CollapsedTimerView(
+              time: currentSet.restTime,
+              timerId: viewModel.currentTimerId,
+              onComplete: viewModel.timerDidComplete
             )
-            Spacer()
-            if viewModel.isResting {
-              CollapsedTimerView(
-                time: currentSet.restTime,
-                timerId: viewModel.currentTimerId,
-                onComplete: viewModel.timerDidComplete,
-                isActive: !isDragging
-              )
-            } else {
-              CollapsedActionButtonView(
-                title: "Done Set",
-                action: viewModel.handleDoneSet
-              )
-            }
-          }
-          .padding(.horizontal, 4)
-          .offset(x: dragOffset)
-
-          // Next card (dragging left)
-          if isDragging, dragOffset < 0, let next = viewModel.nextWorkoutSet, let nextDef = next.exerciseDefinition {
-            HStack(spacing: 16) {
-              CollapsedExerciseInfoView(
-                exerciseDefinition: nextDef,
-                set: next.set,
-                setIndex: next.setIndex,
-                totalSets: next.exercise.orderedSets.count,
-                isSuperset: next.isSuperset,
-              )
-              Spacer()
-              CollapsedActionButtonView(
-                title: "Done Set",
-                action: viewModel.handleDoneSet
-              )
-            }
-            .padding(.horizontal, 4)
-            .offset(x: geo.size.width + dragOffset)
-          }
-
-          // Previous card (dragging right)
-          if isDragging, dragOffset > 0, let prev = viewModel.previousWorkoutSet, let prevDef = prev.exerciseDefinition
-          {
-            HStack(spacing: 16) {
-              CollapsedExerciseInfoView(
-                exerciseDefinition: prevDef,
-                set: prev.set,
-                setIndex: prev.setIndex,
-                totalSets: prev.exercise.orderedSets.count,
-                isSuperset: prev.isSuperset,
-              )
-              Spacer()
-              CollapsedActionButtonView(
-                title: "Done Set",
-                action: viewModel.handleDoneSet
-              )
-            }
-            .padding(.horizontal, 4)
-            .offset(x: -geo.size.width + dragOffset)
+          } else {
+            CollapsedActionButtonView(
+              title: "Done Set",
+              action: viewModel.handleDoneSet
+            )
           }
         }
       }
-      .background(Color.clear)
-      .contentShape(Rectangle())
-      .highPriorityGesture(
-        DragGesture(minimumDistance: 20) // Increase minimum distance to prevent accidental triggers
-          .onChanged { value in
-            guard !viewModel.isWorkoutComplete else { return }
-            isDragging = true
-            let toRight = value.translation.width > 0
-            
-            // Set drag direction when drag starts
-            if dragDirection == 0 {
-              dragDirection = toRight ? 1 : -1
-            }
-            
-            // Only allow dragging in the initially detected direction to prevent erratic behavior
-            if (dragDirection > 0 && toRight) || (dragDirection < 0 && !toRight) {
-              if toRight && viewModel.currentSetIndex == 0 { return }
-              if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { return }
-              dragOffset = value.translation.width
-            }
-          }
-          .onEnded { value in
-            let toRight = dragDirection > 0 // Use stored direction for consistency
-            
-            // Reset drag direction
-            dragDirection = 0
-            
-            if toRight && viewModel.currentSetIndex == 0 { 
-              withAnimation(.spring(duration: 0.3)) {
-                dragOffset = 0
-              }
-              isDragging = false
-              return 
-            }
-            
-            if !toRight && viewModel.currentSetIndex == viewModel.workoutSets.count - 1 { 
-              withAnimation(.spring(duration: 0.3)) {
-                dragOffset = 0
-              }
-              isDragging = false
-              return 
-            }
-
-            let width = geo.size.width
-            let threshold = width * 0.2
-            if abs(dragOffset) > threshold {
-              withAnimation(.spring(duration: 0.3)) {
-                dragOffset = toRight ? width : -width
-              }
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                if toRight {
-                  viewModel.navigateToPreviousSet()
-                } else {
-                  viewModel.navigateToNextSet()
-                }
-                dragOffset = 0
-                isDragging = false
-              }
-            } else {
-              withAnimation(.spring(duration: 0.3)) {
-                dragOffset = 0
-              }
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                isDragging = false
-              }
-            }
-          }
-      )
+    }
+    .frame(maxHeight: 60)
+    .padding(12)
+    .background(Color.blue.opacity(0.7))
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+    .onTapGesture {
+      viewModel.expand()
     }
   }
 }
@@ -482,15 +272,13 @@ private struct CollapsedTimerView: View {
   let time: Int
   let timerId: String
   let onComplete: () -> Void
-  let isActive: Bool
 
   var body: some View {
     CountdownTimer(
       time: time,
       id: timerId,
       onComplete: onComplete,
-      compact: true,
-      isActive: isActive
+      compact: true
     )
     .padding(.trailing, 16)
   }

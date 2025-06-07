@@ -467,6 +467,9 @@
         }
       }
     },
+    "Collapse" : {
+
+    },
     "Color theme" : {
       "localizations" : {
         "fr" : {
@@ -982,6 +985,7 @@
       }
     },
     "Stop Workout" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1015,6 +1019,7 @@
       }
     },
     "This will stop the workout. Are you sure you want to stop?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {

@@ -468,7 +468,14 @@
       }
     },
     "Collapse" : {
-
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réduire"
+          }
+        }
+      }
     },
     "Color theme" : {
       "localizations" : {
@@ -893,6 +900,9 @@
         }
       }
     },
+    "SET" : {
+      "shouldTranslate" : false
+    },
     "Set %lld out of %lld" : {
       "localizations" : {
         "en" : {
@@ -915,17 +925,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Set %1$lld/%2$lld"
-          }
-        }
-      },
-      "shouldTranslate" : false
-    },
-    "SET %lld/%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "SET %1$lld/%2$lld"
           }
         }
       },
@@ -984,17 +983,6 @@
         }
       }
     },
-    "Stop Workout" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrêter l’entraînement"
-          }
-        }
-      }
-    },
     "Superset" : {
       "localizations" : {
         "fr" : {
@@ -1014,17 +1002,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Détails du Superset"
-          }
-        }
-      }
-    },
-    "This will stop the workout. Are you sure you want to stop?" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cela va arrêter l’entraînement. Êtes-vous sûr de vouloir arrêter?"
           }
         }
       }

@@ -43,7 +43,7 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
               viewModel.stop()
             }
           )
-          .padding(.horizontal, 10)
+          .padding(.horizontal, 8)
           .padding(.bottom, 55)  // Tab bar height
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -58,7 +58,6 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
               viewModel.stop()
             }
           )
-          .navigationBarTitleDisplayMode(.inline)
           .toolbar {
             ToolbarItem(placement: .topBarLeading) {
               Button("Stop") {
@@ -71,7 +70,6 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
                 viewModel.collapse()
               }
             }
-
           }
           //        .offset(y: dragOffset)
           //        .background {
@@ -148,7 +146,7 @@ private struct CollapsedWorkoutView: View {
             )
           } else {
             CollapsedActionButtonView(
-              title: "Done Set",
+              title: "Done",
               action: viewModel.handleDoneSet
             )
           }
@@ -156,8 +154,9 @@ private struct CollapsedWorkoutView: View {
       }
     }
     .frame(maxHeight: 60)
-    .padding(12)
-    .background(Color.blue.opacity(0.7))
+    .padding(.vertical, 4)
+    .padding(.horizontal, 12)
+    .background(userAccentColor.background)
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     .onTapGesture {
@@ -215,7 +214,7 @@ private struct CollapsedExerciseInfoView: View {
               .foregroundColor(.secondary)
           }
           Text(exerciseDefinition.name)
-            .font(.title)
+            .font(.title2)
             .fontWeight(.bold)
             .lineLimit(1)
             .multilineTextAlignment(.center)
@@ -230,7 +229,6 @@ private struct CollapsedExerciseInfoView: View {
         displayWeightInLbs: displayWeightInLbs,
       )
     }
-    .padding(.leading, 16)
   }
 }
 
@@ -280,7 +278,6 @@ private struct CollapsedTimerView: View {
       onComplete: onComplete,
       compact: true
     )
-    .padding(.trailing, 16)
   }
 }
 
@@ -304,7 +301,6 @@ private struct CollapsedActionButtonView: View {
         .foregroundStyle(userAccentColor.contrastColor)
         .cornerRadius(10)
     }
-    .padding(.trailing, 16)
   }
 }
 

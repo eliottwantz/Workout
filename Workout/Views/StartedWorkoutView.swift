@@ -16,12 +16,11 @@ struct StartedWorkoutView: View {
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var workout: Workout
-  @State private var showingWorkoutEditor = false
-
   let stopAction: () -> Void
+  
+  @State private var currentIndex: Int = 0
 
   var body: some View {
-    @Bindable var startedWorkoutViewModel = startedWorkoutViewModel
     VStack {
       // MARK: - Workout completed view
       if startedWorkoutViewModel.isWorkoutComplete {
@@ -50,35 +49,42 @@ struct StartedWorkoutView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         // Carousel TabView for workout sets
-        TabView(selection: $startedWorkoutViewModel.currentSetIndex) {
-          ForEach(Array(startedWorkoutViewModel.workoutSets.enumerated()), id: \.element.id) { (idx, set) in
-            SetCardView(
-              currentSet: set,
-              currentSetIndex: idx,
-              nextSet: idx < startedWorkoutViewModel.workoutSets.count - 1
-                ? startedWorkoutViewModel.workoutSets[idx + 1] : nil,
-              isResting: startedWorkoutViewModel.isResting && idx == startedWorkoutViewModel.currentSetIndex,
-              displayWeightInLbs: displayWeightInLbs,
-              userAccentColor: userAccentColor
-            )
-            .padding(.vertical, 10)
-            .padding(.horizontal, 8)
-            .tag(idx) // Ensure tag is correctly set for selection binding
+        HStack {
+          TabView(selection: $currentIndex) {
+            ForEach(0..<startedWorkoutViewModel.workoutSets.count, id: \.self) { index in
+              if index >= startedWorkoutViewModel.workoutSets.count { EmptyView() }
+              SetCardView(
+                tabViewIndex: $currentIndex,
+                currentSet: startedWorkoutViewModel.workoutSets[index],
+                currentSetIndex: index,
+                nextSet: index < startedWorkoutViewModel.workoutSets.count - 1
+                  ? startedWorkoutViewModel.workoutSets[index + 1] : nil,
+                isResting: startedWorkoutViewModel.isResting
+                  && index == startedWorkoutViewModel.currentSetIndex,
+                displayWeightInLbs: displayWeightInLbs,
+                userAccentColor: userAccentColor
+              )
+              .animation(.easeInOut, value: currentIndex)
+            }
+          }
+          .tabViewStyle(.page(indexDisplayMode: .never))
+          .onChange(of: currentIndex) { previousValue, newValue in
+            if newValue > previousValue {
+              startedWorkoutViewModel.navigateToNextSet()
+            } else if newValue < previousValue {
+              startedWorkoutViewModel.navigateToPreviousSet()
+            }
           }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .animation(.easeInOut, value: startedWorkoutViewModel.currentSetIndex) // Add animation for smooth transitions
       }
     }
-    .onAppear {
-      print("Showing StartedWorkoutView")
-    }
+    .background(userAccentColor.background)
   }
 }
 
 struct SetCardView: View {
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
+  @Binding var tabViewIndex: Int
   let currentSet: WorkoutSet
   let currentSetIndex: Int
   let nextSet: WorkoutSet?
@@ -92,16 +98,16 @@ struct SetCardView: View {
       // Set navigation controls
       HStack {
         Button {
-          withAnimation(.easeInOut(duration: 0.3)) {
-            startedWorkoutViewModel.navigateToPreviousSet()
+          withAnimation {
+            tabViewIndex -= 1
           }
         } label: {
           Image(systemName: "chevron.left")
             .font(.title2)
             .padding(10)
-            .foregroundColor(startedWorkoutViewModel.currentSetIndex > 0 ? .primary : .gray)
+            .foregroundColor(tabViewIndex > 0 ? .primary : .gray)
         }
-        .disabled(startedWorkoutViewModel.currentSetIndex <= 0)
+        .disabled(tabViewIndex <= 0)
 
         Spacer()
 
@@ -112,20 +118,19 @@ struct SetCardView: View {
         Spacer()
 
         Button {
-          withAnimation(.easeInOut(duration: 0.3)) {
-            startedWorkoutViewModel.navigateToNextSet()
+          withAnimation {
+            tabViewIndex += 1
           }
         } label: {
           Image(systemName: "chevron.right")
             .font(.title2)
             .padding(10)
             .foregroundColor(
-              startedWorkoutViewModel.currentSetIndex < startedWorkoutViewModel.workoutSets.count - 1
+              tabViewIndex < startedWorkoutViewModel.workoutSets.count - 1
                 ? .primary : .gray)
         }
-        .disabled(startedWorkoutViewModel.currentSetIndex >= startedWorkoutViewModel.workoutSets.count - 1)
+        .disabled(tabViewIndex >= startedWorkoutViewModel.workoutSets.count - 1)
       }
-      .padding(.horizontal)
 
       // Current exercise and set
       VStack(spacing: 12) {
@@ -147,12 +152,6 @@ struct SetCardView: View {
               .lineLimit(1)
               .multilineTextAlignment(.center)
           }
-
-          Spacer()
-
-          Text("SET \(currentSet.setIndex + 1)/\(currentSet.exercise.orderedSets.count)")
-            .font(.headline)
-            .foregroundColor(.secondary)
         }
         .padding(.horizontal)
 
@@ -179,12 +178,21 @@ struct SetCardView: View {
               .font(.title2)
               .fontWeight(.semibold)
           }
+          
+          VStack {
+            Text("SET")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            Text("\(currentSet.setIndex + 1)/\(currentSet.exercise.orderedSets.count)")
+              .font(.title2)
+              .fontWeight(.semibold)
+          }
         }
         .frame(maxWidth: .infinity)
         .padding(25)
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
-        .padding(.horizontal)
+//        .padding(.horizontal)
       }
 
       Spacer()
@@ -228,14 +236,8 @@ struct SetCardView: View {
             Text("NEXT: \(nextSet.exerciseName)")
               .font(.headline)
               .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text("SET \(nextSet.setIndex + 1)/\(nextSet.exercise.orderedSets.count)")
-              .font(.subheadline)
-              .foregroundColor(.secondary)
           }
-          .padding(.horizontal)
+//          .padding(.horizontal)
 
           HStack(spacing: 35) {
             VStack {
@@ -258,12 +260,20 @@ struct SetCardView: View {
               Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                 .font(.title3)
             }
+            
+            VStack {
+              Text("SET")
+                .font(.caption)
+                .foregroundColor(.secondary)
+              Text("\(nextSet.setIndex + 1)/\(nextSet.exercise.orderedSets.count)")
+                .font(.title3)
+            }
           }
           .frame(maxWidth: .infinity)
           .padding(20)
           .background(Color(UIColor.secondarySystemBackground))
           .cornerRadius(15)
-          .padding(.horizontal)
+//          .padding(.horizontal)
         }
       } else {
         VStack(spacing: 10) {
@@ -281,8 +291,8 @@ struct SetCardView: View {
         .padding(.horizontal)
       }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .cornerRadius(15)
+    .padding(.horizontal, 8)
+    .padding(.vertical, 10)
   }
 }
 

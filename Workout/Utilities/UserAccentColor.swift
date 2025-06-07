@@ -65,6 +65,10 @@ extension Color {
   var contrastColor: Color {
     isDark ? .white : .black
   }
+  
+  var background: Color {
+    self.opacity(0.3)
+  }
 
   var foregroundColor: Color {
     let uiColor = UIColor(self)

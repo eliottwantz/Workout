@@ -790,6 +790,16 @@
         }
       }
     },
+    "No workout sets available" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun set dans ce workout"
+          }
+        }
+      }
+    },
     "No workouts" : {
       "localizations" : {
         "fr" : {

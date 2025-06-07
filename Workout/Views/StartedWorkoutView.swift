@@ -50,30 +50,41 @@ struct StartedWorkoutView: View {
       } else {
         // Carousel TabView for workout sets
         HStack {
-          TabView(selection: $currentIndex) {
-            ForEach(0..<startedWorkoutViewModel.workoutSets.count, id: \.self) { index in
-              if index >= startedWorkoutViewModel.workoutSets.count { EmptyView() }
-              SetCardView(
-                tabViewIndex: $currentIndex,
-                currentSet: startedWorkoutViewModel.workoutSets[index],
-                currentSetIndex: index,
-                nextSet: index < startedWorkoutViewModel.workoutSets.count - 1
-                  ? startedWorkoutViewModel.workoutSets[index + 1] : nil,
-                isResting: startedWorkoutViewModel.isResting
-                  && index == startedWorkoutViewModel.currentSetIndex,
-                displayWeightInLbs: displayWeightInLbs,
-                userAccentColor: userAccentColor
-              )
-              .animation(.easeInOut, value: currentIndex)
+          if !startedWorkoutViewModel.workoutSets.isEmpty {
+            TabView(selection: $currentIndex) {
+              ForEach(0..<startedWorkoutViewModel.workoutSets.count, id: \.self) { index in
+                if index < startedWorkoutViewModel.workoutSets.count {
+                  SetCardView(
+                    tabViewIndex: $currentIndex,
+                    currentSet: startedWorkoutViewModel.workoutSets[index],
+                    currentSetIndex: index,
+                    nextSet: index < startedWorkoutViewModel.workoutSets.count - 1
+                      ? startedWorkoutViewModel.workoutSets[index + 1] : nil,
+                    isResting: startedWorkoutViewModel.isResting
+                      && index == startedWorkoutViewModel.currentSetIndex,
+                    displayWeightInLbs: displayWeightInLbs,
+                    userAccentColor: userAccentColor
+                  )
+                  .animation(.easeInOut, value: currentIndex)
+                }
+              }
             }
-          }
-          .tabViewStyle(.page(indexDisplayMode: .never))
-          .onChange(of: currentIndex) { previousValue, newValue in
-            if newValue > previousValue {
-              startedWorkoutViewModel.navigateToNextSet()
-            } else if newValue < previousValue {
-              startedWorkoutViewModel.navigateToPreviousSet()
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .onChange(of: currentIndex) { previousValue, newValue in
+              if newValue > previousValue {
+                startedWorkoutViewModel.navigateToNextSet()
+              } else if newValue < previousValue {
+                startedWorkoutViewModel.navigateToPreviousSet()
+              }
             }
+          } else {
+            // Show empty state when no workout sets are available
+            VStack {
+              Text("No workout sets available")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
           }
         }
       }

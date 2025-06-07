@@ -71,6 +71,7 @@ struct StartedWorkoutView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .onChange(of: currentIndex) { previousValue, newValue in
+              guard newValue != startedWorkoutViewModel.currentSetIndex else { return }
               if newValue > previousValue {
                 startedWorkoutViewModel.navigateToNextSet()
               } else if newValue < previousValue {
@@ -90,6 +91,9 @@ struct StartedWorkoutView: View {
       }
     }
     .background(userAccentColor.background)
+    .onAppear {
+      currentIndex = startedWorkoutViewModel.currentSetIndex
+    }
   }
 }
 

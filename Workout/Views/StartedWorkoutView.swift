@@ -79,7 +79,6 @@ struct StartedWorkoutView: View {
               }
             }
           } else {
-            // Show empty state when no workout sets are available
             VStack {
               Text("No workout sets available")
                 .font(.headline)
@@ -90,7 +89,6 @@ struct StartedWorkoutView: View {
         }
       }
     }
-    .background(userAccentColor.background)
     .onAppear {
       currentIndex = startedWorkoutViewModel.currentSetIndex
     }

@@ -16,6 +16,7 @@ extension View {
 }
 
 private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
+  @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var viewModel
   @Environment(\.keyboardIsShown) private var keyboardIsShown
   @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
@@ -71,32 +72,56 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
               }
             }
           }
-          //        .offset(y: dragOffset)
-          //        .background {
-          //          Color(.yellow)
-          //            .ignoresSafeArea()
-          //            .offset(y: dragOffset)
-          //        }
-          //        .gesture(
-          //          DragGesture(coordinateSpace: .global)
-          //            .onChanged { value in
-          //              handleDragChanged(value: value)
-          //            }
-          //            .onEnded { value in
-          //              handleDragEnded(value: value)
-          //            }
-          //        )
-          //        .animation(.interactiveSpring, value: dragOffset)
-          //        .presentationBackground(.clear)
+          .onChange(of: dragOffset) { oldValue, newValue in
+            print("dragOffset: \(newValue)")
+          }
         }
+        .offset(y: dragOffset)
+        .animation(.interactiveSpring, value: dragOffset)
+        .presentationBackground(.clear)
+        .background {
+          ZStack {
+            Color(.systemBackground)
+            userAccentColor.background
+          }
+          .cornerRadius(dynamicCornerRadius, corners: [.topLeft, .topRight])
+          .ignoresSafeArea()
+          .offset(y: dragOffset)
+        }
+        .gesture(
+          DragGesture(coordinateSpace: .global)
+            .onChanged { value in
+              handleDragChanged(value: value)
+            }
+            .onEnded { value in
+              handleDragEnded(value: value)
+            }
+        )
       }
     }
   }
+  
+  private var dynamicCornerRadius: CGFloat {
+    let currentHeight = UIApplication.height + dragOffset
+    let maxHeight = UIApplication.height
+    let midHeight = UIApplication.height * 0.5
+
+    // Calculate progress from top to middle of screen
+    // When at top (maxHeight), progress = 0
+    // When at middle or below, progress = 1
+    let progress = max(0, min(1, (maxHeight - currentHeight) / (maxHeight - midHeight)))
+
+    // Interpolate between displayCornerRadius and 16
+    let startRadius = UIApplication.displayCornerRadius
+    let endRadius: CGFloat = 16
+
+    return startRadius + (endRadius - startRadius) * progress
+  }
 
   private func handleDragChanged(value: DragGesture.Value) {
-    guard value.translation.height > 0 else { return }
-
     let translation = value.translation.height
+    guard translation > 0 else { return }
+
     dragOffset = translation
   }
 
@@ -107,7 +132,8 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
     }
 
     let velocity = value.predictedEndLocation.y - value.location.y
-    if velocity > 300 || abs(value.translation.height) > screenHeight * 0.35 {
+    let draggableHeight: CGFloat = screenHeight - UIApplication.safeAreaInsets.top - UIApplication.safeAreaInsets.bottom
+    if velocity > 300 || abs(value.translation.height) > draggableHeight * 0.35 {
       viewModel.collapse()
     }
 

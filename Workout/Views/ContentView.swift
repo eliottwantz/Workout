@@ -43,7 +43,7 @@ private struct CollapsedWorkoutPaddingModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .padding(.bottom, (viewModel.workout != nil && viewModel.isCollapsed) ? 66 : 0)
+      .padding(.bottom, (viewModel.workout != nil && viewModel.isCollapsed) ? 74 : 0)
   }
 }
 

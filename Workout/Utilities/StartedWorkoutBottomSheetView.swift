@@ -265,6 +265,11 @@ private struct CollapsedWorkoutView: View {
     .onTapGesture {
       viewModel.expand()
     }
+    .gesture(DragGesture(minimumDistance: 1)
+      .onChanged { _ in
+        viewModel.expand()
+      }
+    )
   }
 
 }

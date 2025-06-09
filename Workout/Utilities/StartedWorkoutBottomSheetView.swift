@@ -25,7 +25,8 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
 
       if let workout = viewModel.workout {
         if viewModel.isCollapsed {
-          ZStack(alignment: .bottom) {
+          VStack {
+            Spacer()
             CollapsedWorkoutView(
               workout: workout,
               stopAction: {
@@ -35,7 +36,6 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
             .padding(.horizontal, 8)
             .padding(.bottom, 55)  // Tab bar height
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         } else if viewModel.isPresented {
           ExpandedWorkoutView(workout: workout)
         }

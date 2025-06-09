@@ -20,12 +20,14 @@ struct ContentView: View {
   var body: some View {
     TabView(selection: $selectedTab) {
       WorkoutListView()
+        .modifier(CollapsedWorkoutPaddingModifier())
         .tabItem {
           Label("Workouts", systemImage: "figure.run")
         }
         .tag(Tab.workouts)
 
       ExerciseDefinitionListView()
+        .modifier(CollapsedWorkoutPaddingModifier())
         .tabItem {
           Label("Exercises", systemImage: "dumbbell")
         }
@@ -33,6 +35,15 @@ struct ContentView: View {
     }
     .dismissKeyboardOnTap()
     .startedWorkoutBottomSheet()
+  }
+}
+
+private struct CollapsedWorkoutPaddingModifier: ViewModifier {
+  @Environment(\.startedWorkoutViewModel) private var viewModel
+  
+  func body(content: Content) -> some View {
+    content
+      .padding(.bottom, (viewModel.workout != nil && viewModel.isCollapsed) ? 66 : 0)
   }
 }
 

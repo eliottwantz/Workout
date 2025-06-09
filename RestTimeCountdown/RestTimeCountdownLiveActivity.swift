@@ -274,7 +274,7 @@ private struct LockeScreenView: View {
                       Image(systemName: "arrowshape.forward.fill")
                         .foregroundStyle(state.userAccentColor)
                         .font(.title)
-                      
+
                       CurrentSetIndicators(
                         color: state.userAccentColor,
                         totalSets: setsForNextExercise,

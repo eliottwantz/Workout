@@ -51,7 +51,7 @@ struct AddExerciseToSupersetView: View {
     }
 
     try? modelContext.save()
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 

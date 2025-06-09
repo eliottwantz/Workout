@@ -200,7 +200,7 @@ struct ExerciseDetailView: View {
       exercise.addSet(set)
       try? modelContext.save()
     }
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 
@@ -221,7 +221,7 @@ struct ExerciseDetailView: View {
     }
 
     try? modelContext.save()
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 
@@ -235,7 +235,7 @@ struct ExerciseDetailView: View {
     }
 
     try? modelContext.save()
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 }

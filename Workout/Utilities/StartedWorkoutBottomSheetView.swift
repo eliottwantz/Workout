@@ -148,30 +148,30 @@ private struct ExpandedWorkoutView: View {
       .animation(.interactiveSpring, value: dragOffset)
     }
     .ignoresSafeArea()
-//    .navigationBarBackButtonHidden(viewModel.isPresented)
+    //    .navigationBarBackButtonHidden(viewModel.isPresented)
     .onChange(of: dragOffset) { oldValue, newValue in
       print("dragonOffset: \(newValue)")
     }
   }
 
   private func stop() {
-//    withAnimation {
-//      dragOffset = screenHeight
-//    }
+    //    withAnimation {
+    //      dragOffset = screenHeight
+    //    }
 
-//    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-      viewModel.stop()
-//    }
+    //    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+    viewModel.stop()
+    //    }
   }
 
   private func collapse() {
-//    withAnimation {
-//      dragOffset = screenHeight
-//    }
+    //    withAnimation {
+    //      dragOffset = screenHeight
+    //    }
 
-//    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-      viewModel.collapse()
-//    }
+    //    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+    viewModel.collapse()
+    //    }
   }
 
   private func yOffset(geometry: GeometryProxy) -> CGFloat {

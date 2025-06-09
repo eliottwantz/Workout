@@ -150,7 +150,7 @@ struct WorkoutDetailView: View {
 
       try? modelContext.save()
     }
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 
@@ -167,7 +167,7 @@ struct WorkoutDetailView: View {
 
       try? modelContext.save()
     }
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 

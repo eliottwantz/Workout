@@ -99,7 +99,7 @@ struct SupersetDetailView: View {
     }
 
     try? modelContext.save()
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 
@@ -113,7 +113,7 @@ struct SupersetDetailView: View {
     }
 
     try? modelContext.save()
-    
+
     startedWorkoutViewModel.updateLiveActivity()
   }
 

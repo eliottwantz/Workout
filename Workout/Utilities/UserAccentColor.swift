@@ -10,14 +10,14 @@ import SwiftUI
 import UIKit
 
 extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodable {
-  
+
   public init?(rawValue: String) {
-    
+
     guard let data = Data(base64Encoded: rawValue) else {
       self = .black
       return
     }
-    
+
     do {
       if let color = try NSKeyedUnarchiver.unarchivedObject(
         ofClass: UIColor.self, from: data)
@@ -29,15 +29,15 @@ extension Color: @retroactive RawRepresentable, @retroactive Decodable & Encodab
     } catch {
       self = .black
     }
-    
+
   }
-  
+
   public var rawValue: String {
     do {
       let data =
-      try NSKeyedArchiver.archivedData(
-        withRootObject: UIColor(self), requiringSecureCoding: false
-      ) as Data
+        try NSKeyedArchiver.archivedData(
+          withRootObject: UIColor(self), requiringSecureCoding: false
+        ) as Data
       return data.base64EncodedString()
     } catch {
       return ""
@@ -65,7 +65,7 @@ extension Color {
   var contrastColor: Color {
     isDark ? .white : .black
   }
-  
+
   var background: Color {
     self.opacity(0.3)
   }

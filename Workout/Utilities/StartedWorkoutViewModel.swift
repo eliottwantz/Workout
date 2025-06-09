@@ -82,7 +82,7 @@ class StartedWorkoutViewModel {
     isCollapsed = true
     isPresented = false
   }
-  
+
   // --- Workout Progression Methods ---
 
   func buildWorkoutSetsList() -> [WorkoutSet] {

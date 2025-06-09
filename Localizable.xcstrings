@@ -710,6 +710,16 @@
         }
       }
     },
+    "More" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus"
+          }
+        }
+      }
+    },
     "Muscle Group" : {
       "localizations" : {
         "fr" : {

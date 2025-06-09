@@ -17,7 +17,7 @@ struct StartedWorkoutView: View {
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
   @Bindable var workout: Workout
   let stopAction: () -> Void
-  
+
   @State private var currentIndex: Int = 0
 
   var body: some View {
@@ -107,8 +107,7 @@ struct SetCardView: View {
 
   var body: some View {
     VStack {
-      // MARK: - Workout in progress
-      // Set navigation controls
+      // MARK: - Pagination
       HStack {
         Button {
           withAnimation {
@@ -117,7 +116,6 @@ struct SetCardView: View {
         } label: {
           Image(systemName: "chevron.left")
             .font(.title2)
-            .padding(10)
             .foregroundColor(tabViewIndex > 0 ? .primary : .gray)
         }
         .disabled(tabViewIndex <= 0)
@@ -137,15 +135,16 @@ struct SetCardView: View {
         } label: {
           Image(systemName: "chevron.right")
             .font(.title2)
-            .padding(10)
             .foregroundColor(
               tabViewIndex < startedWorkoutViewModel.workoutSets.count - 1
                 ? .primary : .gray)
         }
         .disabled(tabViewIndex >= startedWorkoutViewModel.workoutSets.count - 1)
       }
+      .padding(.vertical, 6)
+      .padding(.horizontal, 10)
 
-      // Current exercise and set
+      // MARK: - Current exercise and set
       VStack(spacing: 12) {
         HStack {
           VStack(alignment: .leading, spacing: 4) {
@@ -191,7 +190,7 @@ struct SetCardView: View {
               .font(.title2)
               .fontWeight(.semibold)
           }
-          
+
           VStack {
             Text("SET")
               .font(.caption)
@@ -205,12 +204,12 @@ struct SetCardView: View {
         .padding(25)
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
-//        .padding(.horizontal)
       }
+      .padding(.horizontal, 10)
 
       Spacer()
 
-      // Middle action button or rest timer
+      // MARK: - Middle action button or rest timer
       VStack {
         if startedWorkoutViewModel.isResting {
           CountdownTimer(
@@ -242,7 +241,7 @@ struct SetCardView: View {
 
       Spacer()
 
-      // Next set information
+      // MARK: - Next set information
       if let nextSet = nextSet {
         VStack(spacing: 12) {
           HStack {
@@ -250,7 +249,6 @@ struct SetCardView: View {
               .font(.headline)
               .foregroundColor(.secondary)
           }
-//          .padding(.horizontal)
 
           HStack(spacing: 35) {
             VStack {
@@ -273,7 +271,7 @@ struct SetCardView: View {
               Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
                 .font(.title3)
             }
-            
+
             VStack {
               Text("SET")
                 .font(.caption)
@@ -286,8 +284,8 @@ struct SetCardView: View {
           .padding(20)
           .background(Color(UIColor.secondarySystemBackground))
           .cornerRadius(15)
-//          .padding(.horizontal)
         }
+        .padding(.horizontal, 10)
       } else {
         VStack(spacing: 10) {
           Text("No more sets in this workout")
@@ -301,11 +299,9 @@ struct SetCardView: View {
         .padding(25)
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
-        .padding(.horizontal)
+        .padding(.horizontal, 10)
       }
     }
-    .padding(.horizontal, 8)
-    .padding(.vertical, 10)
   }
 }
 

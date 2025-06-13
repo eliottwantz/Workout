@@ -78,6 +78,11 @@ struct StartedWorkoutView: View {
                 startedWorkoutViewModel.navigateToPreviousSet()
               }
             }
+            .onChange(of: startedWorkoutViewModel.currentSetIndex) { oldValue, newValue in
+              if oldValue == currentIndex {
+                currentIndex = newValue
+              }
+            }
           } else {
             VStack {
               Text("No workout sets available")

@@ -24,21 +24,26 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
       content
 
       if let workout = viewModel.workout {
-        if viewModel.isCollapsed {
-          VStack {
-            Spacer()
-            CollapsedWorkoutView(
-              workout: workout,
-              stopAction: {
-                viewModel.stop()
-              }
-            )
-            .padding(.horizontal, 8)
-            .padding(.bottom, 55)  // Tab bar height
+        Group {
+          if viewModel.isCollapsed {
+            VStack {
+              Spacer()
+              CollapsedWorkoutView(
+                workout: workout,
+                stopAction: {
+                  viewModel.stop()
+                }
+              )
+              .padding(.horizontal, 8)
+              .padding(.bottom, 55)  // Tab bar height
+            }
+          } else if viewModel.isPresented {
+            ExpandedWorkoutView(workout: workout)
+              .transition(.move(edge: .bottom).combined(with: .opacity))
+              .animation(.spring(response: 0.6, dampingFraction: 0.75), value: viewModel.isPresented)
           }
-        } else if viewModel.isPresented {
-          ExpandedWorkoutView(workout: workout)
         }
+
       }
     }
   }
@@ -69,6 +74,7 @@ private struct ExpandedWorkoutView: View {
   }
 
   var body: some View {
+
     GeometryReader { geometry in
 
       ZStack {
@@ -146,32 +152,38 @@ private struct ExpandedWorkoutView: View {
       )
       .animation(.interactiveSpring(response: 0.4), value: viewModel.isCollapsed)
       .animation(.interactiveSpring, value: dragOffset)
+      .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Button("Collapse", systemImage: "chevron.down") {
+            collapse()
+          }
+        }
+
+        ToolbarItem(placement: .secondaryAction) {
+          Button("Stop", systemImage: "stop.circle.fill") {
+            stop()
+          }
+        }
+      }
     }
+
     .ignoresSafeArea()
-    //    .navigationBarBackButtonHidden(viewModel.isPresented)
+    .navigationBarBackButtonHidden(viewModel.isPresented)
     .onChange(of: dragOffset) { oldValue, newValue in
       print("dragonOffset: \(newValue)")
     }
   }
 
   private func stop() {
-    //    withAnimation {
-    //      dragOffset = screenHeight
-    //    }
-
-    //    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-    viewModel.stop()
-    //    }
+    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+      viewModel.stop()
+    }
   }
 
   private func collapse() {
-    //    withAnimation {
-    //      dragOffset = screenHeight
-    //    }
-
-    //    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-    viewModel.collapse()
-    //    }
+    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+      viewModel.collapse()
+    }
   }
 
   private func yOffset(geometry: GeometryProxy) -> CGFloat {
@@ -212,10 +224,14 @@ private struct ExpandedWorkoutView: View {
     let draggableHeight: CGFloat = screenHeight - UIApplication.safeAreaInsets.top - UIApplication.safeAreaInsets.bottom
 
     if velocity > 300 || abs(value.translation.height) > draggableHeight * 0.35 {
-      viewModel.collapse()
+      withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+        viewModel.collapse()
+      }
     }
 
-    dragOffset = 0
+    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+      dragOffset = 0
+    }
   }
 }
 
@@ -263,12 +279,17 @@ private struct CollapsedWorkoutView: View {
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     .onTapGesture {
-      viewModel.expand()
-    }
-    .gesture(DragGesture(minimumDistance: 1)
-      .onChanged { _ in
+      withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
         viewModel.expand()
       }
+    }
+    .gesture(
+      DragGesture(minimumDistance: 1)
+        .onChanged { _ in
+          withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+            viewModel.expand()
+          }
+        }
     )
   }
 

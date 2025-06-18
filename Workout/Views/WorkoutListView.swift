@@ -15,6 +15,8 @@ struct WorkoutListView: View {
 
   @State private var showingNewWorkoutAlert = false
   @State private var showingMultipleWorkoutAlert = false
+  @State private var showingCopyToTodayAlert = false
+  @State private var workoutToCopy: Workout?
   @State private var path = NavigationPath()
 
   var body: some View {
@@ -31,6 +33,27 @@ struct WorkoutListView: View {
               NavigationLink(value: workout) {
                 WorkoutRowView(workout: workout)
                   .frame(minHeight: 60)
+              }
+              .contextMenu {
+                if !Calendar.current.isDateInToday(workout.date) {
+                  Button {
+                    workoutToCopy = workout
+                    showingCopyToTodayAlert = true
+                  } label: {
+                    Label("Copy to Today", systemImage: "doc.on.doc")
+                  }
+                }
+              }
+              .swipeActions(edge: .leading) {
+                if !Calendar.current.isDateInToday(workout.date) {
+                  Button {
+                    workoutToCopy = workout
+                    showingCopyToTodayAlert = true
+                  } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                  }
+                  .tint(.blue)
+                }
               }
             }
             .onDelete(perform: deleteWorkouts)
@@ -65,6 +88,16 @@ struct WorkoutListView: View {
         Text(
           "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day."
         )
+      }
+      .alert("Copy Workout to Today", isPresented: $showingCopyToTodayAlert) {
+        Button("Copy", role: .none) {
+          if let workout = workoutToCopy {
+            copyWorkoutToToday(workout)
+          }
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("Do you want to copy this workout to today?")
       }
       .toolbar {
         ToolbarItemGroup(placement: .topBarLeading) {
@@ -107,6 +140,93 @@ struct WorkoutListView: View {
       modelContext.delete(workouts[index])
     }
     try? modelContext.save()
+  }
+
+  private func copyWorkoutToToday(_ workout: Workout) {
+    var descriptor = FetchDescriptor<Workout>(
+      sortBy: [.init(\Workout.date, order: .reverse)]
+    )
+    descriptor.fetchLimit = 1
+
+    do {
+      let allWorkouts = try modelContext.fetch(descriptor)
+      let hasWorkoutForToday = allWorkouts.contains { Calendar.current.isDateInToday($0.date) }
+
+      if hasWorkoutForToday && !allowMultipleWorkoutsPerDay {
+        // Show alert if multiple workouts per day are not allowed
+        showingCopyToTodayAlert = false
+        showingMultipleWorkoutAlert = true
+        return
+      }
+    } catch {
+      print("Failed to fetch workouts: \(error)")
+    }
+
+    // Create a new workout with today's date
+    let todayWorkout = Workout(date: Date())
+
+    // Copy all workout items from the source workout
+    for item in workout.orderedItems {
+      if let exercise = item.exercise {
+        // Create a new exercise
+        let newExercise = Exercise(
+          definition: exercise.definition!,
+          workout: todayWorkout,
+          restTime: exercise.restTime,
+          notes: exercise.notes
+        )
+
+        // Copy all sets from the original exercise
+        for setEntry in exercise.orderedSets {
+          newExercise.addSet(
+            SetEntry(
+              reps: setEntry.reps,
+              weight: setEntry.weight
+            ))
+        }
+
+        // Add the new exercise to the today workout
+        let newItem = WorkoutItem(exercise: newExercise)
+        todayWorkout.addItem(newItem)
+
+      } else if let superset = item.superset {
+        // Create a new superset
+        let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
+
+        // Copy all exercises in the superset
+        for exercise in superset.orderedExercises {
+          let newExercise = Exercise(
+            definition: exercise.definition!,
+            workout: todayWorkout,
+            restTime: exercise.restTime,
+            orderWithinSuperset: exercise.orderWithinSuperset,
+            notes: exercise.notes
+          )
+
+          // Copy all sets from the original exercise
+          for setEntry in exercise.orderedSets {
+            newExercise.addSet(
+              SetEntry(
+                reps: setEntry.reps,
+                weight: setEntry.weight
+              ))
+          }
+
+          newSuperset.addExercise(newExercise)
+        }
+
+        // Add the new superset to the today workout
+        let newItem = WorkoutItem(superset: newSuperset)
+        todayWorkout.addItem(newItem)
+      }
+    }
+
+    // Insert the new workout into the model context
+    modelContext.insert(todayWorkout)
+    try? modelContext.save()
+
+    // Clear the workout to copy reference
+    workoutToCopy = nil
   }
 }
 

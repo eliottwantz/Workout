@@ -26,17 +26,20 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
       if let workout = viewModel.workout {
         Group {
           if viewModel.isCollapsed {
-            VStack {
-              Spacer()
-              CollapsedWorkoutView(
-                workout: workout,
-                stopAction: {
-                  viewModel.stop()
-                }
-              )
-              .padding(.horizontal, 8)
-              .padding(.bottom, 55)  // Tab bar height
-            }
+//            if #available(iOS 26, *) {
+//            } else {
+              VStack {
+                Spacer()
+                CollapsedWorkoutView(
+                  workout: workout,
+                  stopAction: {
+                    viewModel.stop()
+                  }
+                )
+                .padding(.horizontal, 8)
+                .padding(.bottom, 55)  // Tab bar height
+              }
+//            }
           } else if viewModel.isPresented {
             ExpandedWorkoutView(workout: workout)
               .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -292,6 +295,60 @@ private struct CollapsedWorkoutView: View {
         }
     )
   }
+
+}
+
+
+struct iOS26CollapsedWorkoutView: View {
+  @Environment(\.startedWorkoutViewModel) private var viewModel
+  @Environment(\.userAccentColor) private var userAccentColor
+  
+  
+  
+  var body: some View {
+    if viewModel.workout != nil && viewModel.isCollapsed {
+    HStack {
+      if viewModel.isWorkoutComplete {
+        CollapsedCompletionView(stopAction: viewModel.stop)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
+        HStack(spacing: 10) {
+          CollapsedExerciseInfoView(
+            exerciseDefinition: exerciseDefinition,
+            set: currentSet.set,
+            setIndex: currentSet.setIndex,
+            totalSets: currentSet.exercise.orderedSets.count,
+            isSuperset: currentSet.isSuperset,
+          )
+          Spacer()
+          if viewModel.isResting {
+            CollapsedTimerView(
+              time: currentSet.restTime,
+              timerId: viewModel.currentTimerId,
+              onComplete: viewModel.timerDidComplete
+            )
+          } else {
+            CollapsedActionButtonView(
+              title: "Done",
+              action: viewModel.handleDoneSet
+            )
+          }
+        }
+      }
+    }
+    //    .frame(maxHeight: 60)
+    .padding(.vertical, 4)
+    .padding(.horizontal, 12)
+    //    .background(userAccentColor.background)
+    //    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    //    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+    .onTapGesture {
+      withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+        viewModel.expand()
+      }
+    }
+  }
+}
 
 }
 

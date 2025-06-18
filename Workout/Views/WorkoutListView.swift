@@ -21,7 +21,6 @@ struct WorkoutListView: View {
     NavigationStack(path: $path) {
       List {
         if !workouts.isEmpty {
-          Section("Workouts") {
             Button {
               createNewWorkout()
             } label: {
@@ -35,7 +34,6 @@ struct WorkoutListView: View {
               }
             }
             .onDelete(perform: deleteWorkouts)
-          }
         }
       }
       .overlay {

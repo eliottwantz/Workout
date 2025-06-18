@@ -18,23 +18,26 @@ struct ContentView: View {
   @State private var selectedTab: Tab = .workouts
 
   var body: some View {
-    TabView(selection: $selectedTab) {
-      WorkoutListView()
-        .modifier(CollapsedWorkoutPaddingModifier())
-        .tabItem {
-          Label("Workouts", systemImage: "figure.run")
-        }
-        .tag(Tab.workouts)
+    Group {
+      TabView(selection: $selectedTab) {
+        WorkoutListView()
+          .modifier(CollapsedWorkoutPaddingModifier())
+          .tabItem {
+            Label("Workouts", systemImage: "figure.run")
+          }
+          .tag(Tab.workouts)
 
-      ExerciseDefinitionListView()
-        .modifier(CollapsedWorkoutPaddingModifier())
-        .tabItem {
-          Label("Exercises", systemImage: "dumbbell")
-        }
-        .tag(Tab.exercises)
+        ExerciseDefinitionListView()
+          .modifier(CollapsedWorkoutPaddingModifier())
+          .tabItem {
+            Label("Exercises", systemImage: "dumbbell")
+          }
+          .tag(Tab.exercises)
+      }
+      .dismissKeyboardOnTap()
+      .startedWorkoutBottomSheet()
+//      .applyTabBariOS26IfAvailable()
     }
-    .dismissKeyboardOnTap()
-    .startedWorkoutBottomSheet()
   }
 }
 
@@ -42,8 +45,34 @@ private struct CollapsedWorkoutPaddingModifier: ViewModifier {
   @Environment(\.startedWorkoutViewModel) private var viewModel
 
   func body(content: Content) -> some View {
+//    if #available(iOS 26, *) {
+//      content
+//    } else {
+      content
+        .padding(.bottom, (viewModel.workout != nil && viewModel.isCollapsed) ? 74 : 0)
+//    }
+  }
+}
+
+@available(iOS 26, *)
+private struct iOS26BottomSheetCollapsedModifier: ViewModifier {
+  func body(content: Content) -> some View {
     content
-      .padding(.bottom, (viewModel.workout != nil && viewModel.isCollapsed) ? 74 : 0)
+//      .tabBarMinimizeBehavior(.onScrollDown)
+//      .tabViewBottomAccessory {
+//        iOS26CollapsedWorkoutView()
+//        .padding(8)
+//      }
+  }
+}
+
+extension View {
+  fileprivate func applyTabBariOS26IfAvailable() -> some View {
+    if #available(iOS 26, *) {
+      return AnyView(self.modifier(iOS26BottomSheetCollapsedModifier()))
+    } else {
+      return AnyView(self)
+    }
   }
 }
 

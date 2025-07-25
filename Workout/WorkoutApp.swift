@@ -39,6 +39,8 @@ struct WorkoutApp: App {
           ensureUserDefaultsAreSetUp()
           setupViewModelWithModelContext()
           startedWorkoutViewModel.restoreStateIfNeeded()
+          // Clean up any stale live activities from previous sessions
+          startedWorkoutViewModel.cleanUpExistingLiveActivities()
         }
         .onDisappear { dismantleKeyboarMonitors() }
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -86,6 +88,8 @@ struct WorkoutApp: App {
     case .active:
       // Restore state when app becomes active (if needed)
       startedWorkoutViewModel.restoreStateIfNeeded()
+      // Clean up any duplicate live activities
+      startedWorkoutViewModel.cleanUpExistingLiveActivities()
     @unknown default:
       break
     }

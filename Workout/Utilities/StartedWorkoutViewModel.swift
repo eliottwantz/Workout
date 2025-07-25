@@ -17,6 +17,7 @@ struct WorkoutStateSnapshot: Codable {
   let currentTimerId: String
   let isWorkoutComplete: Bool
   let restTimeStartDate: Date?
+  let hasLiveActivity: Bool
   
   init(from viewModel: StartedWorkoutViewModel) {
     guard let workout = viewModel.workout else {
@@ -30,6 +31,7 @@ struct WorkoutStateSnapshot: Codable {
       self.currentTimerId = UUID().uuidString
       self.isWorkoutComplete = false
       self.restTimeStartDate = nil
+      self.hasLiveActivity = false
       return
     }
     
@@ -42,6 +44,7 @@ struct WorkoutStateSnapshot: Codable {
     self.currentTimerId = viewModel.currentTimerId
     self.isWorkoutComplete = viewModel.isWorkoutComplete
     self.restTimeStartDate = viewModel.restTimeStartDate
+    self.hasLiveActivity = viewModel.liveActivity != nil
   }
 }
 
@@ -274,9 +277,66 @@ class StartedWorkoutViewModel {
   }
 
   private func stopLiveActivity() {
-    guard let liveActivity = liveActivity else { return }
+    guard let liveActivity = liveActivity else { 
+      print("No live activity to stop")
+      return 
+    }
+    
+    print("Stopping live activity with timer ID: \(liveActivity.attributes.timerId)")
+    
     Task {
       await liveActivity.end(nil, dismissalPolicy: .immediate)
+      print("Live activity stopped")
+    }
+    
+    // Clear the reference immediately to prevent issues
+    self.liveActivity = nil
+  }
+
+  private func startLiveActivityInternal() {
+    guard let currentSet = currentWorkoutSet else { return }
+
+    let userAccentColor =
+      Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
+    let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
+    let restTime = currentSet.restTime
+    let endTime = Date().addingTimeInterval(TimeInterval(restTime))
+    let timerInterval = Date.now...endTime
+
+    let state = RestTimeCountdownAttributes.ContentState(
+      displayWeightInLbs: displayWeightInLbs,
+      userAccentColor: userAccentColor,
+      exercise: currentSet.exerciseName,
+      set: currentSetIndex + 1,
+      totalSets: workoutSets.count,
+      setForCurrentExercise: currentSet.setIndex + 1,
+      setsForCurrentExercise: currentSet.exercise.orderedSets.count,
+      reps: currentSet.set.reps,
+      weight: currentSet.set.weight,
+      endTime: endTime,
+      restTime: restTime,
+      isResting: isResting,
+      timerInterval: timerInterval,
+      nextExercise: nextWorkoutSet?.exerciseName,
+      nextReps: nextWorkoutSet?.set.reps,
+      nextWeight: nextWorkoutSet?.set.weight,
+      setForNextExercise: nextWorkoutSet != nil ? nextWorkoutSet!.setIndex + 1 : nil,
+      setsForNextExercise: nextWorkoutSet?.exercise.orderedSets.count
+    )
+
+    let attributes = RestTimeCountdownAttributes(
+      timerId: currentTimerId
+    )
+
+    do {
+      liveActivity = try Activity<RestTimeCountdownAttributes>.request(
+        attributes: attributes,
+        content: .init(state: state, staleDate: nil),
+        pushType: nil
+      )
+      print("Started new live activity with timer ID: \(currentTimerId)")
+    } catch {
+      print("Error starting live activity: \(error)")
     }
   }
 
@@ -320,51 +380,7 @@ class StartedWorkoutViewModel {
   }
 
   private func startLiveActivity() {
-    stopLiveActivity()
-
-    guard let currentSet = currentWorkoutSet else { return }
-
-    let userAccentColor =
-      Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
-    let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
-    let restTime = currentSet.restTime
-    let endTime = Date().addingTimeInterval(TimeInterval(restTime))
-    let timerInterval = Date.now...endTime
-
-    let state = RestTimeCountdownAttributes.ContentState(
-      displayWeightInLbs: displayWeightInLbs,
-      userAccentColor: userAccentColor,
-      exercise: currentSet.exerciseName,
-      set: currentSetIndex + 1,
-      totalSets: workoutSets.count,
-      setForCurrentExercise: currentSet.setIndex + 1,  // Set number for the current exercise
-      setsForCurrentExercise: currentSet.exercise.orderedSets.count,  // Sets for current exercise
-      reps: currentSet.set.reps,
-      weight: currentSet.set.weight,
-      endTime: endTime,
-      restTime: restTime,
-      isResting: isResting,
-      timerInterval: timerInterval,
-      nextExercise: nextWorkoutSet?.exerciseName,
-      nextReps: nextWorkoutSet?.set.reps,
-      nextWeight: nextWorkoutSet?.set.weight,
-      setForNextExercise: nextWorkoutSet != nil ? nextWorkoutSet!.setIndex + 1 : nil,
-      setsForNextExercise: nextWorkoutSet?.exercise.orderedSets.count
-    )
-
-    let attributes = RestTimeCountdownAttributes(
-      timerId: currentTimerId
-    )
-
-    do {
-      liveActivity = try Activity<RestTimeCountdownAttributes>.request(
-        attributes: attributes,
-        content: .init(state: state, staleDate: nil),
-        pushType: nil
-      )
-    } catch {
-      print("Error starting live activity: \(error)")
-    }
+    startLiveActivityInternal()
   }
 
   private func removeTimerIdFromUserDefaults() {
@@ -422,6 +438,38 @@ class StartedWorkoutViewModel {
   /// Set the model context for data access
   func setModelContext(_ context: ModelContext) {
     self.modelContext = context
+  }
+
+  /// Clean up any existing live activities that don't match our current state
+  func cleanUpExistingLiveActivities() {
+    Task {
+      // Get all current live activities for our app
+      let activities = Activity<RestTimeCountdownAttributes>.activities
+      
+      print("Found \(activities.count) existing live activities")
+      
+      for activity in activities {
+        // If we have an active workout and this activity matches our current timer ID, keep it
+        if let currentWorkout = workout,
+           isPresented || isCollapsed,
+           activity.attributes.timerId == currentTimerId {
+          print("Keeping live activity with timer ID: \(activity.attributes.timerId)")
+          self.liveActivity = activity
+        } else {
+          // This is an old/duplicate activity, remove it
+          print("Removing stale live activity with timer ID: \(activity.attributes.timerId)")
+          await activity.end(nil, dismissalPolicy: .immediate)
+        }
+      }
+      
+      // If we should have a live activity but don't have one, create it
+      if (workout != nil) && (isPresented || isCollapsed) && (liveActivity == nil) {
+        print("Creating missing live activity")
+        await MainActor.run {
+          startLiveActivityInternal()
+        }
+      }
+    }
   }
 
   /// Save the current workout state to UserDefaults
@@ -492,10 +540,8 @@ class StartedWorkoutViewModel {
           }
         }
         
-        // Restart live activity if needed
-        if isPresented || isCollapsed {
-          startLiveActivity()
-        }
+        // Don't restart live activity here - let cleanUpExistingLiveActivities handle it
+        // during the app foreground lifecycle event
         
         // If we were in a presented state, make sure the sheet is shown
         if isPresented && !isCollapsed {

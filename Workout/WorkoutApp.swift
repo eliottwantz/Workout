@@ -16,6 +16,7 @@ struct WorkoutApp: App {
   @State private var keyboardShownMonitor: AnyCancellable? = nil
   @State var startedWorkoutViewModel = StartedWorkoutViewModel()
   @AppStorage(UserAccentColorKey) private var userAccentColor: Color = .pink
+  @Environment(\.scenePhase) private var scenePhase
 
   init() {
     // Print the Application Support directory path on startup
@@ -36,8 +37,13 @@ struct WorkoutApp: App {
         .onAppear {
           setupKeyboardMonitors()
           ensureUserDefaultsAreSetUp()
+          setupViewModelWithModelContext()
+          startedWorkoutViewModel.restoreStateIfNeeded()
         }
         .onDisappear { dismantleKeyboarMonitors() }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+          handleScenePhaseChange(from: oldPhase, to: newPhase)
+        }
         .tint(userAccentColor)
         .withGeometryEnvironment()
     }
@@ -70,5 +76,22 @@ struct WorkoutApp: App {
     if UserDefaults.standard.string(forKey: forKey) == nil {
       UserDefaults.standard.set(value, forKey: forKey)
     }
+  }
+
+  private func handleScenePhaseChange(from oldPhase: ScenePhase?, to newPhase: ScenePhase) {
+    switch newPhase {
+    case .background, .inactive:
+      // Save state when app goes to background or becomes inactive
+      startedWorkoutViewModel.saveStateToUserDefaults()
+    case .active:
+      // Restore state when app becomes active (if needed)
+      startedWorkoutViewModel.restoreStateIfNeeded()
+    @unknown default:
+      break
+    }
+  }
+
+  private func setupViewModelWithModelContext() {
+    startedWorkoutViewModel.setModelContext(AppContainer.shared.modelContainer.mainContext)
   }
 }

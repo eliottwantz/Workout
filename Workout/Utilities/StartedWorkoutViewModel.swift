@@ -4,6 +4,47 @@ import SwiftData
 import SwiftUI
 import UserNotifications
 
+// MARK: - Workout State Persistence
+
+/// Codable structure to persist workout state across app backgrounds/foregrounds
+struct WorkoutStateSnapshot: Codable {
+  let workoutID: UUID
+  let workoutDate: Date
+  let isCollapsed: Bool
+  let isPresented: Bool
+  let currentSetIndex: Int
+  let isResting: Bool
+  let currentTimerId: String
+  let isWorkoutComplete: Bool
+  let restTimeStartDate: Date?
+  
+  init(from viewModel: StartedWorkoutViewModel) {
+    guard let workout = viewModel.workout else {
+      // Should not happen if we're saving state, but provide defaults
+      self.workoutID = UUID()
+      self.workoutDate = Date()
+      self.isCollapsed = false
+      self.isPresented = false
+      self.currentSetIndex = 0
+      self.isResting = false
+      self.currentTimerId = UUID().uuidString
+      self.isWorkoutComplete = false
+      self.restTimeStartDate = nil
+      return
+    }
+    
+    self.workoutID = workout.id
+    self.workoutDate = workout.date
+    self.isCollapsed = viewModel.isCollapsed
+    self.isPresented = viewModel.isPresented
+    self.currentSetIndex = viewModel.currentSetIndex
+    self.isResting = viewModel.isResting
+    self.currentTimerId = viewModel.currentTimerId
+    self.isWorkoutComplete = viewModel.isWorkoutComplete
+    self.restTimeStartDate = viewModel.restTimeStartDate
+  }
+}
+
 // Extend EnvironmentValues to include the ViewModel
 extension EnvironmentValues {
   @Entry var startedWorkoutViewModel = StartedWorkoutViewModel()
@@ -22,6 +63,13 @@ class StartedWorkoutViewModel {
   var isResting = false
   var currentTimerId = UUID().uuidString
   var isWorkoutComplete = false
+  
+  // Key for UserDefaults persistence
+  private static let workoutStateKey = "savedWorkoutState"
+  
+  // Model context for data access
+  private var modelContext: ModelContext?
+  
   var workoutSets: [WorkoutSet] {
     return buildWorkoutSetsList()
   }
@@ -67,6 +115,7 @@ class StartedWorkoutViewModel {
     removeAllPendingNotifications()  // Clean up notifications
     stopLiveActivity()
     removeTimerIdFromUserDefaults()
+    clearSavedState()  // Clear persisted state when workout ends
     self.workout = nil
     liveActivity = nil
     isPresented = false
@@ -365,6 +414,152 @@ class StartedWorkoutViewModel {
     if isResting {
       isResting = false
       moveToNextSet()
+    }
+  }
+
+  // MARK: - State Persistence
+
+  /// Set the model context for data access
+  func setModelContext(_ context: ModelContext) {
+    self.modelContext = context
+  }
+
+  /// Save the current workout state to UserDefaults
+  func saveStateToUserDefaults() {
+    guard let workout = workout else {
+      // No active workout, clear any saved state
+      clearSavedState()
+      return
+    }
+    
+    print("Saving workout state: \(workout.name ?? "Untitled"), set \(currentSetIndex + 1), presented: \(isPresented), collapsed: \(isCollapsed), resting: \(isResting)")
+    
+    let snapshot = WorkoutStateSnapshot(from: self)
+    do {
+      let data = try JSONEncoder().encode(snapshot)
+      UserDefaults.standard.set(data, forKey: Self.workoutStateKey)
+      print("Successfully saved workout state to UserDefaults")
+    } catch {
+      print("Failed to save workout state: \(error)")
+    }
+  }
+
+  /// Restore workout state from UserDefaults if available and valid
+  func restoreStateIfNeeded() {
+    // Only restore if we don't already have an active workout
+    guard workout == nil else { return }
+    
+    guard let data = UserDefaults.standard.data(forKey: Self.workoutStateKey) else {
+      print("No saved workout state found")
+      return
+    }
+    
+    do {
+      let snapshot = try JSONDecoder().decode(WorkoutStateSnapshot.self, from: data)
+      
+      // Try to find the workout in the current context
+      // Note: This requires access to the model context, which we'll need to provide
+      if let restoredWorkout = findWorkout(id: snapshot.workoutID, date: snapshot.workoutDate) {
+        print("Restoring workout state for workout: \(restoredWorkout.name ?? "Untitled")")
+        
+        // Restore the workout and state
+        self.workout = restoredWorkout
+        self.isCollapsed = snapshot.isCollapsed
+        self.isPresented = snapshot.isPresented
+        self.currentSetIndex = snapshot.currentSetIndex
+        self.isResting = snapshot.isResting
+        self.currentTimerId = snapshot.currentTimerId
+        self.isWorkoutComplete = snapshot.isWorkoutComplete
+        self.restTimeStartDate = snapshot.restTimeStartDate
+        
+        // Validate that the restored state is still valid
+        let workoutSets = buildWorkoutSetsList()
+        if currentSetIndex >= workoutSets.count {
+          print("Restored set index (\(currentSetIndex)) is out of bounds, resetting to last valid set")
+          currentSetIndex = max(0, workoutSets.count - 1)
+        }
+        
+        // If we were resting and it's been too long, stop resting
+        if isResting, let restStartDate = restTimeStartDate {
+          let currentSet = workoutSets.indices.contains(currentSetIndex) ? workoutSets[currentSetIndex] : nil
+          let restDuration = currentSet?.restTime ?? 0
+          let timeElapsed = Date().timeIntervalSince(restStartDate)
+          
+          if timeElapsed >= Double(restDuration) {
+            print("Rest time has already elapsed, moving to next set")
+            isResting = false
+            // Don't automatically move to next set, let user decide
+          }
+        }
+        
+        // Restart live activity if needed
+        if isPresented || isCollapsed {
+          startLiveActivity()
+        }
+        
+        // If we were in a presented state, make sure the sheet is shown
+        if isPresented && !isCollapsed {
+          // The sheet should already be presented due to the restored isPresented state
+          print("Restored workout with expanded bottom sheet")
+        } else if isCollapsed {
+          print("Restored workout with collapsed bottom sheet")
+        }
+        
+        print("Successfully restored workout state")
+      } else {
+        print("Could not find saved workout, clearing saved state")
+        clearSavedState()
+      }
+    } catch {
+      print("Failed to restore workout state: \(error)")
+      clearSavedState()
+    }
+  }
+
+  /// Clear saved state from UserDefaults
+  func clearSavedState() {
+    UserDefaults.standard.removeObject(forKey: Self.workoutStateKey)
+    print("Cleared saved workout state")
+  }
+
+  /// Find a workout by ID and date (this needs model context access)
+  private func findWorkout(id: UUID, date: Date) -> Workout? {
+    guard let modelContext = modelContext else {
+      print("No model context available for finding workout")
+      return nil
+    }
+    
+    do {
+      // First try to find by exact ID
+      let descriptor = FetchDescriptor<Workout>(
+        predicate: #Predicate<Workout> { workout in
+          workout.id == id
+        }
+      )
+      let workouts = try modelContext.fetch(descriptor)
+      
+      // If we find the workout with the exact ID, use it
+      // This is more reliable than date matching due to potential precision issues
+      if let workout = workouts.first {
+        return workout
+      }
+      
+      // Fallback: try to find by date if ID doesn't match (workout might have been recreated)
+      let calendar = Calendar.current
+      let startOfDay = calendar.startOfDay(for: date)
+      let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
+      
+      let dateDescriptor = FetchDescriptor<Workout>(
+        predicate: #Predicate<Workout> { workout in
+          workout.date >= startOfDay && workout.date < endOfDay
+        }
+      )
+      let dayWorkouts = try modelContext.fetch(dateDescriptor)
+      return dayWorkouts.first
+      
+    } catch {
+      print("Error fetching workout: \(error)")
+      return nil
     }
   }
 }

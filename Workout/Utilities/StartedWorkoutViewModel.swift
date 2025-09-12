@@ -450,7 +450,7 @@ class StartedWorkoutViewModel {
       
       for activity in activities {
         // If we have an active workout and this activity matches our current timer ID, keep it
-        if let currentWorkout = workout,
+        if workout != nil,
            isPresented || isCollapsed,
            activity.attributes.timerId == currentTimerId {
           print("Keeping live activity with timer ID: \(activity.attributes.timerId)")

@@ -18,23 +18,9 @@ struct WorkoutStateSnapshot: Codable {
   let isWorkoutComplete: Bool
   let restTimeStartDate: Date?
   let hasLiveActivity: Bool
+  let liveActivityId: String?
   
-  init(from viewModel: StartedWorkoutViewModel) {
-    guard let workout = viewModel.workout else {
-      // Should not happen if we're saving state, but provide defaults
-      self.workoutID = UUID()
-      self.workoutDate = Date()
-      self.isCollapsed = false
-      self.isPresented = false
-      self.currentSetIndex = 0
-      self.isResting = false
-      self.currentTimerId = UUID().uuidString
-      self.isWorkoutComplete = false
-      self.restTimeStartDate = nil
-      self.hasLiveActivity = false
-      return
-    }
-    
+  init(from workout: Workout, viewModel: StartedWorkoutViewModel) {
     self.workoutID = workout.id
     self.workoutDate = workout.date
     self.isCollapsed = viewModel.isCollapsed
@@ -45,6 +31,7 @@ struct WorkoutStateSnapshot: Codable {
     self.isWorkoutComplete = viewModel.isWorkoutComplete
     self.restTimeStartDate = viewModel.restTimeStartDate
     self.hasLiveActivity = viewModel.liveActivity != nil
+    self.liveActivityId = viewModel.liveActivity?.id
   }
 }
 
@@ -69,6 +56,7 @@ class StartedWorkoutViewModel {
   
   // Key for UserDefaults persistence
   private static let workoutStateKey = "savedWorkoutState"
+  private static let liveActivityIdKey = "savedLiveActivityId"
   
   // Model context for data access
   private var modelContext: ModelContext?
@@ -275,22 +263,56 @@ class StartedWorkoutViewModel {
     center.removeAllPendingNotificationRequests()
     print("Removed all pending notifications")
   }
+    
+    private func findActivity(by id: String) -> Activity<RestTimeCountdownAttributes>? {
+        return Activity<RestTimeCountdownAttributes>.activities.first(where: { $0.id == id })
+    }
+  
+  // MARK: - Live Activity ID Persistence
+  
+  private func saveLiveActivityId(_ id: String) {
+    UserDefaults.standard.set(id, forKey: Self.liveActivityIdKey)
+    print("Saved live activity ID: \(id)")
+  }
+  
+  private func getSavedLiveActivityId() -> String? {
+    return UserDefaults.standard.string(forKey: Self.liveActivityIdKey)
+  }
+  
+  private func clearSavedLiveActivityId() {
+    UserDefaults.standard.removeObject(forKey: Self.liveActivityIdKey)
+    print("Cleared saved live activity ID")
+  }
 
   private func stopLiveActivity() {
-    guard let liveActivity = liveActivity else { 
+    // If liveActivity is nil, try to recover it from stored ID
+    if liveActivity == nil, let savedId = getSavedLiveActivityId() {
+      if let existingActivity = findActivity(by: savedId) {
+        liveActivity = existingActivity
+        print("Recovered live activity for stopping from stored ID: \(savedId)")
+      } else {
+        // Stored ID doesn't match any existing activity, clear it and return
+        clearSavedLiveActivityId()
+        print("No live activity found for stored ID, cleared stored ID")
+        return
+      }
+    }
+    
+    guard let liveActivity = liveActivity else {
       print("No live activity to stop")
       return 
     }
     
-    print("Stopping live activity with timer ID: \(liveActivity.attributes.timerId)")
+    print("Stopping live activity with ID: \(liveActivity.id) and timer ID: \(liveActivity.attributes.timerId)")
     
     Task {
       await liveActivity.end(nil, dismissalPolicy: .immediate)
       print("Live activity stopped")
     }
     
-    // Clear the reference immediately to prevent issues
+    // Clear the reference and stored ID
     self.liveActivity = nil
+    clearSavedLiveActivityId()
   }
 
   private func startLiveActivityInternal() {
@@ -334,13 +356,30 @@ class StartedWorkoutViewModel {
         content: .init(state: state, staleDate: nil),
         pushType: nil
       )
-      print("Started new live activity with timer ID: \(currentTimerId)")
+      
+      if let activityId = liveActivity?.id {
+        saveLiveActivityId(activityId)
+        print("Started new live activity with ID: \(activityId) and timer ID: \(currentTimerId)")
+      }
     } catch {
       print("Error starting live activity: \(error)")
     }
   }
 
   func updateLiveActivity() {
+    // If liveActivity is nil, try to recover it from stored ID
+    if liveActivity == nil, let savedId = getSavedLiveActivityId() {
+      if let existingActivity = findActivity(by: savedId) {
+        liveActivity = existingActivity
+        print("Recovered live activity for update from stored ID: \(savedId)")
+      } else {
+        // Stored ID doesn't match any existing activity, clear it
+        clearSavedLiveActivityId()
+        print("No live activity found for stored ID, cleared stored ID")
+        return
+      }
+    }
+    
     guard let liveActivity = liveActivity, let currentSet = currentWorkoutSet else { return }
 
     Task {
@@ -380,6 +419,26 @@ class StartedWorkoutViewModel {
   }
 
   private func startLiveActivity() {
+    // Check if we already have a live activity from a stored ID
+    if liveActivity == nil, let savedId = getSavedLiveActivityId() {
+      if let existingActivity = findActivity(by: savedId) {
+        liveActivity = existingActivity
+        print("Recovered live activity from stored ID: \(savedId)")
+        updateLiveActivity()  // Update it with current state
+        return
+      } else {
+        // Stored ID doesn't match any existing activity, clear it
+        clearSavedLiveActivityId()
+      }
+    }
+    
+    // If we already have a live activity, don't create a new one
+    if liveActivity != nil {
+      print("Live activity already exists, updating instead of creating new one")
+      updateLiveActivity()
+      return
+    }
+    
     startLiveActivityInternal()
   }
 
@@ -446,18 +505,17 @@ class StartedWorkoutViewModel {
       // Get all current live activities for our app
       let activities = Activity<RestTimeCountdownAttributes>.activities
       
-      print("Found \(activities.count) existing live activities")
+      print("Found \(activities.count) existing live activitiy")
       
       for activity in activities {
         // If we have an active workout and this activity matches our current timer ID, keep it
         if workout != nil,
-           isPresented || isCollapsed,
-           activity.attributes.timerId == currentTimerId {
-          print("Keeping live activity with timer ID: \(activity.attributes.timerId)")
+           isPresented || isCollapsed {
+          print("Keeping live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)")
           self.liveActivity = activity
         } else {
           // This is an old/duplicate activity, remove it
-          print("Removing stale live activity with timer ID: \(activity.attributes.timerId)")
+          print("Removing stale live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)")
           await activity.end(nil, dismissalPolicy: .immediate)
         }
       }
@@ -482,7 +540,7 @@ class StartedWorkoutViewModel {
     
     print("Saving workout state: \(workout.name ?? "Untitled"), set \(currentSetIndex + 1), presented: \(isPresented), collapsed: \(isCollapsed), resting: \(isResting)")
     
-    let snapshot = WorkoutStateSnapshot(from: self)
+    let snapshot = WorkoutStateSnapshot(from: workout, viewModel: self)
     do {
       let data = try JSONEncoder().encode(snapshot)
       UserDefaults.standard.set(data, forKey: Self.workoutStateKey)
@@ -519,6 +577,12 @@ class StartedWorkoutViewModel {
         self.currentTimerId = snapshot.currentTimerId
         self.isWorkoutComplete = snapshot.isWorkoutComplete
         self.restTimeStartDate = snapshot.restTimeStartDate
+        
+        // Restore live activity ID if available
+        if let liveActivityId = snapshot.liveActivityId {
+          saveLiveActivityId(liveActivityId)
+          print("Restored live activity ID: \(liveActivityId)")
+        }
         
         // Validate that the restored state is still valid
         let workoutSets = buildWorkoutSetsList()
@@ -565,6 +629,7 @@ class StartedWorkoutViewModel {
   /// Clear saved state from UserDefaults
   func clearSavedState() {
     UserDefaults.standard.removeObject(forKey: Self.workoutStateKey)
+    clearSavedLiveActivityId()
     print("Cleared saved workout state")
   }
 

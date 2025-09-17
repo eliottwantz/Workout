@@ -56,7 +56,6 @@ class StartedWorkoutViewModel {
   
   // Key for UserDefaults persistence
   private static let workoutStateKey = "savedWorkoutState"
-  private static let liveActivityIdKey = "savedLiveActivityId"
   
   // Model context for data access
   private var modelContext: ModelContext?
@@ -268,32 +267,29 @@ class StartedWorkoutViewModel {
         return Activity<RestTimeCountdownAttributes>.activities.first(where: { $0.id == id })
     }
   
-  // MARK: - Live Activity ID Persistence
-  
-  private func saveLiveActivityId(_ id: String) {
-    UserDefaults.standard.set(id, forKey: Self.liveActivityIdKey)
-    print("Saved live activity ID: \(id)")
-  }
+  // MARK: - Live Activity Recovery from Snapshot
   
   private func getSavedLiveActivityId() -> String? {
-    return UserDefaults.standard.string(forKey: Self.liveActivityIdKey)
-  }
-  
-  private func clearSavedLiveActivityId() {
-    UserDefaults.standard.removeObject(forKey: Self.liveActivityIdKey)
-    print("Cleared saved live activity ID")
+    guard let data = UserDefaults.standard.data(forKey: Self.workoutStateKey) else { return nil }
+    
+    do {
+      let snapshot = try JSONDecoder().decode(WorkoutStateSnapshot.self, from: data)
+      return snapshot.liveActivityId
+    } catch {
+      print("Failed to decode workout snapshot for live activity ID: \(error)")
+      return nil
+    }
   }
 
   private func stopLiveActivity() {
-    // If liveActivity is nil, try to recover it from stored ID
+    // If liveActivity is nil, try to recover it from snapshot ID
     if liveActivity == nil, let savedId = getSavedLiveActivityId() {
       if let existingActivity = findActivity(by: savedId) {
         liveActivity = existingActivity
-        print("Recovered live activity for stopping from stored ID: \(savedId)")
+        print("Recovered live activity for stopping from snapshot ID: \(savedId)")
       } else {
-        // Stored ID doesn't match any existing activity, clear it and return
-        clearSavedLiveActivityId()
-        print("No live activity found for stored ID, cleared stored ID")
+        // Stored ID doesn't match any existing activity
+        print("No live activity found for snapshot ID: \(savedId)")
         return
       }
     }
@@ -310,9 +306,8 @@ class StartedWorkoutViewModel {
       print("Live activity stopped")
     }
     
-    // Clear the reference and stored ID
+    // Clear the reference
     self.liveActivity = nil
-    clearSavedLiveActivityId()
   }
 
   private func startLiveActivityInternal() {
@@ -358,7 +353,6 @@ class StartedWorkoutViewModel {
       )
       
       if let activityId = liveActivity?.id {
-        saveLiveActivityId(activityId)
         print("Started new live activity with ID: \(activityId) and timer ID: \(currentTimerId)")
       }
     } catch {
@@ -367,15 +361,14 @@ class StartedWorkoutViewModel {
   }
 
   func updateLiveActivity() {
-    // If liveActivity is nil, try to recover it from stored ID
+    // If liveActivity is nil, try to recover it from snapshot ID
     if liveActivity == nil, let savedId = getSavedLiveActivityId() {
       if let existingActivity = findActivity(by: savedId) {
         liveActivity = existingActivity
-        print("Recovered live activity for update from stored ID: \(savedId)")
+        print("Recovered live activity for update from snapshot ID: \(savedId)")
       } else {
-        // Stored ID doesn't match any existing activity, clear it
-        clearSavedLiveActivityId()
-        print("No live activity found for stored ID, cleared stored ID")
+        // Stored ID doesn't match any existing activity
+        print("No live activity found for snapshot ID: \(savedId)")
         return
       }
     }
@@ -419,16 +412,16 @@ class StartedWorkoutViewModel {
   }
 
   private func startLiveActivity() {
-    // Check if we already have a live activity from a stored ID
+    // Check if we already have a live activity from a stored ID in snapshot
     if liveActivity == nil, let savedId = getSavedLiveActivityId() {
       if let existingActivity = findActivity(by: savedId) {
         liveActivity = existingActivity
-        print("Recovered live activity from stored ID: \(savedId)")
+        print("Recovered live activity from snapshot ID: \(savedId)")
         updateLiveActivity()  // Update it with current state
         return
       } else {
-        // Stored ID doesn't match any existing activity, clear it
-        clearSavedLiveActivityId()
+        // Stored ID doesn't match any existing activity
+        print("No live activity found for snapshot ID: \(savedId)")
       }
     }
     
@@ -578,12 +571,6 @@ class StartedWorkoutViewModel {
         self.isWorkoutComplete = snapshot.isWorkoutComplete
         self.restTimeStartDate = snapshot.restTimeStartDate
         
-        // Restore live activity ID if available
-        if let liveActivityId = snapshot.liveActivityId {
-          saveLiveActivityId(liveActivityId)
-          print("Restored live activity ID: \(liveActivityId)")
-        }
-        
         // Validate that the restored state is still valid
         let workoutSets = buildWorkoutSetsList()
         if currentSetIndex >= workoutSets.count {
@@ -629,7 +616,6 @@ class StartedWorkoutViewModel {
   /// Clear saved state from UserDefaults
   func clearSavedState() {
     UserDefaults.standard.removeObject(forKey: Self.workoutStateKey)
-    clearSavedLiveActivityId()
     print("Cleared saved workout state")
   }
 

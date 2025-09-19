@@ -87,6 +87,7 @@ class CountdownTimerModel {
   private func updateRemainingTime() {
     let now = Date()
     if now >= endTime {
+      print("Ended timer")
       // Timer has completed
       secondsRemaining = 0
       stop()
@@ -101,53 +102,43 @@ class CountdownTimerModel {
 struct CountdownTimer: View {
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.userAccentColor) private var userAccentColor
-  let time: Int
-  @State private var timerModel: CountdownTimerModel
-  private var lineWidth: CGFloat = 20
+
   // Optional completion handler
-  var onComplete: (() -> Void)?
-  var compact: Bool = false
+  let time: Int
+  let onComplete: (() -> Void)?
+  let compact: Bool
+  let timerTimeRange: ClosedRange<Date>
+
+  private var timerModel: CountdownTimerModel
+  private var lineWidth: CGFloat = 20
 
   init(
-    time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil, compact: Bool = false,
-    isActive: Bool = true
+    time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil,
+    compact: Bool = false
   ) {
     self.time = time
-    self._timerModel = State(initialValue: CountdownTimerModel(seconds: time, id: id, onComplete: onComplete))
+    self.timerModel = CountdownTimerModel(seconds: time, id: id, onComplete: onComplete)
     self.onComplete = onComplete
     self.compact = compact
+    self.timerTimeRange = Date()...Date().addingTimeInterval(TimeInterval(time))
   }
 
   var body: some View {
     if compact {
       // Compact timer for the collapsed view (small circular timer)
-      ZStack {
-        Circle()
-          .stroke(lineWidth: 8)
-          .foregroundStyle(userAccentColor.opacity(0.3))
-
-        Circle()
-          .trim(from: 0.0, to: min(1.0 - timerModel.progress, 1.0))
-          .stroke(
-            userAccentColor,
-            style: StrokeStyle(
-              lineWidth: 8,
-              lineCap: .round,
-              lineJoin: .round
-            )
-          )
-          .rotationEffect(.degrees(-90))
-          .shadow(radius: 1)
-
+      VStack(alignment: .trailing, spacing: 2) {
         Text(displayTime(timerModel.secondsRemaining))
           .font(.system(size: 14, weight: .bold, design: .rounded))
           .monospacedDigit()
           .contentTransition(.numericText())
           .foregroundStyle(.primary)
           .animation(.linear, value: timerModel.secondsRemaining)
+
+        ProgressView(value: Double(timerModel.secondsRemaining), total: Double(time))
+
       }
-      .frame(width: 50, height: 50)  // Smaller size for the compact version
-      .animation(.easeInOut, value: timerModel.secondsRemaining)
+      .frame(maxWidth: 50)
+      .frame(height: 20)
       .onChange(of: scenePhase) { oldPhase, newPhase in
         if newPhase == .active && oldPhase == .background {
           // App came back to foreground

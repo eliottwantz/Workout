@@ -23,40 +23,40 @@ struct WorkoutListView: View {
     NavigationStack(path: $path) {
       List {
         if !workouts.isEmpty {
-            Button {
-              createNewWorkout()
-            } label: {
-              Label("Add Workout", systemImage: "plus")
+          Button {
+            createNewWorkout()
+          } label: {
+            Label("Add Workout", systemImage: "plus")
+          }
+          .frame(minHeight: 40)
+          ForEach(workouts) { workout in
+            NavigationLink(value: workout) {
+              WorkoutRowView(workout: workout)
+                .frame(minHeight: 60)
             }
-            .frame(minHeight: 40)
-            ForEach(workouts) { workout in
-              NavigationLink(value: workout) {
-                WorkoutRowView(workout: workout)
-                  .frame(minHeight: 60)
-              }
-              .contextMenu {
-                if !Calendar.current.isDateInToday(workout.date) {
-                  Button {
-                    workoutToCopy = workout
-                    showingCopyToTodayAlert = true
-                  } label: {
-                    Label("Copy to Today", systemImage: "doc.on.doc")
-                  }
-                }
-              }
-              .swipeActions(edge: .leading) {
-                if !Calendar.current.isDateInToday(workout.date) {
-                  Button {
-                    workoutToCopy = workout
-                    showingCopyToTodayAlert = true
-                  } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
-                  }
-                  .tint(.blue)
+            .contextMenu {
+              if !Calendar.current.isDateInToday(workout.date) {
+                Button {
+                  workoutToCopy = workout
+                  showingCopyToTodayAlert = true
+                } label: {
+                  Label("Copy to Today", systemImage: "doc.on.doc")
                 }
               }
             }
-            .onDelete(perform: deleteWorkouts)
+            .swipeActions(edge: .leading) {
+              if !Calendar.current.isDateInToday(workout.date) {
+                Button {
+                  workoutToCopy = workout
+                  showingCopyToTodayAlert = true
+                } label: {
+                  Label("Copy", systemImage: "doc.on.doc")
+                }
+                .tint(.blue)
+              }
+            }
+          }
+          .onDelete(perform: deleteWorkouts)
         }
       }
       .overlay {
@@ -100,11 +100,12 @@ struct WorkoutListView: View {
         Text("Do you want to copy this workout to today?")
       }
       .toolbar {
-        ToolbarItemGroup(placement: .topBarLeading) {
-          NavigationLink(destination: SettingsView()) {
+        ToolbarItem(placement: .topBarLeading) {
+          NavigationLink(value: "settings") {
             Label("Settings", systemImage: "gear")
           }
         }
+
         ToolbarItemGroup(placement: .primaryAction) {
           EditButton()
           Button {

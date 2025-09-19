@@ -22,31 +22,24 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
     @Bindable var viewModel = viewModel
     ZStack {
       content
-
-      if let workout = viewModel.workout {
-        Group {
-          if viewModel.isCollapsed {
-//            if #available(iOS 26, *) {
-//            } else {
-              VStack {
-                Spacer()
-                CollapsedWorkoutView(
-                  workout: workout,
-                  stopAction: {
-                    viewModel.stop()
-                  }
-                )
-                .padding(.horizontal, 8)
-                .padding(.bottom, 55)  // Tab bar height
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewBottomAccessory {
+          if let workout = viewModel.workout, viewModel.isCollapsed {
+            CollapsedWorkoutView(
+              workout: workout,
+              stopAction: {
+                viewModel.stop()
               }
-//            }
-          } else if viewModel.isPresented {
-            ExpandedWorkoutView(workout: workout)
-              .transition(.move(edge: .bottom).combined(with: .opacity))
-              .animation(.spring(response: 0.6, dampingFraction: 0.75), value: viewModel.isPresented)
+            )
+            .padding(.horizontal, 16)
           }
         }
 
+      if let workout = viewModel.workout, viewModel.isPresented {
+        ExpandedWorkoutView(workout: workout)
+          .transition(.move(edge: .bottom).combined(with: .opacity))
+          .animation(
+            .spring(response: 0.6, dampingFraction: 0.75), value: viewModel.isPresented)
       }
     }
   }
@@ -224,7 +217,8 @@ private struct ExpandedWorkoutView: View {
 
   private func handleDragEnded(value: DragGesture.Value) {
     let velocity = value.predictedEndLocation.y - value.location.y
-    let draggableHeight: CGFloat = screenHeight - UIApplication.safeAreaInsets.top - UIApplication.safeAreaInsets.bottom
+    let draggableHeight: CGFloat =
+      screenHeight - UIApplication.safeAreaInsets.top - UIApplication.safeAreaInsets.bottom
 
     if velocity > 300 || abs(value.translation.height) > draggableHeight * 0.35 {
       withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
@@ -250,8 +244,10 @@ private struct CollapsedWorkoutView: View {
       if viewModel.isWorkoutComplete {
         CollapsedCompletionView(stopAction: stopAction)
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
-        HStack(spacing: 16) {
+      } else if let currentSet = viewModel.currentWorkoutSet,
+        let exerciseDefinition = currentSet.exerciseDefinition
+      {
+        HStack {
           CollapsedExerciseInfoView(
             exerciseDefinition: exerciseDefinition,
             set: currentSet.set,
@@ -275,12 +271,7 @@ private struct CollapsedWorkoutView: View {
         }
       }
     }
-    .frame(maxHeight: 60)
-    .padding(.vertical, 4)
-    .padding(.horizontal, 12)
-    .background(userAccentColor.background)
-    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+    .contentShape(.rect)
     .onTapGesture {
       withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
         viewModel.expand()
@@ -295,60 +286,6 @@ private struct CollapsedWorkoutView: View {
         }
     )
   }
-
-}
-
-
-struct iOS26CollapsedWorkoutView: View {
-  @Environment(\.startedWorkoutViewModel) private var viewModel
-  @Environment(\.userAccentColor) private var userAccentColor
-  
-  
-  
-  var body: some View {
-    if viewModel.workout != nil && viewModel.isCollapsed {
-    HStack {
-      if viewModel.isWorkoutComplete {
-        CollapsedCompletionView(stopAction: viewModel.stop)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-      } else if let currentSet = viewModel.currentWorkoutSet, let exerciseDefinition = currentSet.exerciseDefinition {
-        HStack(spacing: 10) {
-          CollapsedExerciseInfoView(
-            exerciseDefinition: exerciseDefinition,
-            set: currentSet.set,
-            setIndex: currentSet.setIndex,
-            totalSets: currentSet.exercise.orderedSets.count,
-            isSuperset: currentSet.isSuperset,
-          )
-          Spacer()
-          if viewModel.isResting {
-            CollapsedTimerView(
-              time: currentSet.restTime,
-              timerId: viewModel.currentTimerId,
-              onComplete: viewModel.timerDidComplete
-            )
-          } else {
-            CollapsedActionButtonView(
-              title: "Done",
-              action: viewModel.handleDoneSet
-            )
-          }
-        }
-      }
-    }
-    //    .frame(maxHeight: 60)
-    .padding(.vertical, 4)
-    .padding(.horizontal, 12)
-    //    .background(userAccentColor.background)
-    //    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    //    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
-    .onTapGesture {
-      withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-        viewModel.expand()
-      }
-    }
-  }
-}
 
 }
 
@@ -381,7 +318,7 @@ private struct CollapsedExerciseInfoView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 5) {
+    VStack(alignment: .leading, spacing: 1) {
       HStack(spacing: 4) {
         if isSuperset {
           Text("SUPERSET")
@@ -401,10 +338,10 @@ private struct CollapsedExerciseInfoView: View {
               .foregroundColor(.secondary)
           }
           Text(exerciseDefinition.name)
-            .font(.title2)
+            .font(.title3)
             .fontWeight(.bold)
             .lineLimit(1)
-            .multilineTextAlignment(.center)
+            .multilineTextAlignment(.leading)
         }
       }
 
@@ -518,12 +455,17 @@ private struct CollapsedCompletionView: View {
 
 #Preview {
   @Previewable @State var startedWorkoutViewModel = StartedWorkoutViewModel()
-  let workouts = try? AppContainer.preview.modelContainer.mainContext.fetch(FetchDescriptor<Workout>())
+  let workouts = try? AppContainer.preview.modelContainer.mainContext.fetch(
+    FetchDescriptor<Workout>())
   if let workouts = workouts, let workout = workouts.first {
 
+    //    TabView {
+    //      Tab("Workouts", systemImage: "dumbbell") {
     VStack {
       WorkoutDetailView(workout: workout)
         .startedWorkoutBottomSheet()
+      //        }
+      //      }
     }
     .withGeometryEnvironment()
     .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)

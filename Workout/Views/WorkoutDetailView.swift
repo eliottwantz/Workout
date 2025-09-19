@@ -97,6 +97,8 @@ struct WorkoutDetailView: View {
     .navigationTitle(String(localized: workout.smartFormattedDate))
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
+        EditButton()
+
         if !Calendar.current.isDateInToday(workout.date) {
           Button {
             showingCopyToTodayAlert = true
@@ -105,7 +107,6 @@ struct WorkoutDetailView: View {
           }
         }
 
-        EditButton()
         Button {
           showingAddExerciseView = true
         } label: {

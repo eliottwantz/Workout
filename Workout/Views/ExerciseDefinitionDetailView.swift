@@ -85,7 +85,8 @@ struct ExerciseDefinitionDetailView: View {
   NavigationStack {
     ExerciseDefinitionDetailView(
       exercise: .init(
-        name: "Bench Press", muscleGroup: .chest, notes: "A great exercise for building upper body strength."),
+        name: "Bench Press", muscleGroup: .chest,
+        notes: "A great exercise for building upper body strength."),
       path: $path
     )
   }

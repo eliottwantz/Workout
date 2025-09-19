@@ -88,7 +88,8 @@ final class AppContainer {
     workout1.addItem(workoutItem1)
 
     // Workout 2 (yesterday): Bench Press
-    let benchPressExercise1 = Exercise(definition: benchPressDefinition, workout: workout2, restTime: 120)
+    let benchPressExercise1 = Exercise(
+      definition: benchPressDefinition, workout: workout2, restTime: 120)
     for i in 0..<3 {
       let set = SetEntry(reps: 8, weight: 135.0 + Double(i * 10))
       benchPressExercise1.addSet(set)
@@ -97,7 +98,8 @@ final class AppContainer {
     workout2.addItem(workoutItem2)
 
     // Workout 2: Deadlift
-    let deadliftExercise1 = Exercise(definition: deadliftDefinition, workout: workout2, restTime: 150)
+    let deadliftExercise1 = Exercise(
+      definition: deadliftDefinition, workout: workout2, restTime: 150)
     for i in 0..<3 {
       let set = SetEntry(reps: 5, weight: 275.0 + Double(i * 10))
       deadliftExercise1.addSet(set)
@@ -134,7 +136,8 @@ final class AppContainer {
     todayWorkout.addItem(workoutItem4)
 
     // Today's Workout: Shoulder Press
-    let shoulderPressExercise1 = Exercise(definition: shoulderPressDefinition, workout: todayWorkout, restTime: 90)
+    let shoulderPressExercise1 = Exercise(
+      definition: shoulderPressDefinition, workout: todayWorkout, restTime: 90)
     for i in 0..<3 {
       let set = SetEntry(reps: 10, weight: 65.0 + Double(i * 5))
       shoulderPressExercise1.addSet(set)

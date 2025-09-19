@@ -126,7 +126,8 @@ struct AddExerciseToSupersetView: View {
   modelContext.insert(workout)
 
   // Add one exercise to the superset
-  let benchPressExercise = Exercise(definition: benchPressDefinition, workout: workout, orderWithinSuperset: 0)
+  let benchPressExercise = Exercise(
+    definition: benchPressDefinition, workout: workout, orderWithinSuperset: 0)
   superset.addExercise(benchPressExercise)
 
   return NavigationStack {

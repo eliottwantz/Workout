@@ -20,8 +20,9 @@ struct WorkoutApp: App {
 
   init() {
     // Print the Application Support directory path on startup
-    if let appSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-    {
+    if let appSupportDirectory = FileManager.default.urls(
+      for: .applicationSupportDirectory, in: .userDomainMask
+    ).first {
       print("Application Support Path: \(appSupportDirectory.path)")
     } else {
       print("Unable to access Application Support directory")

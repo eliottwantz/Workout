@@ -19,7 +19,7 @@ struct WorkoutStateSnapshot: Codable {
   let restTimeStartDate: Date?
   let hasLiveActivity: Bool
   let liveActivityId: String?
-  
+
   init(from workout: Workout, viewModel: StartedWorkoutViewModel) {
     self.workoutID = workout.id
     self.workoutDate = workout.date
@@ -53,19 +53,21 @@ class StartedWorkoutViewModel {
   var isResting = false
   var currentTimerId = UUID().uuidString
   var isWorkoutComplete = false
-  
+
   // Key for UserDefaults persistence
   private static let workoutStateKey = "savedWorkoutState"
-  
+
   // Model context for data access
   private var modelContext: ModelContext?
-  
+
   var workoutSets: [WorkoutSet] {
     return buildWorkoutSetsList()
   }
 
   var currentWorkoutSet: WorkoutSet? {
-    guard workout != nil, !workoutSets.isEmpty, currentSetIndex < workoutSets.count else { return nil }
+    guard workout != nil, !workoutSets.isEmpty, currentSetIndex < workoutSets.count else {
+      return nil
+    }
     return workoutSets[currentSetIndex]
   }
 
@@ -75,12 +77,16 @@ class StartedWorkoutViewModel {
   }
 
   var nextWorkoutSet: WorkoutSet? {
-    guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else { return nil }
+    guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 1 < workoutSets.count else {
+      return nil
+    }
     return workoutSets[currentSetIndex + 1]
   }
 
   var nextOfNextWorkoutSet: WorkoutSet? {
-    guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 2 < workoutSets.count else { return nil }
+    guard workout != nil, !workoutSets.isEmpty, currentSetIndex + 2 < workoutSets.count else {
+      return nil
+    }
     return workoutSets[currentSetIndex + 2]
   }
 
@@ -180,7 +186,8 @@ class StartedWorkoutViewModel {
   }
 
   private func requestNotificationPermissions() {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
+      granted, error in
       if granted {
         print("Notification permission granted")
       } else if let error = error {
@@ -247,7 +254,8 @@ class StartedWorkoutViewModel {
     content.sound = .default
 
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-    let request = UNNotificationRequest(identifier: currentTimerId, content: content, trigger: trigger)
+    let request = UNNotificationRequest(
+      identifier: currentTimerId, content: content, trigger: trigger)
 
     print("Scheduling notification (\(currentTimerId)) for rest timer: \(timeInterval) seconds")
     UNUserNotificationCenter.current().add(request) { error in
@@ -262,16 +270,16 @@ class StartedWorkoutViewModel {
     center.removeAllPendingNotificationRequests()
     print("Removed all pending notifications")
   }
-    
-    private func findActivity(by id: String) -> Activity<RestTimeCountdownAttributes>? {
-        return Activity<RestTimeCountdownAttributes>.activities.first(where: { $0.id == id })
-    }
-  
+
+  private func findActivity(by id: String) -> Activity<RestTimeCountdownAttributes>? {
+    return Activity<RestTimeCountdownAttributes>.activities.first(where: { $0.id == id })
+  }
+
   // MARK: - Live Activity Recovery from Snapshot
-  
+
   private func getSavedLiveActivityId() -> String? {
     guard let data = UserDefaults.standard.data(forKey: Self.workoutStateKey) else { return nil }
-    
+
     do {
       let snapshot = try JSONDecoder().decode(WorkoutStateSnapshot.self, from: data)
       return snapshot.liveActivityId
@@ -293,19 +301,21 @@ class StartedWorkoutViewModel {
         return
       }
     }
-    
+
     guard let liveActivity = liveActivity else {
       print("No live activity to stop")
-      return 
+      return
     }
-    
-    print("Stopping live activity with ID: \(liveActivity.id) and timer ID: \(liveActivity.attributes.timerId)")
-    
+
+    print(
+      "Stopping live activity with ID: \(liveActivity.id) and timer ID: \(liveActivity.attributes.timerId)"
+    )
+
     Task {
       await liveActivity.end(nil, dismissalPolicy: .immediate)
       print("Live activity stopped")
     }
-    
+
     // Clear the reference
     self.liveActivity = nil
   }
@@ -314,7 +324,8 @@ class StartedWorkoutViewModel {
     guard let currentSet = currentWorkoutSet else { return }
 
     let userAccentColor =
-      Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
+      Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF")
+      ?? .blue
     let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
     let restTime = currentSet.restTime
     let endTime = Date().addingTimeInterval(TimeInterval(restTime))
@@ -351,7 +362,7 @@ class StartedWorkoutViewModel {
         content: .init(state: state, staleDate: nil),
         pushType: nil
       )
-      
+
       if let activityId = liveActivity?.id {
         print("Started new live activity with ID: \(activityId) and timer ID: \(currentTimerId)")
       }
@@ -372,12 +383,13 @@ class StartedWorkoutViewModel {
         return
       }
     }
-    
+
     guard let liveActivity = liveActivity, let currentSet = currentWorkoutSet else { return }
 
     Task {
       let userAccentColor =
-        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF") ?? .blue
+        Color(rawValue: UserDefaults.standard.string(forKey: UserAccentColorKey) ?? "#FFFFFF")
+        ?? .blue
       let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
       let restTime = currentSet.restTime
       let endTime = (restTimeStartDate ?? Date()).addingTimeInterval(TimeInterval(restTime))
@@ -424,14 +436,14 @@ class StartedWorkoutViewModel {
         print("No live activity found for snapshot ID: \(savedId)")
       }
     }
-    
+
     // If we already have a live activity, don't create a new one
     if liveActivity != nil {
       print("Live activity already exists, updating instead of creating new one")
       updateLiveActivity()
       return
     }
-    
+
     startLiveActivityInternal()
   }
 
@@ -497,22 +509,26 @@ class StartedWorkoutViewModel {
     Task {
       // Get all current live activities for our app
       let activities = Activity<RestTimeCountdownAttributes>.activities
-      
+
       print("Found \(activities.count) existing live activitiy")
-      
+
       for activity in activities {
         // If we have an active workout and this activity matches our current timer ID, keep it
         if workout != nil,
-           isPresented || isCollapsed {
-          print("Keeping live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)")
+          isPresented || isCollapsed
+        {
+          print(
+            "Keeping live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)")
           self.liveActivity = activity
         } else {
           // This is an old/duplicate activity, remove it
-          print("Removing stale live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)")
+          print(
+            "Removing stale live activity ID \(activity.id) with timer ID: \(activity.attributes.timerId)"
+          )
           await activity.end(nil, dismissalPolicy: .immediate)
         }
       }
-      
+
       // If we should have a live activity but don't have one, create it
       if (workout != nil) && (isPresented || isCollapsed) && (liveActivity == nil) {
         print("Creating missing live activity")
@@ -530,9 +546,11 @@ class StartedWorkoutViewModel {
       clearSavedState()
       return
     }
-    
-    print("Saving workout state: \(workout.name ?? "Untitled"), set \(currentSetIndex + 1), presented: \(isPresented), collapsed: \(isCollapsed), resting: \(isResting)")
-    
+
+    print(
+      "Saving workout state: \(workout.name ?? "Untitled"), set \(currentSetIndex + 1), presented: \(isPresented), collapsed: \(isCollapsed), resting: \(isResting)"
+    )
+
     let snapshot = WorkoutStateSnapshot(from: workout, viewModel: self)
     do {
       let data = try JSONEncoder().encode(snapshot)
@@ -547,20 +565,20 @@ class StartedWorkoutViewModel {
   func restoreStateIfNeeded() {
     // Only restore if we don't already have an active workout
     guard workout == nil else { return }
-    
+
     guard let data = UserDefaults.standard.data(forKey: Self.workoutStateKey) else {
       print("No saved workout state found")
       return
     }
-    
+
     do {
       let snapshot = try JSONDecoder().decode(WorkoutStateSnapshot.self, from: data)
-      
+
       // Try to find the workout in the current context
       // Note: This requires access to the model context, which we'll need to provide
       if let restoredWorkout = findWorkout(id: snapshot.workoutID, date: snapshot.workoutDate) {
         print("Restoring workout state for workout: \(restoredWorkout.name ?? "Untitled")")
-        
+
         // Restore the workout and state
         self.workout = restoredWorkout
         self.isCollapsed = snapshot.isCollapsed
@@ -570,30 +588,32 @@ class StartedWorkoutViewModel {
         self.currentTimerId = snapshot.currentTimerId
         self.isWorkoutComplete = snapshot.isWorkoutComplete
         self.restTimeStartDate = snapshot.restTimeStartDate
-        
+
         // Validate that the restored state is still valid
         let workoutSets = buildWorkoutSetsList()
         if currentSetIndex >= workoutSets.count {
-          print("Restored set index (\(currentSetIndex)) is out of bounds, resetting to last valid set")
+          print(
+            "Restored set index (\(currentSetIndex)) is out of bounds, resetting to last valid set")
           currentSetIndex = max(0, workoutSets.count - 1)
         }
-        
+
         // If we were resting and it's been too long, stop resting
         if isResting, let restStartDate = restTimeStartDate {
-          let currentSet = workoutSets.indices.contains(currentSetIndex) ? workoutSets[currentSetIndex] : nil
+          let currentSet =
+            workoutSets.indices.contains(currentSetIndex) ? workoutSets[currentSetIndex] : nil
           let restDuration = currentSet?.restTime ?? 0
           let timeElapsed = Date().timeIntervalSince(restStartDate)
-          
+
           if timeElapsed >= Double(restDuration) {
             print("Rest time has already elapsed, moving to next set")
             isResting = false
             // Don't automatically move to next set, let user decide
           }
         }
-        
+
         // Don't restart live activity here - let cleanUpExistingLiveActivities handle it
         // during the app foreground lifecycle event
-        
+
         // If we were in a presented state, make sure the sheet is shown
         if isPresented && !isCollapsed {
           // The sheet should already be presented due to the restored isPresented state
@@ -601,7 +621,7 @@ class StartedWorkoutViewModel {
         } else if isCollapsed {
           print("Restored workout with collapsed bottom sheet")
         }
-        
+
         print("Successfully restored workout state")
       } else {
         print("Could not find saved workout, clearing saved state")
@@ -625,7 +645,7 @@ class StartedWorkoutViewModel {
       print("No model context available for finding workout")
       return nil
     }
-    
+
     do {
       // First try to find by exact ID
       let descriptor = FetchDescriptor<Workout>(
@@ -634,18 +654,18 @@ class StartedWorkoutViewModel {
         }
       )
       let workouts = try modelContext.fetch(descriptor)
-      
+
       // If we find the workout with the exact ID, use it
       // This is more reliable than date matching due to potential precision issues
       if let workout = workouts.first {
         return workout
       }
-      
+
       // Fallback: try to find by date if ID doesn't match (workout might have been recreated)
       let calendar = Calendar.current
       let startOfDay = calendar.startOfDay(for: date)
       let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
-      
+
       let dateDescriptor = FetchDescriptor<Workout>(
         predicate: #Predicate<Workout> { workout in
           workout.date >= startOfDay && workout.date < endOfDay
@@ -653,7 +673,7 @@ class StartedWorkoutViewModel {
       )
       let dayWorkouts = try modelContext.fetch(dateDescriptor)
       return dayWorkouts.first
-      
+
     } catch {
       print("Error fetching workout: \(error)")
       return nil

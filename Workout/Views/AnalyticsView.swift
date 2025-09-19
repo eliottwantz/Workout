@@ -248,7 +248,8 @@ struct ChartView: View {
             // Tooltip rendering
             if let selected = selectedElement {
               // Convert selected weight for positioning if displaying in lbs
-              let selectedPlotWeight = displayWeightInLbs ? selected.weight * 2.20462 : selected.weight
+              let selectedPlotWeight =
+                displayWeightInLbs ? selected.weight * 2.20462 : selected.weight
               // Use the potentially converted weight to find the position
               if let positionInPlot = proxy.position(for: (selected.date, selectedPlotWeight)) {
                 let finalX = plotAreaOrigin.x + positionInPlot.x

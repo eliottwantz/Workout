@@ -191,9 +191,11 @@ struct SetCardView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             }
-            Text("\(currentSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
-              .font(.title2)
-              .fontWeight(.semibold)
+            Text(
+              "\(currentSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")"
+            )
+            .font(.title2)
+            .fontWeight(.semibold)
           }
 
           VStack {
@@ -273,8 +275,10 @@ struct SetCardView: View {
                   .font(.caption)
                   .foregroundColor(.secondary)
               }
-              Text("\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")")
-                .font(.title3)
+              Text(
+                "\(nextSet.set.weight.weightValue(inLbs: displayWeightInLbs), specifier: "%.1f")"
+              )
+              .font(.title3)
             }
 
             VStack {

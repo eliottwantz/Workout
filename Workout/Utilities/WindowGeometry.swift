@@ -51,7 +51,8 @@ extension UIApplication {
   }
 
   static var safeAreaInsets: UIEdgeInsets {
-    (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.safeAreaInsets ?? .zero
+    (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.safeAreaInsets
+      ?? .zero
   }
 
   static var displayCornerRadius: CGFloat {

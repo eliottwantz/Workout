@@ -28,7 +28,8 @@ struct ExerciseDefinitionEditor: View {
     self.exerciseDefinition = exerciseDefinition
     if let exerciseDefinition {
       self._name = State(initialValue: exerciseDefinition.name)
-      self._muscleGroup = State(initialValue: MuscleGroup(rawValue: exerciseDefinition.muscleGroup) ?? .other)
+      self._muscleGroup = State(
+        initialValue: MuscleGroup(rawValue: exerciseDefinition.muscleGroup) ?? .other)
       self._favorite = State(initialValue: exerciseDefinition.favorite)
       self._notes = State(initialValue: exerciseDefinition.notes ?? "")
     }

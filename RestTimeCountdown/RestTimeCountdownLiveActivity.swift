@@ -75,10 +75,13 @@ struct RestTimeCountdownLiveActivity: Widget {
                 } else {
                   VStack(alignment: .trailing) {
                     VStack(alignment: .trailing, spacing: 4) {
-                      Text(context.state.weight.formattedWeight(inLbs: context.state.displayWeightInLbs))
-                        .font(.title2)
-                        .bold()
-                        .foregroundStyle(context.state.userAccentColor)
+                      Text(
+                        context.state.weight.formattedWeight(
+                          inLbs: context.state.displayWeightInLbs)
+                      )
+                      .font(.title2)
+                      .bold()
+                      .foregroundStyle(context.state.userAccentColor)
                       Text("\(context.state.reps) reps")
                         .font(.title3)
                         .bold()
@@ -103,7 +106,8 @@ struct RestTimeCountdownLiveActivity: Widget {
                 }
 
                 Group {
-                  if let nextExercise = context.state.nextExercise, let nextReps = context.state.nextReps,
+                  if let nextExercise = context.state.nextExercise,
+                    let nextReps = context.state.nextReps,
                     let nextWeight = context.state.nextWeight,
                     let setForNextExercise = context.state.setForNextExercise,
                     let setsForNextExercise = context.state.setsForNextExercise
@@ -248,7 +252,8 @@ private struct LockeScreenView: View {
 
               Group {
                 if let nextReps = state.nextReps,
-                  let nextWeight = state.nextWeight, let setForNextExercise = state.setForNextExercise,
+                  let nextWeight = state.nextWeight,
+                  let setForNextExercise = state.setForNextExercise,
                   let setsForNextExercise = state.setsForNextExercise
                 {
 

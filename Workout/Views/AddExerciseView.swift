@@ -48,7 +48,8 @@ struct AddExerciseView: View {
           )
           .frame(maxWidth: .infinity)
         }
-        .disabled(selectedOption == .individual ? selectedExercises.isEmpty : selectedExercises.count < 2)
+        .disabled(
+          selectedOption == .individual ? selectedExercises.isEmpty : selectedExercises.count < 2)
       }
     }
     .navigationTitle("Add Exercises")

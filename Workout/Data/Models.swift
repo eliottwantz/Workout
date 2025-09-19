@@ -132,7 +132,8 @@ final class Exercise {
 
   // Requires the ExerciseDefinition to link to
   init(
-    definition: ExerciseDefinition, workout: Workout, restTime: Int = 120, orderWithinSuperset: Int = 0,
+    definition: ExerciseDefinition, workout: Workout, restTime: Int = 120,
+    orderWithinSuperset: Int = 0,
     notes: String? = nil
   ) {
     self.definition = definition
@@ -222,7 +223,9 @@ final class ExerciseDefinition {
 
   @Relationship(deleteRule: .cascade, inverse: \Exercise.definition) var exercises: [Exercise]?
 
-  init(name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false) {
+  init(
+    name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false
+  ) {
     self.name = name
     self.muscleGroup = muscleGroup.rawValue
     self.notes = notes

@@ -126,7 +126,7 @@ struct CountdownTimer: View {
   var body: some View {
     if compact {
       // Compact timer for the collapsed view (small circular timer)
-      VStack(alignment: .trailing, spacing: 2) {
+      VStack(spacing: 2) {
         Text(displayTime(timerModel.secondsRemaining))
           .font(.system(size: 14, weight: .bold, design: .rounded))
           .monospacedDigit()

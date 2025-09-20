@@ -10,28 +10,17 @@ import SwiftUI
 
 /// A reusable view for selecting exercises from a list.
 /// Used by both AddExerciseView and AddExerciseToSupersetView to maintain DRY principles.
-struct ExerciseSelectionView<ActionButton: View>: View {
+struct ExerciseSelectionView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
-
   @Query(sort: \ExerciseDefinition.name) var exerciseDefinitions: [ExerciseDefinition]
+
   @Binding var selectedExercises: Set<PersistentIdentifier>
-  @State private var searchText = ""
-  @State private var isEditorPresented = false
-
-  // Custom button to be provided by parent views
-  let actionButton: ActionButton
   let headerText: LocalizedStringResource
+  let disabled: Bool
+  let confirmAction: () -> Void
 
-  init(
-    selectedExercises: Binding<Set<PersistentIdentifier>>,
-    headerText: LocalizedStringResource,
-    @ViewBuilder actionButton: () -> ActionButton
-  ) {
-    self._selectedExercises = selectedExercises
-    self.headerText = headerText
-    self.actionButton = actionButton()
-  }
+  @State private var searchText = ""
 
   var body: some View {
     VStack {
@@ -46,27 +35,21 @@ struct ExerciseSelectionView<ActionButton: View>: View {
       .searchable(text: $searchText, prompt: "Exercise Name")
       .environment(\.editMode, .constant(.active))
       .listStyle(.inset)
-
-      actionButton
-        .padding([.horizontal, .bottom])
-        .buttonStyle(.borderedProminent)
-        .foregroundStyle(userAccentColor.contrastColor)
     }
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Button {
-          isEditorPresented = true
+          confirmAction()
         } label: {
-          Label("Add New Exercise", systemImage: "plus")
+          Label("Confirm", systemImage: "checkmark")
         }
+        .disabled(disabled)
+        .buttonStyle(.glassProminent)
+
       }
     }
     .interactiveDismissDisabled()
     .presentationDetents([.fraction(0.65), .large])
-    .sheet(isPresented: $isEditorPresented) {
-      ExerciseDefinitionEditor(exerciseDefinition: nil)
-        .interactiveDismissDisabled()
-    }
   }
 
   private var filteredExerciseDefinitions: [ExerciseDefinition] {

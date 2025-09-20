@@ -20,17 +20,13 @@ struct AddExerciseToSupersetView: View {
   var body: some View {
     ExerciseSelectionView(
       selectedExercises: $selectedExercises,
-      headerText: "Select exercises to add to your superset"
-    ) {
-      Button {
+      headerText: "Select exercises to add to your superset",
+      disabled: selectedExercises.isEmpty,
+      confirmAction: {
         addSelectedExercisesToSuperset()
         dismiss()
-      } label: {
-        Text("Add \(selectedExercises.count) Exercises to Superset")
-          .frame(maxWidth: .infinity)
       }
-      .disabled(selectedExercises.isEmpty)
-    }
+    )
     .navigationTitle("Add to Superset")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {

@@ -119,11 +119,8 @@ struct WorkoutListView: View {
         case .exerciseDetailView(let exercise):
           ExerciseDetailView(exercise: exercise)
         default:
-          VStack {
-            Text("No view for this route")
-          }
+          WorkoutListView()
         }
-
       }
     }
   }

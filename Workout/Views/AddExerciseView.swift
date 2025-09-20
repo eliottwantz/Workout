@@ -35,22 +35,20 @@ struct AddExerciseView: View {
         selectedExercises: $selectedExercises,
         headerText: selectedOption == .individual
           ? "Select exercises to add to your workout"
-          : "Select exercises to include in your superset"
-      ) {
-        Button {
-          addSelectedExercisesToWorkout()
-          dismiss()
-        } label: {
-          Text(
-            selectedOption == .individual
-              ? "Add \(selectedExercises.count) Exercises"
-              : "Add Superset with \(selectedExercises.count) Exercises"
-          )
-          .frame(maxWidth: .infinity)
+          : "Select exercises to include in your superset",
+        disabled: selectedOption == .individual
+          ? selectedExercises.isEmpty : selectedExercises.count < 2,
+        confirmAction: {
+          switch selectedOption {
+          case .individual:
+            addSelectedExercisesToWorkout()
+            dismiss()
+          case .superset:
+            addSelectedExercisesToWorkout()
+            dismiss()
+          }
         }
-        .disabled(
-          selectedOption == .individual ? selectedExercises.isEmpty : selectedExercises.count < 2)
-      }
+      )
     }
     .navigationTitle("Add Exercises")
     .navigationBarTitleDisplayMode(.inline)

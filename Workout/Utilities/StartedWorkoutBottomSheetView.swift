@@ -36,6 +36,13 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
                 }
               )
               .padding(.horizontal, 16)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background {
+                ZStack {
+                  Color(.systemBackground)
+                  userAccentColor.background
+                }
+              }
 
             } else if case .workoutDetail(let workout) = router.currentRoute,
               !workout.orderedItems.isEmpty

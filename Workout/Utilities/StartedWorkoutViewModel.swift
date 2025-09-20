@@ -42,7 +42,7 @@ extension EnvironmentValues {
 
 @Observable
 class StartedWorkoutViewModel {
-  var isCollapsed: Bool = false
+  var isCollapsed: Bool { !isPresented }
   var isPresented: Bool = false
   var workout: Workout? = nil  // Make workout optional
   var liveActivity: Activity<RestTimeCountdownAttributes>?
@@ -115,16 +115,16 @@ class StartedWorkoutViewModel {
     self.workout = nil
     liveActivity = nil
     isPresented = false
-    isCollapsed = false
+    //    isCollapsed = false
   }
 
   func expand() {
-    isCollapsed = false
+    //    isCollapsed = false
     isPresented = true
   }
 
   func collapse() {
-    isCollapsed = true
+    //    isCollapsed = true
     isPresented = false
   }
 
@@ -581,7 +581,7 @@ class StartedWorkoutViewModel {
 
         // Restore the workout and state
         self.workout = restoredWorkout
-        self.isCollapsed = snapshot.isCollapsed
+        //        self.isCollapsed = snapshot.isCollapsed
         self.isPresented = snapshot.isPresented
         self.currentSetIndex = snapshot.currentSetIndex
         self.isResting = snapshot.isResting

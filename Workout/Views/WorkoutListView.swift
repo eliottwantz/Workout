@@ -17,10 +17,11 @@ struct WorkoutListView: View {
   @State private var showingMultipleWorkoutAlert = false
   @State private var showingCopyToTodayAlert = false
   @State private var workoutToCopy: Workout?
-  @State private var path = NavigationPath()
+  @Environment(\.router) private var router
 
   var body: some View {
-    NavigationStack(path: $path) {
+    @Bindable var router = router
+    NavigationStack(path: $router.path) {
       List {
         if !workouts.isEmpty {
           Button {
@@ -30,7 +31,7 @@ struct WorkoutListView: View {
           }
           .frame(minHeight: 40)
           ForEach(workouts) { workout in
-            NavigationLink(value: workout) {
+            NavigationLink(value: Route.workoutDetail(workout: workout)) {
               WorkoutRowView(workout: workout)
                 .frame(minHeight: 60)
             }
@@ -71,17 +72,9 @@ struct WorkoutListView: View {
         }
       }
       .navigationTitle("Workout Log")
-      .navigationDestination(for: Workout.self) { workout in
-        WorkoutDetailView(workout: workout, navigationPath: $path)
-      }
-      .navigationDestination(for: String.self) { destination in
-        if destination == "settings" {
-          SettingsView()
-        }
-      }
       .alert("Can't add another workout for today", isPresented: $showingMultipleWorkoutAlert) {
         Button("Settings") {
-          path.append("settings")
+          router.navigate(to: .settings)
         }
         Button("Cancel", role: .cancel) {}
       } message: {
@@ -101,7 +94,9 @@ struct WorkoutListView: View {
       }
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          NavigationLink(value: "settings") {
+          Button {
+            router.navigate(to: .settings)
+          } label: {
             Label("Settings", systemImage: "gear")
           }
         }
@@ -115,7 +110,21 @@ struct WorkoutListView: View {
           }
         }
       }
+      .navigationDestination(for: Route.self) { route in
+        switch route {
+        case .workoutDetail(let workout):
+          WorkoutDetailView(workout: workout)
+        case .settings:
+          SettingsView()
+        case .exerciseDetailView(let exercise):
+          ExerciseDetailView(exercise: exercise)
+        default:
+          VStack {
+            Text("No view for this route")
+          }
+        }
 
+      }
     }
   }
 
@@ -132,7 +141,7 @@ struct WorkoutListView: View {
       let newWorkout = Workout(date: Date())
       modelContext.insert(newWorkout)
       try? modelContext.save()
-      path.append(newWorkout)
+      router.navigate(to: .workoutDetail(workout: newWorkout))
     }
   }
 

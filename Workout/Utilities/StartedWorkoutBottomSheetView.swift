@@ -17,6 +17,9 @@ extension View {
 
 private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.startedWorkoutViewModel) private var viewModel
+  @Environment(\.router) private var router
+  @Environment(\.userAccentColor) private var userAccentColor
+  @Namespace private var namespace
 
   func body(content: Content) -> some View {
     @Bindable var viewModel = viewModel
@@ -24,110 +27,75 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
       content
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-          if let workout = viewModel.workout, viewModel.isCollapsed {
-            CollapsedWorkoutView(
-              workout: workout,
-              stopAction: {
-                viewModel.stop()
+          Group {
+            if let workout = viewModel.workout {
+              CollapsedWorkoutView(
+                workout: workout,
+                stopAction: {
+                  viewModel.stop()
+                }
+              )
+              .padding(.horizontal, 16)
+
+            } else if case .workoutDetail(let workout) = router.currentRoute,
+              !workout.orderedItems.isEmpty
+                && !workout.orderedItems.flatMap({ item in
+                  if let exercise = item.exercise {
+                    return exercise.orderedSets
+                  }
+                  if let superset = item.superset {
+                    return superset.orderedExercises.flatMap({ $0.orderedSets })
+                  }
+                  return []
+                }).isEmpty && viewModel.workout == nil
+            {
+              HStack {
+                Button {
+                  viewModel.start(workout: workout)
+                } label: {
+                  Text("Start workout")
+                    .font(.title3)
+                    .bold()
+                    .foregroundStyle(userAccentColor.contrastColor)
+                }
               }
-            )
-            .padding(.horizontal, 16)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background(userAccentColor)
+            } else {
+              EmptyView()
+            }
+          }
+          .matchedTransitionSource(id: "workout-view", in: namespace)
+        }
+        .fullScreenCover(isPresented: $viewModel.isPresented) {
+          if let workout = viewModel.workout {
+            ExpandedWorkoutView(workout: workout)
+              .navigationTransition(.zoom(sourceID: "workout-view", in: namespace))
           }
         }
-
-      if let workout = viewModel.workout, viewModel.isPresented {
-        ExpandedWorkoutView(workout: workout)
-          .transition(.move(edge: .bottom).combined(with: .opacity))
-          .animation(
-            .spring(response: 0.6, dampingFraction: 0.75), value: viewModel.isPresented)
-      }
     }
   }
 
 }
 
+// MARK: - ExpandedWorkoutView
 private struct ExpandedWorkoutView: View {
-  let workout: Workout
-
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var viewModel
-  @Environment(\.keyboardIsShown) private var keyboardIsShown
-  @Environment(\.mainWindowSafeAreaInsets) var safeAreaInsets
   @Environment(\.colorScheme) private var colorScheme
 
-  @State private var dragOffset: CGFloat = 0
-
-  private var capsuleHeight: CGFloat = 25
-  private let screenHeight: CGFloat = UIApplication.height
-  private let dragThreshold: CGFloat = 10
-
-  var currentHeight: CGFloat {
-    screenHeight - dragOffset
-  }
-
-  init(workout: Workout) {
-    self.workout = workout
-  }
+  let workout: Workout
 
   var body: some View {
 
-    GeometryReader { geometry in
-
-      ZStack {
-        VStack(spacing: 0) {
-
-          // MARK: - Header toolbar
-          HStack {
-            Button("Collapse", systemImage: "chevron.down") {
-              collapse()
-            }
-            .contentShape(Rectangle())
-            .frame(width: 44, height: 44)
-            .labelStyle(.iconOnly)
-
-            Spacer()
-
-            Capsule()
-              .fill(Color(.systemBackground))
-              .opacity(0.2275)
-              .frame(width: 36, height: 5)
-              .padding(.top, 4)
-              .padding(.bottom, 8)
-              .background(
-                Rectangle()
-                  .fill(Color.clear)
-                  .contentShape(Rectangle())
-                  .frame(width: 100, height: capsuleHeight)
-              )
-
-            Spacer()
-
-            Menu {
-              Button("Stop", systemImage: "stop.circle.fill") {
-                stop()
-              }
-            } label: {
-              Label("More", systemImage: "ellipsis")
-                .contentShape(Rectangle())
-                .frame(width: 44, height: 44)
-                .labelStyle(.iconOnly)
-            }
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.top, max(UIApplication.safeAreaInsets.top - abs(dragOffset), 0))
-
-          // MARK: - Content
-          VStack(spacing: 0) {
-            StartedWorkoutView(
-              workout: workout,
-              stopAction: stop,
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-          }
-        }
-        .safeAreaPadding(.bottom, UIApplication.safeAreaInsets.bottom)
+    NavigationStack {
+      VStack(spacing: 0) {
+        StartedWorkoutView(
+          workout: workout,
+          stopAction: stop,
+        )
       }
-      .frame(height: currentHeight)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
       .background {
         ZStack {
           Color(.systemBackground)
@@ -135,24 +103,20 @@ private struct ExpandedWorkoutView: View {
         }
         .ignoresSafeArea()
       }
-      .cornerRadius(dynamicCornerRadius(geometry: geometry), corners: [.topLeft, .topRight])
-      .offset(y: yOffset(geometry: geometry))
-      .gesture(
-        DragGesture(coordinateSpace: .global)
-          .onChanged { value in
-            handleDragChanged(value: value)
-          }
-          .onEnded { value in
-            handleDragEnded(value: value)
-          }
-      )
-      .animation(.interactiveSpring(response: 0.4), value: viewModel.isCollapsed)
-      .animation(.interactiveSpring, value: dragOffset)
+      // MARK: - ExpandedWorkoutView toolbar
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           Button("Collapse", systemImage: "chevron.down") {
-            collapse()
+            viewModel.isPresented = false
           }
+        }
+
+        ToolbarItem(placement: .title) {
+          Capsule()
+            .fill(Color(.systemBackground))
+            .opacity(0.2275)
+            .frame(width: 35, height: 5)
+
         }
 
         ToolbarItem(placement: .secondaryAction) {
@@ -161,13 +125,10 @@ private struct ExpandedWorkoutView: View {
           }
         }
       }
+      .toolbarTitleDisplayMode(.inline)
+
     }
 
-    .ignoresSafeArea()
-    .navigationBarBackButtonHidden(viewModel.isPresented)
-    .onChange(of: dragOffset) { oldValue, newValue in
-      print("dragonOffset: \(newValue)")
-    }
   }
 
   private func stop() {
@@ -176,60 +137,6 @@ private struct ExpandedWorkoutView: View {
     }
   }
 
-  private func collapse() {
-    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-      viewModel.collapse()
-    }
-  }
-
-  private func yOffset(geometry: GeometryProxy) -> CGFloat {
-    return geometry.size.height - currentHeight
-  }
-
-  private func dynamicCornerRadius(geometry: GeometryProxy) -> CGFloat {
-    let maxHeight = screenHeight
-    let midHeight = geometry.size.height - UIApplication.safeAreaInsets.top
-
-    // Calculate progress from top to middle of screen
-    // When at top (maxHeight), progress = 0
-    // When at middle or below, progress = 1
-    let progress = max(0, min(1, (maxHeight - currentHeight) / (maxHeight - midHeight)))
-
-    // Interpolate between displayCornerRadius and 16
-    let startRadius = UIApplication.displayCornerRadius
-    let endRadius: CGFloat = 16
-
-    return startRadius + (endRadius - startRadius) * progress
-  }
-
-  private func handleDragChanged(value: DragGesture.Value) {
-    let translation = value.translation.height
-    let newHeight = screenHeight - translation
-
-    // Prevent over-expansion when already expanded
-    if newHeight > screenHeight {
-      dragOffset = 0
-      return
-    }
-
-    dragOffset = translation
-  }
-
-  private func handleDragEnded(value: DragGesture.Value) {
-    let velocity = value.predictedEndLocation.y - value.location.y
-    let draggableHeight: CGFloat =
-      screenHeight - UIApplication.safeAreaInsets.top - UIApplication.safeAreaInsets.bottom
-
-    if velocity > 300 || abs(value.translation.height) > draggableHeight * 0.35 {
-      withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-        viewModel.collapse()
-      }
-    }
-
-    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-      dragOffset = 0
-    }
-  }
 }
 
 private struct CollapsedWorkoutView: View {

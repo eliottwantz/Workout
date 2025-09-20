@@ -14,7 +14,8 @@ struct WorkoutApp: App {
   @State private var keyboardIsShown = false
   @State private var keyboardHideMonitor: AnyCancellable? = nil
   @State private var keyboardShownMonitor: AnyCancellable? = nil
-  @State var startedWorkoutViewModel = StartedWorkoutViewModel()
+  @State private var startedWorkoutViewModel = StartedWorkoutViewModel()
+  @State private var router = Router()
   @AppStorage(UserAccentColorKey) private var userAccentColor: Color = .pink
   @Environment(\.scenePhase) private var scenePhase
 
@@ -35,12 +36,12 @@ struct WorkoutApp: App {
         .environment(\.userAccentColor, userAccentColor)
         .environment(\.keyboardIsShown, keyboardIsShown)
         .environment(\.startedWorkoutViewModel, startedWorkoutViewModel)
+        .environment(\.router, router)
         .onAppear {
           setupKeyboardMonitors()
           ensureUserDefaultsAreSetUp()
           setupViewModelWithModelContext()
           startedWorkoutViewModel.restoreStateIfNeeded()
-          // Clean up any stale live activities from previous sessions
           startedWorkoutViewModel.cleanUpExistingLiveActivities()
         }
         .onDisappear { dismantleKeyboarMonitors() }

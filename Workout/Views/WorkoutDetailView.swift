@@ -9,30 +9,19 @@ import SwiftData
 import SwiftUI
 
 struct WorkoutDetailView: View {
-  @AppStorage(AllowMultipleWorkoutsPerDayKey) var allowMultipleWorkoutsPerDay: Bool = false
+  @AppStorage(AllowMultipleWorkoutsPerDayKey) private var allowMultipleWorkoutsPerDay: Bool = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.userAccentColor) private var userAccentColor
   @Environment(\.startedWorkoutViewModel) private var startedWorkoutViewModel
+  @Environment(\.router) private var router
+
   @Bindable var workout: Workout
-  @Binding var navigationPath: NavigationPath
 
   @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
   @State private var showingCopyToTodayAlert = false
   @State private var showingStartedWorkoutView = false
   @State private var showingMultipleWorkoutAlert = false
-
-  // For previews
-  init(workout: Workout) {
-    self.workout = workout
-    self._navigationPath = .constant(NavigationPath())
-  }
-
-  // For actual use
-  init(workout: Workout, navigationPath: Binding<NavigationPath>) {
-    self.workout = workout
-    self._navigationPath = navigationPath
-  }
 
   var body: some View {
 
@@ -65,33 +54,6 @@ struct WorkoutDetailView: View {
             showingAddExerciseView = true
           }
         }
-      }
-    }
-    .safeAreaInset(edge: .bottom) {
-      if !workout.orderedItems.isEmpty
-        && !workout.orderedItems.flatMap({ item in
-          if let exercise = item.exercise {
-            return exercise.orderedSets
-          }
-          if let superset = item.superset {
-            return superset.orderedExercises.flatMap({ $0.orderedSets })
-          }
-          return []
-        }).isEmpty && startedWorkoutViewModel.workout == nil
-      {
-        Button {
-          startedWorkoutViewModel.start(workout: workout)
-        } label: {
-          Text("Start Workout")
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(userAccentColor)
-            .foregroundStyle(userAccentColor.contrastColor)
-            .cornerRadius(10)
-        }
-        .padding(.horizontal)
-        .padding(.bottom, 5)
       }
     }
     .navigationTitle(String(localized: workout.smartFormattedDate))
@@ -130,7 +92,7 @@ struct WorkoutDetailView: View {
     }
     .alert("Can't add another workout for today", isPresented: $showingMultipleWorkoutAlert) {
       Button("Settings") {
-        navigationPath.append("settings")
+        router.navigate(to: .settings)
       }
       Button("Cancel", role: .cancel) {}
     } message: {
@@ -257,7 +219,8 @@ struct WorkoutDetailView: View {
     try? modelContext.save()
 
     // Navigate back to home screen
-    navigationPath.removeLast(navigationPath.count)
+    router.navigateToRoot()
+    router.navigate(to: .workoutDetail(workout: todayWorkout))
   }
 }
 
@@ -266,7 +229,7 @@ struct WorkoutItemRowView: View {
 
   var body: some View {
     if let exercise = workoutItem.exercise, let definition = exercise.definition {
-      NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+      NavigationLink(value: Route.exerciseDetailView(exercise: exercise)) {
         HStack {
           VStack(alignment: .leading, spacing: 8) {
             Text(definition.name)

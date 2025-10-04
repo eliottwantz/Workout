@@ -152,7 +152,7 @@ struct SetCardView: View {
       // MARK: - Current exercise and set
       VStack(spacing: 12) {
         HStack {
-          VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .center, spacing: 4) {
             if currentSet.isSuperset {
               Text("SUPERSET")
                 .font(.callout)

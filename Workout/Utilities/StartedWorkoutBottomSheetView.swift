@@ -170,11 +170,10 @@ private struct CollapsedWorkoutView: View {
             isSuperset: currentSet.isSuperset,
           )
           Spacer()
-          if viewModel.isResting {
+          if let countdownTimerModel = viewModel.countdownTimerModel {
             CollapsedTimerView(
-              time: currentSet.restTime,
-              timerId: viewModel.currentTimerId,
-              onComplete: viewModel.timerDidComplete
+              timerModel: countdownTimerModel,
+              time: currentSet.restTime
             )
           } else {
             CollapsedActionButtonView(
@@ -305,15 +304,13 @@ private struct CollapsedSetDetailsView: View {
 
 /// A reusable view for the timer in collapsed state
 private struct CollapsedTimerView: View {
+  let timerModel: CountdownTimerModel
   let time: Int
-  let timerId: String
-  let onComplete: () -> Void
 
   var body: some View {
     CountdownTimer(
+      timerModel: timerModel,
       time: time,
-      id: timerId,
-      onComplete: onComplete,
       compact: true
     )
   }

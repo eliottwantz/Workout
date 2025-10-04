@@ -16,7 +16,7 @@ struct WorkoutStateSnapshot: Codable {
   let isResting: Bool
   let currentTimerId: String
   let isWorkoutComplete: Bool
-  let restTimeStartDate: Date?
+  let endDate: Date?
   let hasLiveActivity: Bool
   let liveActivityId: String?
 
@@ -29,7 +29,7 @@ struct WorkoutStateSnapshot: Codable {
     self.isResting = viewModel.isResting
     self.currentTimerId = viewModel.currentTimerId
     self.isWorkoutComplete = viewModel.isWorkoutComplete
-    self.restTimeStartDate = viewModel.restTimeStartDate
+    self.endDate = viewModel.endDate
     self.hasLiveActivity = viewModel.liveActivity != nil
     self.liveActivityId = viewModel.liveActivity?.id
   }
@@ -46,7 +46,8 @@ class StartedWorkoutViewModel {
   var isPresented: Bool = false
   var workout: Workout? = nil  // Make workout optional
   var liveActivity: Activity<RestTimeCountdownAttributes>?
-  var restTimeStartDate: Date?
+  var endDate: Date?
+  var countdownTimerModel: CountdownTimerModel?
 
   // Workout Progress State
   var currentSetIndex = 0
@@ -115,16 +116,13 @@ class StartedWorkoutViewModel {
     self.workout = nil
     liveActivity = nil
     isPresented = false
-    //    isCollapsed = false
   }
 
   func expand() {
-    //    isCollapsed = false
     isPresented = true
   }
 
   func collapse() {
-    //    isCollapsed = true
     isPresented = false
   }
 
@@ -201,9 +199,18 @@ class StartedWorkoutViewModel {
       moveToNextSet()  // Should not happen if shouldShowRest was true, but safeguard
       return
     }
-    restTimeStartDate = .now
+    endDate = Date().addingTimeInterval(TimeInterval(currentSet.restTime))
     isResting = true
     currentTimerId = UUID().uuidString  // New ID for this specific timer instance
+
+    // Create and start the countdown timer model
+    countdownTimerModel = CountdownTimerModel(
+      withEndDate: endDate!, totalSeconds: currentSet.restTime)
+    countdownTimerModel?.start(
+      onComplete: { [weak self] in
+        self?.timerDidComplete()
+      })
+
     scheduleRestFinishedNotification(timeInterval: TimeInterval(currentSet.restTime))
     updateLiveActivity()  // Update live activity when starting rest timer
   }
@@ -212,6 +219,10 @@ class StartedWorkoutViewModel {
     removeAllPendingNotifications()  // Cancel timer for the completed rest/set
     removeTimerIdFromUserDefaults()
 
+    // Stop and clean up the timer model
+    countdownTimerModel?.stop()
+    countdownTimerModel = nil
+
     if let currentSet = currentWorkoutSet, currentSet.isLastSetInWorkout {
       // Mark workout as complete
       isWorkoutComplete = true
@@ -219,6 +230,7 @@ class StartedWorkoutViewModel {
     }
     currentSetIndex += 1
     isResting = false  // Ensure resting state is reset when moving
+    endDate = nil
     updateLiveActivity()
   }
 
@@ -227,7 +239,12 @@ class StartedWorkoutViewModel {
 
     if isResting {
       // If currently resting, completing the action means skipping the rest
+      // Stop and clean up the timer model
+      countdownTimerModel?.stop()
+      countdownTimerModel = nil
+
       isResting = false
+      endDate = nil
       moveToNextSet()
     } else {
       // If not resting, check if rest is needed after this set
@@ -236,6 +253,7 @@ class StartedWorkoutViewModel {
       } else {
         // No rest needed, move directly to the next set
         moveToNextSet()
+        endDate = nil
       }
     }
   }
@@ -328,7 +346,7 @@ class StartedWorkoutViewModel {
       ?? .blue
     let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
     let restTime = currentSet.restTime
-    let endTime = Date().addingTimeInterval(TimeInterval(restTime))
+    let endTime = endDate ?? Date().addingTimeInterval(TimeInterval(restTime))
     let timerInterval = Date.now...endTime
 
     let state = RestTimeCountdownAttributes.ContentState(
@@ -392,8 +410,8 @@ class StartedWorkoutViewModel {
         ?? .blue
       let displayWeightInLbs = UserDefaults.standard.bool(forKey: "displayWeightInLbs")
       let restTime = currentSet.restTime
-      let endTime = (restTimeStartDate ?? Date()).addingTimeInterval(TimeInterval(restTime))
-      let timerInterval = (restTimeStartDate ?? Date.now)...endTime
+      let endTime = endDate ?? Date().addingTimeInterval(TimeInterval(restTime))
+      let timerInterval = Date.now...endTime
 
       await liveActivity.update(
         .init(
@@ -454,7 +472,12 @@ class StartedWorkoutViewModel {
   func navigateToPreviousSet() {
     if currentSetIndex > 0 {
       if isResting {
+        // Stop and clean up the timer model
+        countdownTimerModel?.stop()
+        countdownTimerModel = nil
+
         isResting = false
+        endDate = nil
         removeAllPendingNotifications()  // Cancel rest timer
       }
       currentSetIndex -= 1
@@ -469,7 +492,12 @@ class StartedWorkoutViewModel {
   // Navigate to next set, potentially skipping rest if currently resting
   func navigateToNextSet() {
     if isResting {
+      // Stop and clean up the timer model
+      countdownTimerModel?.stop()
+      countdownTimerModel = nil
+
       isResting = false
+      endDate = nil
       removeAllPendingNotifications()  // Cancel rest timer
     }
     // Advance index only if not already at/past the end
@@ -482,7 +510,12 @@ class StartedWorkoutViewModel {
   // Explicit action to skip the current rest timer
   func skipRest() {
     if isResting {
+      // Stop and clean up the timer model
+      countdownTimerModel?.stop()
+      countdownTimerModel = nil
+
       isResting = false
+      endDate = nil
       moveToNextSet()  // Move to the next set immediately
     }
   }
@@ -492,7 +525,12 @@ class StartedWorkoutViewModel {
     // Check if we were actually resting for the completed timer ID? (Optional robustness)
     print("Timer \(currentTimerId) completed")
     if isResting {
+      // Stop and clean up the timer model
+      countdownTimerModel?.stop()
+      countdownTimerModel = nil
+
       isResting = false
+      endDate = nil
       moveToNextSet()
     }
   }
@@ -587,7 +625,7 @@ class StartedWorkoutViewModel {
         self.isResting = snapshot.isResting
         self.currentTimerId = snapshot.currentTimerId
         self.isWorkoutComplete = snapshot.isWorkoutComplete
-        self.restTimeStartDate = snapshot.restTimeStartDate
+        self.endDate = snapshot.endDate
 
         // Validate that the restored state is still valid
         let workoutSets = buildWorkoutSetsList()
@@ -597,17 +635,27 @@ class StartedWorkoutViewModel {
           currentSetIndex = max(0, workoutSets.count - 1)
         }
 
-        // If we were resting and it's been too long, stop resting
-        if isResting, let restStartDate = restTimeStartDate {
+        // If we were resting, recreate the timer model
+        if isResting, let endDate = endDate {
           let currentSet =
             workoutSets.indices.contains(currentSetIndex) ? workoutSets[currentSetIndex] : nil
           let restDuration = currentSet?.restTime ?? 0
-          let timeElapsed = Date().timeIntervalSince(restStartDate)
+          let timeElapsed = Date().timeIntervalSince(endDate) + Double(restDuration)
 
           if timeElapsed >= Double(restDuration) {
             print("Rest time has already elapsed, moving to next set")
             isResting = false
+            self.endDate = nil
             // Don't automatically move to next set, let user decide
+          } else {
+            // Recreate the timer model
+            guard let currentSet else { return }
+            countdownTimerModel = CountdownTimerModel(
+              withEndDate: endDate, totalSeconds: currentSet.restTime)
+            countdownTimerModel?.start(
+              onComplete: { [weak self] in
+                self?.timerDidComplete()
+              })
           }
         }
 

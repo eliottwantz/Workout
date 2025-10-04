@@ -220,11 +220,8 @@ struct SetCardView: View {
       VStack {
         if startedWorkoutViewModel.isResting {
           CountdownTimer(
-            time: currentSet.restTime,
-            id: startedWorkoutViewModel.currentTimerId,
-            onComplete: {
-              startedWorkoutViewModel.timerDidComplete()
-            }
+            timerModel: startedWorkoutViewModel.countdownTimerModel!,
+            time: currentSet.restTime
           )
 
           Button("Skip Rest") {

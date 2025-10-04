@@ -9,46 +9,34 @@ import SwiftUI
 
 @Observable
 class CountdownTimerModel {
-  // Total duration in seconds
-  private let totalSeconds: Int
-  // Fixed end time - doesn't change when app goes to background
   private var endTime: Date
-  // Key identifier for this timer instance
-  private let timerKey: String
-
   private var timer: Timer?
   private var isActive = false
 
+  private static let endTimeKey = "active_timer_end_date"
+
   // Current seconds remaining
   var secondsRemaining: Int = 0
-
   var onComplete: (() -> Void)?
 
   var progress: Double {
-    guard totalSeconds > 0 else { return 0 }
     return 1.0 - (Double(secondsRemaining) / Double(totalSeconds))
   }
 
-  init(seconds: Int, id: String = UUID().uuidString, onComplete: (() -> Void)?) {
-    self.totalSeconds = seconds
-    self.secondsRemaining = seconds
-    self.onComplete = onComplete
-    self.timerKey = "timer_\(id)"
+  private var totalSeconds: Int
 
-    // Check if we already have a stored end time for this timer
-    if let storedEndTime = UserDefaults.standard.object(forKey: timerKey) as? Date {
-      // Calculate current time remaining based on the stored end time
-      endTime = storedEndTime
-      updateRemainingTime()
-    } else {
-      // Set initial end time
-      endTime = Date().addingTimeInterval(TimeInterval(seconds))
-      UserDefaults.standard.set(Date().addingTimeInterval(TimeInterval(seconds)), forKey: timerKey)
-    }
+  init(withEndDate endDate: Date, totalSeconds: Int) {
+    self.endTime = endDate
+    self.totalSeconds = totalSeconds
   }
 
-  func start() {
+  func start(onComplete: (() -> Void)?) {
     guard !isActive else { return }
+    self.secondsRemaining = totalSeconds
+    self.onComplete = onComplete
+
+    // Store endDate in UserDefaults
+    UserDefaults.standard.set(endTime, forKey: Self.endTimeKey)
 
     isActive = true
     startTimer()
@@ -58,9 +46,8 @@ class CountdownTimerModel {
     isActive = false
     timer?.invalidate()
     timer = nil
-
     // Clear stored end time
-    UserDefaults.standard.removeObject(forKey: timerKey)
+    UserDefaults.standard.removeObject(forKey: Self.endTimeKey)
   }
 
   // Update timer when app comes to foreground
@@ -85,8 +72,7 @@ class CountdownTimerModel {
   }
 
   private func updateRemainingTime() {
-    let now = Date()
-    if now >= endTime {
+    if Date.now >= endTime {
       print("Ended timer")
       // Timer has completed
       secondsRemaining = 0
@@ -94,7 +80,7 @@ class CountdownTimerModel {
       onComplete?()
     } else {
       // Calculate seconds remaining
-      secondsRemaining = Int(endTime.timeIntervalSince(now))
+      secondsRemaining = Int(endTime.timeIntervalSince(Date.now))
     }
   }
 }
@@ -103,24 +89,20 @@ struct CountdownTimer: View {
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.userAccentColor) private var userAccentColor
 
-  // Optional completion handler
+  // Timer model from ViewModel
+  let timerModel: CountdownTimerModel
   let time: Int
-  let onComplete: (() -> Void)?
   let compact: Bool
-  let timerTimeRange: ClosedRange<Date>
 
-  private var timerModel: CountdownTimerModel
   private var lineWidth: CGFloat = 20
 
   init(
-    time: Int, id: String = UUID().uuidString, onComplete: (() -> Void)? = nil,
+    timerModel: CountdownTimerModel, time: Int,
     compact: Bool = false
   ) {
+    self.timerModel = timerModel
     self.time = time
-    self.timerModel = CountdownTimerModel(seconds: time, id: id, onComplete: onComplete)
-    self.onComplete = onComplete
     self.compact = compact
-    self.timerTimeRange = Date()...Date().addingTimeInterval(TimeInterval(time))
   }
 
   var body: some View {
@@ -144,9 +126,6 @@ struct CountdownTimer: View {
           // App came back to foreground
           timerModel.updateOnForeground()
         }
-      }
-      .onAppear {
-        timerModel.start()
       }
       .sensoryFeedback(
         trigger: timerModel.secondsRemaining
@@ -194,9 +173,6 @@ struct CountdownTimer: View {
           timerModel.updateOnForeground()
         }
       }
-      .onAppear {
-        timerModel.start()
-      }
       .sensoryFeedback(
         trigger: timerModel.secondsRemaining
       ) { oldValue, newValue in
@@ -219,5 +195,7 @@ struct CountdownTimer: View {
 }
 
 #Preview {
-  CountdownTimer(time: 10)
+  let model = CountdownTimerModel(withEndDate: Date().addingTimeInterval(10), totalSeconds: 10)
+  model.start(onComplete: {})
+  return CountdownTimer(timerModel: model, time: 10)
 }

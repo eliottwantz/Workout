@@ -18,6 +18,10 @@ struct WorkoutListView: View {
   @State private var showingCopyToTodayAlert = false
   @State private var workoutToCopy: Workout?
   @Environment(\.router) private var router
+  @Query(
+    sort: [SortDescriptor(\WorkoutTemplate.updatedAt, order: .reverse)]
+  ) private var templates: [WorkoutTemplate]
+  @State private var showingTemplatePicker = false
 
   var body: some View {
     @Bindable var router = router
@@ -122,6 +126,20 @@ struct WorkoutListView: View {
           WorkoutListView()
         }
       }
+      .sheet(isPresented: $showingTemplatePicker) {
+        TemplatePickerView(
+          onSelect: { template in
+            startWorkout(from: template)
+          },
+          onCreateBlank: {
+            createBlankWorkout()
+          },
+          onManageTemplates: {
+            router.selectedTab = .templates
+            router.templates.popToRoot()
+          }
+        )
+      }
     }
   }
 
@@ -134,12 +152,19 @@ struct WorkoutListView: View {
       // Show alert if multiple workouts per day are not allowed
       showingMultipleWorkoutAlert = true
     } else {
-      // Create new workout
-      let newWorkout = Workout(date: Date())
-      modelContext.insert(newWorkout)
-      try? modelContext.save()
-      router.workouts.push(to: .workoutDetail(workout: newWorkout))
+      if templates.isEmpty {
+        createBlankWorkout()
+      } else {
+        showingTemplatePicker = true
+      }
     }
+  }
+
+  private func createBlankWorkout() {
+    let newWorkout = Workout(date: Date())
+    modelContext.insert(newWorkout)
+    try? modelContext.save()
+    router.workouts.navigate(path: [.workoutDetail(workout: newWorkout)])
   }
 
   private func deleteWorkouts(offsets: IndexSet) {
@@ -170,70 +195,19 @@ struct WorkoutListView: View {
     }
 
     // Create a new workout with today's date
-    let todayWorkout = Workout(date: Date())
-
-    // Copy all workout items from the source workout
-    for item in workout.orderedItems {
-      if let exercise = item.exercise {
-        // Create a new exercise
-        let newExercise = Exercise(
-          definition: exercise.definition!,
-          workout: todayWorkout,
-          restTime: exercise.restTime,
-          notes: exercise.notes
-        )
-
-        // Copy all sets from the original exercise
-        for setEntry in exercise.orderedSets {
-          newExercise.addSet(
-            SetEntry(
-              reps: setEntry.reps,
-              weight: setEntry.weight
-            ))
-        }
-
-        // Add the new exercise to the today workout
-        let newItem = WorkoutItem(exercise: newExercise)
-        todayWorkout.addItem(newItem)
-
-      } else if let superset = item.superset {
-        // Create a new superset
-        let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
-
-        // Copy all exercises in the superset
-        for exercise in superset.orderedExercises {
-          let newExercise = Exercise(
-            definition: exercise.definition!,
-            workout: todayWorkout,
-            restTime: exercise.restTime,
-            orderWithinSuperset: exercise.orderWithinSuperset,
-            notes: exercise.notes
-          )
-
-          // Copy all sets from the original exercise
-          for setEntry in exercise.orderedSets {
-            newExercise.addSet(
-              SetEntry(
-                reps: setEntry.reps,
-                weight: setEntry.weight
-              ))
-          }
-
-          newSuperset.addExercise(newExercise)
-        }
-
-        // Add the new superset to the today workout
-        let newItem = WorkoutItem(superset: newSuperset)
-        todayWorkout.addItem(newItem)
-      }
-    }
-
-    // Insert the new workout into the model context
+    let todayWorkout = workout.deepCopy(for: Date())
     modelContext.insert(todayWorkout)
     try? modelContext.save()
 
     // Clear the workout to copy reference
     workoutToCopy = nil
+  }
+
+  private func startWorkout(from template: WorkoutTemplate) {
+    if let workout = try? modelContext.instantiateWorkout(from: template, on: Date()) {
+      router.selectedTab = .workouts
+      router.workouts.navigate(path: [.workoutDetail(workout: workout)])
+    }
   }
 }
 

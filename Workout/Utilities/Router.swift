@@ -67,13 +67,22 @@ final class ExercisesRouter: Router<ExercisesRouter.Route> {
 final class AppRouter {
   var workouts = WorkoutsRouter()
   var exercises = ExercisesRouter()
+  var templates = TemplatesRouter()
 
   enum Tabs: Hashable {
     case workouts
+    case templates
     case exercises
   }
 
   var selectedTab: Tabs = .workouts
+}
+
+@Observable
+final class TemplatesRouter: Router<TemplatesRouter.Route> {
+  enum Route: Hashable {
+    case edit(template: WorkoutTemplate)
+  }
 }
 
 extension AppRouter {
@@ -87,6 +96,10 @@ extension AppRouter {
       TabView(selection: $router.selectedTab) {
         Tab("Workouts", systemImage: "dumbbell.fill", value: .workouts) {
           WorkoutListView()
+        }
+
+        Tab("Templates", systemImage: "square.stack.3d.up.fill", value: .templates) {
+          TemplateListView()
         }
 
         Tab("Exercises", systemImage: "figure.strengthtraining.traditional", value: .exercises) {

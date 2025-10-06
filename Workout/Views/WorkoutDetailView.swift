@@ -22,6 +22,9 @@ struct WorkoutDetailView: View {
   @State private var showingCopyToTodayAlert = false
   @State private var showingStartedWorkoutView = false
   @State private var showingMultipleWorkoutAlert = false
+  @State private var showingSaveAsTemplateSheet = false
+  @State private var templateName: String = ""
+  @State private var templateNotes: String = ""
 
   var body: some View {
 
@@ -70,6 +73,15 @@ struct WorkoutDetailView: View {
         }
 
         Button {
+          templateName = workout.name ?? "New Template"
+          templateNotes = ""
+          showingSaveAsTemplateSheet = true
+        } label: {
+          Label("Save as Template", systemImage: "square.and.arrow.down")
+        }
+        .disabled(workout.orderedItems.isEmpty)
+
+        Button {
           showingAddExerciseView = true
         } label: {
           Label("Add Exercises", systemImage: "plus")
@@ -99,6 +111,30 @@ struct WorkoutDetailView: View {
       Text(
         "Enable 'Allow multiple workouts per day' in settings to create more than one workout per day."
       )
+    }
+    .sheet(isPresented: $showingSaveAsTemplateSheet) {
+      TemplateMetadataSheet(
+        title: "Save as Template",
+        name: $templateName,
+        notes: $templateNotes,
+        onSave: {
+          let trimmedName = templateName.trimmingCharacters(in: .whitespacesAndNewlines)
+          guard !trimmedName.isEmpty else { return }
+          if let template = try? modelContext.createTemplate(
+            from: workout,
+            name: trimmedName,
+            notes: templateNotes.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty()
+          ) {
+            router.selectedTab = .templates
+            router.templates.navigate(path: [.edit(template: template)])
+          }
+          showingSaveAsTemplateSheet = false
+        },
+        onCancel: {
+          showingSaveAsTemplateSheet = false
+        }
+      )
+      .presentationDetents([.medium])
     }
   }
 
@@ -155,66 +191,7 @@ struct WorkoutDetailView: View {
       print("Failed to fetch workouts: \(error)")
     }
 
-    // Create a new workout with today's date
-    let todayWorkout = Workout(date: Date())
-
-    // Copy all workout items from the source workout
-    for item in workout.orderedItems {
-      if let exercise = item.exercise {
-        // Create a new exercise
-        let newExercise = Exercise(
-          definition: exercise.definition!,
-          workout: todayWorkout,
-          restTime: exercise.restTime,
-          notes: exercise.notes
-        )
-
-        // Copy all sets from the original exercise
-        for setEntry in exercise.orderedSets {
-          newExercise.addSet(
-            SetEntry(
-              reps: setEntry.reps,
-              weight: setEntry.weight
-            ))
-        }
-
-        // Add the new exercise to the today workout
-        let newItem = WorkoutItem(exercise: newExercise)
-        todayWorkout.addItem(newItem)
-
-      } else if let superset = item.superset {
-        // Create a new superset
-        let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
-
-        // Copy all exercises in the superset
-        for exercise in superset.orderedExercises {
-          let newExercise = Exercise(
-            definition: exercise.definition!,
-            workout: todayWorkout,
-            restTime: exercise.restTime,
-            orderWithinSuperset: exercise.orderWithinSuperset,
-            notes: exercise.notes
-          )
-
-          // Copy all sets from the original exercise
-          for setEntry in exercise.orderedSets {
-            newExercise.addSet(
-              SetEntry(
-                reps: setEntry.reps,
-                weight: setEntry.weight
-              ))
-          }
-
-          newSuperset.addExercise(newExercise)
-        }
-
-        // Add the new superset to the today workout
-        let newItem = WorkoutItem(superset: newSuperset)
-        todayWorkout.addItem(newItem)
-      }
-    }
-
-    // Insert the new workout into the model context
+    let todayWorkout = workout.deepCopy(for: Date())
     modelContext.insert(todayWorkout)
     try? modelContext.save()
 
@@ -278,6 +255,48 @@ struct WorkoutItemRowView: View {
         .padding(.vertical, 4)
       }
     }
+  }
+}
+
+private struct TemplateMetadataSheet: View {
+  let title: String
+  @Binding var name: String
+  @Binding var notes: String
+  var onSave: () -> Void
+  var onCancel: () -> Void
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section("Details") {
+          TextField("Template name", text: $name)
+          TextField("Notes", text: $notes, axis: .vertical)
+        }
+      }
+      .navigationTitle(title)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Cancel", role: .cancel) {
+            onCancel()
+          }
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Save") {
+            onSave()
+          }
+          .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+      }
+    }
+  }
+}
+
+private extension String {
+  func nilIfEmpty() -> String? {
+    let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
   }
 }
 

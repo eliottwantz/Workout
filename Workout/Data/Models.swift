@@ -45,6 +45,277 @@ final class Workout {
   }
 }
 
+// MARK: - Workout Template
+
+@Model
+final class WorkoutTemplate {
+  var id = UUID()
+  var name: String = ""
+  var notes: String?
+  var createdAt: Date = Date.now
+  var updatedAt: Date = Date.now
+  var isFavorite: Bool = false
+
+  @Relationship(deleteRule: .cascade, inverse: \WorkoutTemplateItem.template)
+  var items: [WorkoutTemplateItem]? = []
+
+  init(
+    name: String,
+    notes: String? = nil,
+    createdAt: Date = .now,
+    updatedAt: Date = .now,
+    isFavorite: Bool = false
+  ) {
+    self.name = name
+    self.notes = notes
+    self.createdAt = createdAt
+    self.updatedAt = updatedAt
+    self.isFavorite = isFavorite
+    self.items = []
+  }
+
+  convenience init(name: String, sourceWorkout: Workout, notes: String? = nil) {
+    self.init(name: name, notes: notes)
+    copyItems(from: sourceWorkout)
+  }
+
+  @Transient var orderedItems: [WorkoutTemplateItem] {
+    (items ?? []).sorted { $0.order < $1.order }
+  }
+
+  @Transient var exerciseCount: Int {
+    orderedItems.reduce(into: 0) { count, item in
+      if item.exercise != nil {
+        count += 1
+      } else if let superset = item.superset {
+        count += superset.orderedExercises.count
+      }
+    }
+  }
+
+  func addItem(_ item: WorkoutTemplateItem) {
+    if items == nil {
+      items = []
+    }
+    item.order = (items?.count ?? 0)
+    items?.append(item)
+    item.template = self
+    item.updateContainedRelationships()
+  }
+
+  func refreshUpdatedAt() {
+    updatedAt = .now
+  }
+
+  func instantiateWorkout(on date: Date = .now) -> Workout {
+    let workout = Workout(date: date)
+    workout.name = name
+
+    for item in orderedItems {
+      if let exerciseTemplate = item.exercise, let definition = exerciseTemplate.definition {
+        let exercise = Exercise(
+          definition: definition,
+          workout: workout,
+          restTime: exerciseTemplate.restTime,
+          notes: exerciseTemplate.notes
+        )
+
+        for setTemplate in exerciseTemplate.orderedSets {
+          let set = SetEntry(reps: setTemplate.reps, weight: setTemplate.weight)
+          exercise.addSet(set)
+        }
+
+        let workoutItem = WorkoutItem(exercise: exercise)
+        workout.addItem(workoutItem)
+
+      } else if let supersetTemplate = item.superset {
+        let superset = Superset(notes: supersetTemplate.notes, restTime: supersetTemplate.restTime)
+
+        for exerciseTemplate in supersetTemplate.orderedExercises {
+          guard let definition = exerciseTemplate.definition else { continue }
+
+          let exercise = Exercise(
+            definition: definition,
+            workout: workout,
+            restTime: exerciseTemplate.restTime,
+            orderWithinSuperset: exerciseTemplate.orderWithinSuperset,
+            notes: exerciseTemplate.notes
+          )
+
+          for setTemplate in exerciseTemplate.orderedSets {
+            let set = SetEntry(reps: setTemplate.reps, weight: setTemplate.weight)
+            exercise.addSet(set)
+          }
+
+          superset.addExercise(exercise)
+        }
+
+        let workoutItem = WorkoutItem(superset: superset)
+        workout.addItem(workoutItem)
+      }
+    }
+
+    return workout
+  }
+
+  private func copyItems(from workout: Workout) {
+    items = []
+    for item in workout.orderedItems {
+      if let exercise = item.exercise {
+        let templateExercise = WorkoutTemplateExercise(
+          definition: exercise.definition,
+          restTime: exercise.restTime,
+          notes: exercise.notes
+        )
+
+        for set in exercise.orderedSets {
+          let templateSet = WorkoutTemplateSet(order: set.order, reps: set.reps, weight: set.weight)
+          templateExercise.addSet(templateSet)
+        }
+
+        let templateItem = WorkoutTemplateItem(exercise: templateExercise)
+        addItem(templateItem)
+      } else if let superset = item.superset {
+        let templateSuperset = WorkoutTemplateSuperset(notes: superset.notes, restTime: superset.restTime)
+
+        for exercise in superset.orderedExercises {
+          let templateExercise = WorkoutTemplateExercise(
+            definition: exercise.definition,
+            restTime: exercise.restTime,
+            orderWithinSuperset: exercise.orderWithinSuperset,
+            notes: exercise.notes
+          )
+
+          for set in exercise.orderedSets {
+            let templateSet = WorkoutTemplateSet(order: set.order, reps: set.reps, weight: set.weight)
+            templateExercise.addSet(templateSet)
+          }
+
+          templateSuperset.addExercise(templateExercise)
+        }
+
+        let templateItem = WorkoutTemplateItem(superset: templateSuperset)
+        addItem(templateItem)
+      }
+    }
+  }
+}
+
+@Model
+final class WorkoutTemplateItem {
+  var order: Int = 0
+  var template: WorkoutTemplate?
+
+  @Relationship(deleteRule: .cascade, inverse: \WorkoutTemplateExercise.templateItem)
+  var exercise: WorkoutTemplateExercise?
+
+  @Relationship(deleteRule: .cascade, inverse: \WorkoutTemplateSuperset.templateItem)
+  var superset: WorkoutTemplateSuperset?
+
+  private init(order: Int = 0, exercise: WorkoutTemplateExercise? = nil, superset: WorkoutTemplateSuperset? = nil) {
+    self.order = order
+    self.exercise = exercise
+    self.superset = superset
+
+    exercise?.templateItem = self
+    superset?.templateItem = self
+  }
+
+  convenience init(order: Int = 0, exercise: WorkoutTemplateExercise) {
+    self.init(order: order, exercise: exercise, superset: nil)
+  }
+
+  convenience init(order: Int = 0, superset: WorkoutTemplateSuperset) {
+    self.init(order: order, exercise: nil, superset: superset)
+  }
+
+  func updateContainedRelationships() {
+    exercise?.templateItem = self
+    superset?.templateItem = self
+  }
+}
+
+@Model
+final class WorkoutTemplateExercise {
+  var restTime: Int = 120
+  var orderWithinSuperset: Int = 0
+  var notes: String?
+
+  var definition: ExerciseDefinition?
+
+  @Relationship(deleteRule: .cascade, inverse: \WorkoutTemplateSet.exercise)
+  var sets: [WorkoutTemplateSet]? = []
+
+  var templateItem: WorkoutTemplateItem?
+  var containingSuperset: WorkoutTemplateSuperset?
+
+  @Transient var orderedSets: [WorkoutTemplateSet] {
+    (sets ?? []).sorted { $0.order < $1.order }
+  }
+
+  init(
+    definition: ExerciseDefinition?,
+    restTime: Int = 120,
+    orderWithinSuperset: Int = 0,
+    notes: String? = nil
+  ) {
+    self.definition = definition
+    self.restTime = restTime
+    self.orderWithinSuperset = orderWithinSuperset
+    self.notes = notes
+    self.sets = []
+  }
+
+  func addSet(_ set: WorkoutTemplateSet) {
+    set.order = (sets?.count ?? 0)
+    sets?.append(set)
+    set.exercise = self
+  }
+}
+
+@Model
+final class WorkoutTemplateSuperset {
+  var notes: String?
+  var restTime: Int = 150
+
+  @Relationship(deleteRule: .cascade, inverse: \WorkoutTemplateExercise.containingSuperset)
+  var exercises: [WorkoutTemplateExercise]? = []
+
+  var templateItem: WorkoutTemplateItem?
+
+  @Transient var orderedExercises: [WorkoutTemplateExercise] {
+    (exercises ?? []).sorted { $0.orderWithinSuperset < $1.orderWithinSuperset }
+  }
+
+  init(notes: String? = nil, restTime: Int = 150) {
+    self.notes = notes
+    self.restTime = restTime
+    self.exercises = []
+  }
+
+  func addExercise(_ exercise: WorkoutTemplateExercise) {
+    exercise.templateItem = nil
+    exercise.containingSuperset = self
+    exercise.orderWithinSuperset = (exercises?.count ?? 0)
+    exercises?.append(exercise)
+  }
+}
+
+@Model
+final class WorkoutTemplateSet {
+  var order: Int = 0
+  var reps: Int = 10
+  var weight: Double = 20
+
+  var exercise: WorkoutTemplateExercise?
+
+  init(order: Int = 0, reps: Int, weight: Double) {
+    self.order = order
+    self.reps = reps
+    self.weight = weight
+  }
+}
+
 // MARK: - Workout Item (Wrapper for Exercise/Superset in Workout Order)
 
 @Model
@@ -222,6 +493,7 @@ final class ExerciseDefinition {
   var favorite: Bool = false
 
   @Relationship(deleteRule: .cascade, inverse: \Exercise.definition) var exercises: [Exercise]?
+  @Relationship(deleteRule: .nullify, inverse: \WorkoutTemplateExercise.definition) var templateExercises: [WorkoutTemplateExercise]?
 
   init(
     name: String, muscleGroup: MuscleGroup = .other, notes: String? = nil, favorite: Bool = false
@@ -246,7 +518,67 @@ extension Workout {
       return "Yesterday"
     } else {
       return formattedDate
+  }
+}
+
+  func deepCopy(for date: Date? = nil) -> Workout {
+    let newWorkout = Workout(date: date ?? self.date, name: self.name)
+
+    for item in orderedItems {
+      if let exercise = item.exercise, let definition = exercise.definition {
+        let newExercise = Exercise(
+          definition: definition,
+          workout: newWorkout,
+          restTime: exercise.restTime,
+          notes: exercise.notes
+        )
+
+        for set in exercise.orderedSets {
+          let newSet = SetEntry(
+            reps: set.reps,
+            weight: set.weight
+          )
+          newExercise.addSet(newSet)
+        }
+
+        let newItem = WorkoutItem(exercise: newExercise)
+        newWorkout.addItem(newItem)
+
+      } else if let superset = item.superset {
+        let newSuperset = Superset(notes: superset.notes, restTime: superset.restTime)
+
+        for exercise in superset.orderedExercises {
+          guard let definition = exercise.definition else { continue }
+
+          let newExercise = Exercise(
+            definition: definition,
+            workout: newWorkout,
+            restTime: exercise.restTime,
+            orderWithinSuperset: exercise.orderWithinSuperset,
+            notes: exercise.notes
+          )
+
+          for set in exercise.orderedSets {
+            let newSet = SetEntry(
+              reps: set.reps,
+              weight: set.weight
+            )
+            newExercise.addSet(newSet)
+          }
+
+          newSuperset.addExercise(newExercise)
+        }
+
+        let newItem = WorkoutItem(superset: newSuperset)
+        newWorkout.addItem(newItem)
+      }
     }
+
+    return newWorkout
+  }
+
+  func makeTemplate(name: String, notes: String? = nil) -> WorkoutTemplate {
+    WorkoutTemplate(name: name, sourceWorkout: self, notes: notes)
   }
 }
 

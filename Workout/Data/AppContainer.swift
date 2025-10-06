@@ -15,11 +15,16 @@ final class AppContainer {
 
   private let schema = Schema([
     Workout.self,
+    WorkoutTemplate.self,
     WorkoutItem.self,
     Exercise.self,
     Superset.self,
     SetEntry.self,
     ExerciseDefinition.self,
+    WorkoutTemplateItem.self,
+    WorkoutTemplateExercise.self,
+    WorkoutTemplateSuperset.self,
+    WorkoutTemplateSet.self,
   ])
 
   let modelContainer: ModelContainer

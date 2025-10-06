@@ -48,8 +48,6 @@ struct ExerciseSelectionView: View {
 
       }
     }
-    .interactiveDismissDisabled()
-    .presentationDetents([.fraction(0.65), .large])
   }
 
   private var filteredExerciseDefinitions: [ExerciseDefinition] {

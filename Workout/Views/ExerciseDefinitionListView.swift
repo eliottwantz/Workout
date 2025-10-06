@@ -10,16 +10,20 @@ import SwiftUI
 
 struct ExerciseDefinitionListView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.router) private var router
   @Query(sort: \ExerciseDefinition.name) private var exercises: [ExerciseDefinition]
 
   @State private var isEditorPresented = false
-  @State private var path = NavigationPath()
 
   var body: some View {
-    NavigationStack(path: $path) {
+    @Bindable var router = router
+
+    NavigationStack(path: $router.exercises.path) {
       List {
         ForEach(exercises) { definition in
-          NavigationLink(value: definition) {
+          NavigationLink(
+            value: ExercisesRouter.Route.exerciseDefinitionDetailView(exercise: definition)
+          ) {
             Text(definition.name)
           }
           .padding(.vertical, 8)
@@ -37,8 +41,15 @@ struct ExerciseDefinitionListView: View {
           }
         }
       }
-      .navigationDestination(for: ExerciseDefinition.self) { definition in
-        ExerciseDefinitionDetailView(exercise: definition, path: $path)
+      .navigationDestination(for: ExercisesRouter.Route.self) { route in
+        switch route {
+        case .settings:
+          SettingsView()
+        case .exerciseDefinitionDetailView(let exercise):
+          ExerciseDefinitionDetailView(exercise: exercise)
+        default:
+          ExerciseDefinitionListView()
+        }
       }
       .navigationTitle("Exercises")
       .sheet(isPresented: $isEditorPresented) {

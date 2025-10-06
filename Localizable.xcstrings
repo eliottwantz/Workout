@@ -856,6 +856,7 @@
       }
     },
     "Start workout" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {

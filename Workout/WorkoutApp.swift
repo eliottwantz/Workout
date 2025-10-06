@@ -15,7 +15,7 @@ struct WorkoutApp: App {
   @State private var keyboardHideMonitor: AnyCancellable? = nil
   @State private var keyboardShownMonitor: AnyCancellable? = nil
   @State private var startedWorkoutViewModel = StartedWorkoutViewModel()
-  @State private var router = Router()
+  @State private var router = AppRouter()
   @AppStorage(UserAccentColorKey) private var userAccentColor: Color = .pink
   @Environment(\.scenePhase) private var scenePhase
 

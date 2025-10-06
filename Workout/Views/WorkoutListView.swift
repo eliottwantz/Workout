@@ -21,7 +21,7 @@ struct WorkoutListView: View {
 
   var body: some View {
     @Bindable var router = router
-    NavigationStack(path: $router.path) {
+    NavigationStack(path: $router.workouts.path) {
       List {
         if !workouts.isEmpty {
           Button {
@@ -31,7 +31,7 @@ struct WorkoutListView: View {
           }
           .frame(minHeight: 40)
           ForEach(workouts) { workout in
-            NavigationLink(value: Route.workoutDetail(workout: workout)) {
+            NavigationLink(value: WorkoutsRouter.Route.workoutDetail(workout: workout)) {
               WorkoutRowView(workout: workout)
                 .frame(minHeight: 60)
             }
@@ -74,7 +74,7 @@ struct WorkoutListView: View {
       .navigationTitle("Workout Log")
       .alert("Can't add another workout for today", isPresented: $showingMultipleWorkoutAlert) {
         Button("Settings") {
-          router.navigate(to: .settings)
+          router.workouts.push(to: .settings)
         }
         Button("Cancel", role: .cancel) {}
       } message: {
@@ -95,7 +95,7 @@ struct WorkoutListView: View {
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           Button {
-            router.navigate(to: .settings)
+            router.workouts.push(to: .settings)
           } label: {
             Label("Settings", systemImage: "gear")
           }
@@ -110,13 +110,13 @@ struct WorkoutListView: View {
           }
         }
       }
-      .navigationDestination(for: Route.self) { route in
+      .navigationDestination(for: WorkoutsRouter.Route.self) { route in
         switch route {
         case .workoutDetail(let workout):
           WorkoutDetailView(workout: workout)
         case .settings:
           SettingsView()
-        case .exerciseDetailView(let exercise):
+        case .exerciseDetail(let exercise):
           ExerciseDetailView(exercise: exercise)
         default:
           WorkoutListView()
@@ -138,7 +138,7 @@ struct WorkoutListView: View {
       let newWorkout = Workout(date: Date())
       modelContext.insert(newWorkout)
       try? modelContext.save()
-      router.navigate(to: .workoutDetail(workout: newWorkout))
+      router.workouts.push(to: .workoutDetail(workout: newWorkout))
     }
   }
 

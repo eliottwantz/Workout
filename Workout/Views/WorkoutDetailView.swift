@@ -92,7 +92,7 @@ struct WorkoutDetailView: View {
     }
     .alert("Can't add another workout for today", isPresented: $showingMultipleWorkoutAlert) {
       Button("Settings") {
-        router.navigate(to: .settings)
+        router.workouts.push(to: .settings)
       }
       Button("Cancel", role: .cancel) {}
     } message: {
@@ -219,8 +219,7 @@ struct WorkoutDetailView: View {
     try? modelContext.save()
 
     // Navigate back to home screen
-    router.navigateToRoot()
-    router.navigate(to: .workoutDetail(workout: todayWorkout))
+    router.workouts.navigate(path: [.workoutDetail(workout: todayWorkout)])
   }
 }
 
@@ -229,7 +228,7 @@ struct WorkoutItemRowView: View {
 
   var body: some View {
     if let exercise = workoutItem.exercise, let definition = exercise.definition {
-      NavigationLink(value: Route.exerciseDetailView(exercise: exercise)) {
+      NavigationLink(value: WorkoutsRouter.Route.exerciseDetail(exercise: exercise)) {
         HStack {
           VStack(alignment: .leading, spacing: 8) {
             Text(definition.name)

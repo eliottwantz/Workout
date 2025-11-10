@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TemplateListView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.dismiss) private var dismiss
   @Environment(\.router) private var router
   @Query(
     sort: [SortDescriptor(\WorkoutTemplate.updatedAt, order: .reverse)]
@@ -222,6 +223,7 @@ private struct TemplateRowView: View {
 }
 
 private struct TemplateInfoSheet: View {
+  @Environment(\.dismiss) private var dismiss
   let title: String
   @Binding var name: String
   @Binding var notes: String
@@ -242,6 +244,7 @@ private struct TemplateInfoSheet: View {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel", role: .cancel) {
             onCancel()
+            dismiss()
           }
         }
 

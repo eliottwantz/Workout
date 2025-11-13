@@ -49,7 +49,6 @@ struct WorkoutApp: App {
           handleScenePhaseChange(from: oldPhase, to: newPhase)
         }
         .tint(userAccentColor)
-        .withGeometryEnvironment()
     }
     .modelContainer(AppContainer.shared.modelContainer)
   }

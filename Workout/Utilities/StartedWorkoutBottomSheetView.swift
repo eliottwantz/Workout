@@ -21,66 +21,93 @@ private struct StartedWorkoutBottomSheetViewModifier: ViewModifier {
   @Environment(\.userAccentColor) private var userAccentColor
   @Namespace private var namespace
 
+  private var shouldShowStartWorkoutButton: Bool {
+    guard case .workoutDetail(let workout) = router.workouts.currentRoute,
+      router.selectedTab == .workouts,
+      viewModel.workout == nil
+    else { return false }
+
+    return !workout.orderedItems.isEmpty
+      && !workout.orderedItems.flatMap({ item in
+        if let exercise = item.exercise {
+          return exercise.orderedSets
+        }
+        if let superset = item.superset {
+          return superset.orderedExercises.flatMap({ $0.orderedSets })
+        }
+        return []
+      }).isEmpty
+  }
+
   func body(content: Content) -> some View {
     @Bindable var viewModel = viewModel
 
-    content
-      .tabBarMinimizeBehavior(.onScrollDown)
-      .tabViewBottomAccessory {
-        Group {
-          if let workout = viewModel.workout {
-            CollapsedWorkoutView(
-              workout: workout,
-              stopAction: {
-                viewModel.stop()
-              }
-            )
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background {
-              ZStack {
-                Color(.systemBackground)
-                userAccentColor.background
-              }
-            }
-
-          } else if case .workoutDetail(let workout) = router.workouts.currentRoute,
-            router.selectedTab == .workouts,
-            !workout.orderedItems.isEmpty
-              && !workout.orderedItems.flatMap({ item in
-                if let exercise = item.exercise {
-                  return exercise.orderedSets
+    ZStack {
+      content
+      // MARK: - Custom tabViewBottomAccessory
+      VStack {
+        Spacer()
+        HStack {
+          Group {
+            if let workout = viewModel.workout {
+              CollapsedWorkoutView(
+                workout: workout,
+                stopAction: {
+                  viewModel.stop()
                 }
-                if let superset = item.superset {
-                  return superset.orderedExercises.flatMap({ $0.orderedSets })
+              )
+              .padding(.horizontal, 16)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background {
+                ZStack {
+                  Color(.systemBackground)
+                  userAccentColor.background
                 }
-                return []
-              }).isEmpty && viewModel.workout == nil
-          {
-            HStack {
-              Button {
-                viewModel.start(workout: workout)
-              } label: {
-                Text("Start workout")
-                  .font(.title3)
-                  .bold()
-                  .foregroundStyle(userAccentColor.contrastColor)
               }
+            } else if case .workoutDetail(let workout) = router.workouts.currentRoute,
+              router.selectedTab == .workouts,
+              !workout.orderedItems.isEmpty
+                && !workout.orderedItems.flatMap({ item in
+                  if let exercise = item.exercise {
+                    return exercise.orderedSets
+                  }
+                  if let superset = item.superset {
+                    return superset.orderedExercises.flatMap({ $0.orderedSets })
+                  }
+                  return []
+                }).isEmpty && viewModel.workout == nil
+            {
+              HStack {
+                Button {
+                  viewModel.start(workout: workout)
+                } label: {
+                  Text("Start workout")
+                    .font(.title3)
+                    .bold()
+                    .foregroundStyle(userAccentColor.contrastColor)
+                }
+              }
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background(userAccentColor)
+            } else {
+              EmptyView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(userAccentColor)
-          } else {
-            EmptyView()
           }
+          .matchedTransitionSource(id: "workout-view", in: namespace)
         }
-        .matchedTransitionSource(id: "workout-view", in: namespace)
+        .frame(maxWidth: .infinity)
+        .frame(height: 48)
+        .clipShape(.capsule)
+        .padding(.horizontal, 21)
+        .padding(.bottom, 57)
       }
-      .fullScreenCover(isPresented: $viewModel.isPresented) {
-        if let workout = viewModel.workout {
-          ExpandedWorkoutView(workout: workout)
-            .navigationTransition(.zoom(sourceID: "workout-view", in: namespace))
-        }
+    }
+    .fullScreenCover(isPresented: $viewModel.isPresented) {
+      if let workout = viewModel.workout {
+        ExpandedWorkoutView(workout: workout)
+          .navigationTransition(.zoom(sourceID: "workout-view", in: namespace))
       }
+    }
   }
 }
 

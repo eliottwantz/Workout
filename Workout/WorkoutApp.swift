@@ -44,7 +44,7 @@ struct WorkoutApp: App {
           startedWorkoutViewModel.restoreStateIfNeeded()
           startedWorkoutViewModel.cleanUpExistingLiveActivities()
         }
-        .onDisappear { dismantleKeyboarMonitors() }
+        .onDisappear { dismantleKeyboardMonitors() }
         .onChange(of: scenePhase) { oldPhase, newPhase in
           handleScenePhaseChange(from: oldPhase, to: newPhase)
         }
@@ -64,7 +64,7 @@ struct WorkoutApp: App {
       .sink { _ in if keyboardIsShown { keyboardIsShown = false } }
   }
 
-  private func dismantleKeyboarMonitors() {
+  private func dismantleKeyboardMonitors() {
     keyboardHideMonitor?.cancel()
     keyboardShownMonitor?.cancel()
   }

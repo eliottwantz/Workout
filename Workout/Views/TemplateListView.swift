@@ -67,6 +67,7 @@ struct TemplateListView: View {
               } label: {
                 Label("Delete", systemImage: "trash")
               }
+              .tint(.red)
               Button {
                 if let duplicated = try? modelContext.duplicateTemplate(template) {
                   router.templates.navigate(path: [.edit(template: duplicated)])
@@ -148,7 +149,9 @@ struct TemplateListView: View {
         }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text("Do you want to create today's workout using \(templateToStart?.name ?? "this template")?")
+        Text(
+          "Do you want to create today's workout using \(templateToStart?.name ?? "this template")?"
+        )
       }
       .alert("Delete Template", isPresented: $showingDeleteConfirmation) {
         Button("Delete", role: .destructive) {
@@ -166,7 +169,9 @@ struct TemplateListView: View {
           name: $newTemplateName,
           notes: $newTemplateNotes,
           onSave: {
-            guard !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            guard !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+              return
+            }
             if let template = try? modelContext.createEmptyTemplate(
               name: newTemplateName,
               notes: newTemplateNotes.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty()
@@ -259,8 +264,8 @@ private struct TemplateInfoSheet: View {
   }
 }
 
-private extension String {
-  func nilIfEmpty() -> String? {
+extension String {
+  fileprivate func nilIfEmpty() -> String? {
     let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
     return trimmed.isEmpty ? nil : trimmed
   }

@@ -40,13 +40,13 @@ struct TemplateListView: View {
 
         ForEach(templates) { template in
           TemplateRowView(template: template)
-            .overlay(alignment: .topTrailing) {
-              if template.isFavorite {
-                Image(systemName: "star.fill")
-                  .foregroundStyle(.yellow)
-                  .padding(8)
-              }
-            }
+            //            .overlay(alignment: .topTrailing) {
+            //              if template.isFavorite {
+            //                Image(systemName: "star.fill")
+            //                  .foregroundStyle(.yellow)
+            //                  .padding(8)
+            //              }
+            //            }
             .contentShape(Rectangle())
             .onTapGesture {
               router.templates.navigate(path: [.edit(template: template)])
@@ -105,9 +105,9 @@ struct TemplateListView: View {
               } label: {
                 Label("Delete", systemImage: "trash")
               }
+              .tint(.red)
             }
         }
-        .onDelete(perform: deleteTemplates)
       }
       .overlay {
         if templates.isEmpty {
@@ -207,8 +207,16 @@ private struct TemplateRowView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
-      Text(template.name)
-        .font(.headline)
+      HStack {
+        Text(template.name)
+          .font(.headline)
+
+        if template.isFavorite {
+          Image(systemName: "star.fill")
+            .foregroundStyle(.yellow)
+            .padding(8)
+        }
+      }
 
       HStack(spacing: 8) {
         Text("\(template.exerciseCount) exercises")

@@ -13,39 +13,43 @@ struct TemplateEditorView: View {
 
   @Bindable var template: WorkoutTemplate
 
-  @State private var name: String
   @State private var notes: String
-  @State private var isFavorite: Bool
   @State private var editMode = EditMode.inactive
   @State private var showingAddExerciseView = false
-  @State private var hasUnsavedChanges = false
 
   init(template: WorkoutTemplate) {
     self.template = template
-    _name = State(initialValue: template.name)
     _notes = State(initialValue: template.notes ?? "")
-    _isFavorite = State(initialValue: template.isFavorite)
   }
 
   var body: some View {
-    List {
+    Form {
       Section("Template Info") {
-        TextField("Template name", text: $name)
-          .onSubmit { saveChanges() }
-          .onChange(of: name) { _, _ in
-            hasUnsavedChanges = true
-          }
+        LabeledContent("Template name") {
+          TextField("Template name", text: $template.name)
+            .multilineTextAlignment(.trailing)
+            .foregroundStyle(.tint)
+        }
+        .onChange(of: template.name) { _, _ in
+          template.refreshUpdatedAt()
+        }
 
-        Toggle("Favorite", isOn: $isFavorite)
-          .onChange(of: isFavorite) { _, _ in
-            hasUnsavedChanges = true
+        LabeledContent("Favorite") {
+          HStack {
+            Spacer()
+            EditableFavoriteButton(isSet: $template.isFavorite)
           }
+        }
+        .onChange(of: template.isFavorite) { _, _ in
+          template.refreshUpdatedAt()
+        }
       }
 
       Section("Notes") {
         TextField("Optional notes", text: $notes, axis: .vertical)
           .onChange(of: notes) { _, _ in
-            hasUnsavedChanges = true
+            template.notes = notes
+            template.refreshUpdatedAt()
           }
       }
 
@@ -80,13 +84,6 @@ struct TemplateEditorView: View {
         } label: {
           Label("Add Exercises", systemImage: "plus")
         }
-
-        Button {
-          saveChanges()
-        } label: {
-          Label("Save", systemImage: "checkmark")
-        }
-        .disabled(!hasUnsavedChanges)
       }
     }
     .environment(\.editMode, $editMode)
@@ -95,29 +92,6 @@ struct TemplateEditorView: View {
         TemplateAddExerciseView(template: template)
       }
     }
-    .onDisappear {
-      if hasUnsavedChanges {
-        saveChanges()
-      } else {
-        markTemplateUpdated()
-      }
-    }
-  }
-
-  private func saveChanges() {
-    let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-    let finalName = trimmedName.isEmpty ? template.name : trimmedName
-
-    try? modelContext.updateTemplate(
-      template,
-      name: finalName,
-      notes: notes.nilIfEmpty(),
-      isFavorite: isFavorite
-    )
-
-    name = finalName
-    notes = template.notes ?? notes
-    hasUnsavedChanges = false
   }
 
   private func moveItems(from source: IndexSet, to destination: Int) {
@@ -268,11 +242,13 @@ private struct TemplateAddExerciseView: View {
     switch selectedOption {
     case .individual:
       for definitionID in selectedExercises {
-        guard let definition = try? modelContext.fetch(
-          FetchDescriptor<ExerciseDefinition>(
-            predicate: #Predicate { $0.persistentModelID == definitionID }
-          )
-        ).first else { continue }
+        guard
+          let definition = try? modelContext.fetch(
+            FetchDescriptor<ExerciseDefinition>(
+              predicate: #Predicate { $0.persistentModelID == definitionID }
+            )
+          ).first
+        else { continue }
 
         let previousExercise = AppContainer.findMostRecentExercise(
           for: definitionID,
@@ -289,7 +265,8 @@ private struct TemplateAddExerciseView: View {
         if let previousExercise {
           for setEntry in previousExercise.orderedSets {
             templateExercise.addSet(
-              WorkoutTemplateSet(order: setEntry.order, reps: setEntry.reps, weight: setEntry.weight)
+              WorkoutTemplateSet(
+                order: setEntry.order, reps: setEntry.reps, weight: setEntry.weight)
             )
           }
         }
@@ -301,11 +278,13 @@ private struct TemplateAddExerciseView: View {
     case .superset:
       let superset = WorkoutTemplateSuperset()
       for (index, definitionID) in selectedExercises.enumerated() {
-        guard let definition = try? modelContext.fetch(
-          FetchDescriptor<ExerciseDefinition>(
-            predicate: #Predicate { $0.persistentModelID == definitionID }
-          )
-        ).first else { continue }
+        guard
+          let definition = try? modelContext.fetch(
+            FetchDescriptor<ExerciseDefinition>(
+              predicate: #Predicate { $0.persistentModelID == definitionID }
+            )
+          ).first
+        else { continue }
 
         let previousExercise = AppContainer.findMostRecentExercise(
           for: definitionID,
@@ -323,7 +302,8 @@ private struct TemplateAddExerciseView: View {
         if let previousExercise {
           for setEntry in previousExercise.orderedSets {
             templateExercise.addSet(
-              WorkoutTemplateSet(order: setEntry.order, reps: setEntry.reps, weight: setEntry.weight)
+              WorkoutTemplateSet(
+                order: setEntry.order, reps: setEntry.reps, weight: setEntry.weight)
             )
           }
         }
@@ -369,13 +349,14 @@ private struct TemplateExerciseDetailView: View {
       }
 
       Section("Rest Time") {
-        Stepper(value: $restTime, in: 0...900, step: 5) {
-          Text("Rest: \(formatRestTime(restTime))")
-        }
-        .onChange(of: restTime) { _, newValue in
-          exercise.restTime = newValue
-          markTemplateChanged()
-        }
+        //        Stepper(value: $restTime, in: 0...900, step: 5) {
+        //          Text("Rest: \(formatRestTime(restTime))")
+        //        }
+        //        .onChange(of: restTime) { _, newValue in
+        //          exercise.restTime = newValue
+        //          markTemplateChanged()
+        //        }
+        RestTimePicker(exercise: exercise)
       }
 
       Section("Sets") {
@@ -403,7 +384,7 @@ private struct TemplateExerciseDetailView: View {
           TemplateEditableSetRowView(set: set, displayWeightInLbs: displayWeightInLbs) {
             markTemplateChanged()
           }
-            .frame(minHeight: 50)
+          .frame(minHeight: 50)
         }
         .onDelete(perform: deleteSets)
         .onMove(perform: moveSets)
@@ -451,7 +432,8 @@ private struct TemplateExerciseDetailView: View {
 
   private func addSet() {
     if let lastSet = exercise.orderedSets.last {
-      let set = WorkoutTemplateSet(order: lastSet.order + 1, reps: lastSet.reps, weight: lastSet.weight)
+      let set = WorkoutTemplateSet(
+        order: lastSet.order + 1, reps: lastSet.reps, weight: lastSet.weight)
       exercise.addSet(set)
     } else {
       let set = WorkoutTemplateSet(order: 0, reps: 10, weight: 20)
@@ -504,6 +486,49 @@ private struct TemplateExerciseDetailView: View {
   }
 }
 
+private struct RestTimePicker: View {
+  @Bindable var exercise: WorkoutTemplateExercise
+
+  @State private var showingRestTimePicker = false
+
+  var body: some View {
+    Button {
+      showingRestTimePicker = true
+    } label: {
+      Stepper(value: $exercise.restTime, in: 5...600, step: 5) {
+        HStack {
+          Text(exercise.restTime.formattedRestTime)
+            .frame(minWidth: 60, alignment: .center)
+            .font(.body.monospacedDigit())
+            .foregroundStyle(Color.primary)
+            .contentTransition(.numericText())
+            .animation(.snappy, value: exercise.restTime)
+        }
+      }
+      .sensoryFeedback(trigger: exercise.restTime) { oldValue, newValue in
+        return newValue < oldValue ? .decrease : .increase
+      }
+    }
+    .sheet(isPresented: $showingRestTimePicker) {
+      RestTimePickerView(restTime: $exercise.restTime)
+        .presentationDetents([.fraction(0.7)])
+    }
+  }
+
+  private func incrementRestTime() {
+    withAnimation {
+      exercise.restTime += 15
+    }
+  }
+
+  private func decrementRestTime() {
+    withAnimation {
+      // Ensure we don't go below 0 seconds
+      exercise.restTime = max(0, exercise.restTime - 15)
+    }
+  }
+}
+
 private struct TemplateEditableSetRowView: View {
   @Environment(\.modelContext) private var modelContext
   @Bindable var set: WorkoutTemplateSet
@@ -520,31 +545,24 @@ private struct TemplateEditableSetRowView: View {
 
   var body: some View {
     HStack {
-      Text("\(set.order + 1)")
-        .frame(width: 40, alignment: .leading)
+      ZStack {
+        Circle()
+          .fill(Color.gray.opacity(0.2))
+          .frame(width: 24, height: 24)
 
-      Stepper(value: $set.reps, in: 1...100) {
-        Text("\(set.reps)")
-          .frame(maxWidth: .infinity, alignment: .center)
+        Text("\(set.order + 1)")
+          .font(.system(.callout, weight: .medium))
       }
-      .labelsHidden()
+      .frame(width: 40, alignment: .leading)
 
-      Stepper(value: $weight, in: 0...500, step: displayWeightInLbs ? 5 : 2.5) {
-        Text(String(format: "%.1f", weight))
-          .frame(maxWidth: .infinity, alignment: .center)
-      }
-      .labelsHidden()
+      RepsInputField(reps: $set.reps)
+
+      WeightInputField(weight: $weight)
+        .onChange(of: weight) { _, newValue in
+          set.weight = displayWeightInLbs ? newValue / 2.20462 : newValue
+        }
     }
-    .buttonStyle(.plain)
-    .onChange(of: set.reps) { _, _ in
-      try? modelContext.save()
-      onChange()
-    }
-    .onChange(of: weight) { _, newValue in
-      set.weight = displayWeightInLbs ? newValue / 2.20462 : newValue
-      try? modelContext.save()
-      onChange()
-    }
+    .padding(.vertical, 4)
   }
 }
 
@@ -751,11 +769,13 @@ private struct TemplateSupersetAddExerciseView: View {
     let startingIndex = superset.orderedExercises.count
 
     for (offset, definitionID) in selectedExercises.enumerated() {
-      guard let definition = try? modelContext.fetch(
-        FetchDescriptor<ExerciseDefinition>(
-          predicate: #Predicate { $0.persistentModelID == definitionID }
-        )
-      ).first else { continue }
+      guard
+        let definition = try? modelContext.fetch(
+          FetchDescriptor<ExerciseDefinition>(
+            predicate: #Predicate { $0.persistentModelID == definitionID }
+          )
+        ).first
+      else { continue }
 
       let previousExercise = AppContainer.findMostRecentExercise(
         for: definitionID,
@@ -789,15 +809,15 @@ private struct TemplateSupersetAddExerciseView: View {
   }
 }
 
-private extension String {
-  func nilIfEmpty() -> String? {
+extension String {
+  fileprivate func nilIfEmpty() -> String? {
     let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
     return trimmed.isEmpty ? nil : trimmed
   }
 }
 
-private extension Array {
-  subscript(safe index: Int) -> Element? {
+extension Array {
+  fileprivate subscript(safe index: Int) -> Element? {
     guard indices.contains(index) else { return nil }
     return self[index]
   }

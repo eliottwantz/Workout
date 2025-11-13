@@ -328,7 +328,7 @@ private struct RestTimePicker: View {
   }
 }
 
-private struct WeightInputField: View {
+struct WeightInputField: View {
   @Binding var weight: Double
   @FocusState var isFocused: Bool
 
@@ -356,7 +356,7 @@ private struct WeightInputField: View {
   }
 }
 
-private struct RepsInputField: View {
+struct RepsInputField: View {
   @Binding var reps: Int
   @FocusState var isFocused: Bool
 

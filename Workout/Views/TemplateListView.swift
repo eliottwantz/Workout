@@ -95,7 +95,7 @@ struct TemplateListView: View {
                 templateToStart = template
                 showingStartConfirmation = true
               } label: {
-                Label("Start Workout", systemImage: "play.fill")
+                Label("Start workout", systemImage: "play.fill")
               }
 
               Button(role: .destructive) {

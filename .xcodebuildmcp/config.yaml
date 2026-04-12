@@ -1,0 +1,15 @@
+schemaVersion: 1
+enabledWorkflows:
+  - simulator
+  - debugging
+  - logging
+  - project-discovery
+  - ui-automation
+debug: false
+sentryDisabled: true
+sessionDefaults:
+  projectPath: Workout.xcodeproj
+  scheme: Workout
+  deviceId: F3968B01-8621-597C-93A6-4A4514802442
+  simulatorId: 675661F0-057D-42B1-A16B-9F82D4B6E660
+  simulatorName: iPhone 17 Pro

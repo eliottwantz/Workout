@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+project_root="${MISE_PROJECT_ROOT:-$PWD}"
+
+fail() {
+  printf '%s\n' "$1" >&2
+  exit 1
+}
+
+usage() {
+  printf 'Usage: mise run bump [path/to/Project.xcodeproj|path/to/project.pbxproj|search-root]\n'
+  exit "${1:-0}"
+}
+
+discover_project_file() {
+  local search_root="$1"
+  local projects
+
+  projects="$(cd -- "$search_root" && { fd -a --hidden --follow --exclude .git --exclude .build --exclude DerivedData --exclude node_modules --type d --glob '*.xcodeproj' || true; } | sort -u)"
+
+  if [[ -z "$projects" ]]; then
+    fail "No .xcodeproj found under $search_root"
+  fi
+
+  if [[ "$(printf '%s\n' "$projects" | wc -l | tr -d ' ')" != "1" ]]; then
+    printf 'Multiple .xcodeproj files found under %s. Pass one explicitly:\n%s\n' "$search_root" "$projects" >&2
+    exit 1
+  fi
+
+  printf '%s/project.pbxproj\n' "$projects"
+}
+
+resolve_project_file() {
+  local input="${1:-}"
+  local resolved
+
+  if [[ -z "$input" ]]; then
+    discover_project_file "$project_root"
+    return
+  fi
+
+  if [[ ! -e "$input" ]]; then
+    fail "Path not found: $input"
+  fi
+
+  resolved="$(cd -- "$(dirname -- "$input")" && pwd -P)/$(basename -- "$input")"
+
+  if [[ -f "$resolved" ]]; then
+    [[ "$resolved" == */project.pbxproj ]] || fail "Expected an .xcodeproj directory or project.pbxproj file: $resolved"
+    printf '%s\n' "$resolved"
+    return
+  fi
+
+  if [[ "$resolved" == *.xcodeproj ]]; then
+    printf '%s/project.pbxproj\n' "$resolved"
+    return
+  fi
+
+  discover_project_file "$resolved"
+}
+
+[[ "${1:-}" == "--help" || "${1:-}" == "-h" ]] && usage
+[[ "$#" -le 1 ]] || usage 1
+
+project_file="$(resolve_project_file "${1:-}")"
+[[ -f "$project_file" ]] || fail "Project file not found: $project_file"
+
+today="$(date +%F)"
+current_version="$(rg -m1 -o --replace '$1' 'MARKETING_VERSION = "?([^";]+)"?;' "$project_file" || true)"
+current_build="$(rg -m1 -o --replace '$1' 'CURRENT_PROJECT_VERSION = ([^;]+);' "$project_file" || true)"
+
+next_build=1
+if [[ -n "$current_version" && -n "$current_build" && "$current_version" == "$today" ]]; then
+  [[ "$current_build" =~ ^[0-9]+$ ]] || fail "Current build number is not numeric: $current_build"
+  next_build=$((current_build + 1))
+fi
+
+tmp_file="$(mktemp "${TMPDIR:-/tmp}/bump.XXXXXX")"
+trap 'rm -f "$tmp_file"' EXIT
+
+awk -v today="$today" -v next_build="$next_build" '
+function flush_block(    i, insert_at, line, should_update) {
+  if (!in_block) {
+    return
+  }
+
+  should_update = has_bundle || has_marketing || has_build
+  if (indent == "") {
+    match(block[1], /^[[:space:]]*/)
+    indent = substr(block[1], 1, RLENGTH) "\t"
+  }
+
+  if (!should_update) {
+    for (i = 1; i <= block_count; i++) {
+      print block[i]
+    }
+  } else {
+    insert_at = 0
+    for (i = 1; i <= block_count; i++) {
+      if (block[i] ~ /PRODUCT_BUNDLE_IDENTIFIER[[:space:]]*=/) {
+        insert_at = i
+        break
+      }
+    }
+
+    if (insert_at == 0) {
+      insert_at = block_count
+    }
+
+    for (i = 1; i <= block_count; i++) {
+      line = block[i]
+
+      if (line ~ /MARKETING_VERSION[[:space:]]*=/) {
+        print indent "MARKETING_VERSION = \"" today "\";"
+        continue
+      }
+
+      if (line ~ /CURRENT_PROJECT_VERSION[[:space:]]*=/) {
+        print indent "CURRENT_PROJECT_VERSION = " next_build ";"
+        continue
+      }
+
+      if (i == insert_at) {
+        if (!has_build) {
+          print indent "CURRENT_PROJECT_VERSION = " next_build ";"
+        }
+
+        if (!has_marketing) {
+          print indent "MARKETING_VERSION = \"" today "\";"
+        }
+      }
+
+      print line
+    }
+  }
+
+  delete block
+  block_count = 0
+  in_block = 0
+  has_bundle = 0
+  has_marketing = 0
+  has_build = 0
+  indent = ""
+}
+
+{
+  if (in_block) {
+    block[++block_count] = $0
+
+    if (indent == "" && $0 ~ /[[:space:]]*[A-Z_]+[[:space:]]*=/) {
+      match($0, /^[[:space:]]*/)
+      indent = substr($0, 1, RLENGTH)
+    }
+
+    if ($0 ~ /PRODUCT_BUNDLE_IDENTIFIER[[:space:]]*=/) {
+      has_bundle = 1
+    }
+
+    if ($0 ~ /MARKETING_VERSION[[:space:]]*=/) {
+      has_marketing = 1
+    }
+
+    if ($0 ~ /CURRENT_PROJECT_VERSION[[:space:]]*=/) {
+      has_build = 1
+    }
+
+    if ($0 ~ /^[[:space:]]*};$/) {
+      flush_block()
+    }
+
+    next
+  }
+
+  if ($0 ~ /buildSettings = \{/) {
+    in_block = 1
+    block_count = 1
+    block[1] = $0
+    has_bundle = 0
+    has_marketing = 0
+    has_build = 0
+    indent = ""
+    next
+  }
+
+  print
+}
+
+END {
+  flush_block()
+}
+' "$project_file" > "$tmp_file"
+
+cmp -s "$project_file" "$tmp_file" || mv "$tmp_file" "$project_file"
+trap - EXIT
+rm -f "$tmp_file"
+
+printf 'Updated %s\n' "$project_file"
+printf 'Set MARKETING_VERSION to %s\n' "$today"
+printf 'Set CURRENT_PROJECT_VERSION to %s\n' "$next_build"
+
+git add "$project_file"
+git commit -m "Bump version to $today ($next_build)"

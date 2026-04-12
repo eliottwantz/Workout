@@ -1,0 +1,42 @@
+[tools]
+fd = "latest"
+tuist = "latest"
+
+[env]
+SENTRY_DISABLED = "true"
+
+[tasks.archive]
+run = ["echo 'Starting archive process...'", """xcodebuild \
+    -project Workout.xcodeproj \
+    -scheme 'Workout Release' \
+    -configuration Release \
+    -destination 'generic/platform=iOS' \
+    -archivePath .archives/Workout \
+    archive | xcbeautify""", "echo 'Done with archive process!'"]
+description = "Creates an archive of the app for distribution"
+sources = ["Workout/**/*", "Workout.xcodeproj/**/*", "ExportOptions.plist", "Tuist.swift"]
+outputs = [".archives/Workout.xcarchive"]
+depends = ["clean", "bump"]
+
+[tasks.clean]
+run = "xcodebuildmcp utilities clean"
+description = "Cleans the build artifacts"
+
+[tasks.create-ipa]
+run = ["""xcodebuild \
+  -exportArchive \
+  -archivePath .archives/Workout.xcarchive \
+  -exportOptionsPlist ./ExportOptions.plist \
+  -exportPath .archives/export
+""", "tuist inspect bundle .archives/Workout.xcarchive"]
+description = "Creates an IPA file from the archive for distribution"
+depends = ["archive"]
+
+[tasks.release]
+run = "tuist share .archives/export/Workout.ipa"
+description = "Creates a Tuist preview for the latest release build"
+depends = ["create-ipa"]
+
+[tasks.tuist-web]
+run = "tuist project show --web"
+description = "Opens the Tuist web page for the project"
